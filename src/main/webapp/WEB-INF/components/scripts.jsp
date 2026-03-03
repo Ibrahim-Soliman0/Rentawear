@@ -5,10 +5,17 @@
   <!-- Bootstrap 5 JS bundle (includes Popper) -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
-  <!-- Custom app JS -->
-  <script src="${pageContext.request.contextPath}/assets/js/app.js"></script>
+  <%-- Load order matters:
+       1. utils.js  — CTX and esc() used by all other files
+       2. search.js — depends on utils.js
+       3. cart.js   — depends on utils.js
+       4. main.js   — page interactions, depends on utils.js
+  --%>
+  <script src="${pageContext.request.contextPath}/assets/js/utils.js"></script>
+  <script src="${pageContext.request.contextPath}/assets/js/search.js"></script>
+  <script src="${pageContext.request.contextPath}/assets/js/cart.js"></script>
 
-  <!-- Extra page-specific JS hook -->
+  <!-- Extra page-specific JS hook (e.g. product detail page) -->
   ${param.extraJS}
 
 </body>
