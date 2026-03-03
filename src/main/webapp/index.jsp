@@ -14,6 +14,7 @@
 </jsp:include>
 
 <%-- 3. Page body --%>
+<main class="rw-main">
 
 <!-- ============================================================
      TRENDING RENTALS
@@ -51,6 +52,7 @@
     </div>
   </div>
 </section>
+</main>
 
 <%-- 4. Footer --%>
 <jsp:include page="WEB-INF/components/footer.jsp"/>
