@@ -219,6 +219,44 @@ h1, h2, h3, h4, h5, h6 { font-weight: 700; color: var(--rw-dark); }
 
 
 /* ── 6. Desktop Dropdowns ──────────────────────────────────── */
+/* ── Hover Dropdowns (desktop only) ───────────────────────────
+   Only applies on devices that support true hover (mice).
+   On touch devices (tablets, phones) the click behaviour from
+   Bootstrap is preserved automatically.
+   ─────────────────────────────────────────────────────────── */
+
+@media (min-width: 992px) {
+  @media (hover: hover) {
+
+    /* 1. Show the menu when the .dropdown wrapper is hovered */
+    .rw-desktop-nav .dropdown:hover > .dropdown-menu {
+      display: block;
+      opacity: 1;
+      visibility: visible;
+      /* Smooth fade-in */
+      animation: rwDropFade 0.18s ease forwards;
+    }
+
+    /* 2. Keep the toggle link highlighted while menu is open */
+    .rw-desktop-nav .dropdown:hover > .nav-link {
+      color: var(--rw-teal);
+      background: var(--rw-teal-light);
+    }
+
+    /* 3. Small gap between the nav link and the menu so moving
+          the mouse diagonally toward a menu item doesn't close it */
+    .rw-desktop-nav .dropdown-menu {
+      margin-top: 4px;
+    }
+
+  }
+}
+
+/* Fade-in keyframe */
+@keyframes rwDropFade {
+  from { opacity: 0; transform: translateY(-6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
 .rw-dropdown {
   border: 1px solid var(--rw-gray-300);
   border-radius: var(--rw-radius-sm);
