@@ -86,7 +86,7 @@
                 <configuration>
                     <url>http://localhost:9090/manager/text</url>
                     <server>TomcatServer</server>
-                    <path>rentawear</path>
+                    <path>/rentawear</path>
                 </configuration>
             </plugin>
         </plugins>
