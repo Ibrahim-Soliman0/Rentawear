@@ -16,7 +16,7 @@
   <script src="${pageContext.request.contextPath}/assets/js/cart.js"></script>
 
   <!-- Extra page-specific JS hook (e.g. product detail page) -->
-  ${param.extraJS}
+<script src=${param.extraJS}></script>
 
 </body>
 </html>
