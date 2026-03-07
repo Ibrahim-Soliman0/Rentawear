@@ -1469,35 +1469,6 @@ h1, h2, h3, h4, h5, h6 { font-weight: 700; color: var(--rw-dark); }
 }
 
 
-/* ── Social buttons ─────────────────────────────────────────── */
-.rw-social-row {
-  display: flex;
-  flex-direction: column;
-  gap: 0.6rem;
-  margin-bottom: 1.4rem;
-}
-.rw-social-btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.6rem;
-  width: 100%;
-  background: var(--rw-white);
-  border: 1.5px solid var(--rw-gray-300);
-  border-radius: 50px;
-  padding: 0.65rem 1.25rem;
-  font-size: 0.875rem;
-  font-weight: 600;
-  font-family: 'Inter', sans-serif;
-  color: var(--rw-gray-700);
-  cursor: pointer;
-  transition: var(--rw-transition);
-}
-.rw-social-btn:hover {
-  border-color: var(--rw-gray-500);
-  background: var(--rw-gray-100);
-}
-
 
 /* ── Switch link ────────────────────────────────────────────── */
 .rw-auth-switch {
