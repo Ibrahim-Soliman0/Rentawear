@@ -87,6 +87,7 @@ const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   const emailEl     = document.getElementById('regEmail');
   const passwordEl  = document.getElementById('regPassword');
   const termsEl     = document.getElementById('agreeTerms');
+  const dobEl = document.getElementById("dob");
 
   /* ── Password strength meter ── */
   const strengthFill  = document.getElementById('pwdStrengthFill');
@@ -124,6 +125,7 @@ const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   fullNameEl?.addEventListener('blur', validateFullName);
   emailEl?.addEventListener('blur',    validateRegEmail);
   passwordEl?.addEventListener('blur', validateRegPassword);
+  dobEl?.addEventListener('blur',validateDob);
 
   function validateFullName() {
     const val = fullNameEl.value.trim();
@@ -193,6 +195,7 @@ const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
       validateFullName(),
       validateRegEmail(),
       validateRegPassword(),
+      validateDob(),
       validateTerms(),
     ].every(Boolean);
 
