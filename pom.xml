@@ -84,9 +84,9 @@
                 <artifactId>tomcat7-maven-plugin</artifactId>
                 <version>2.2</version>
                 <configuration>
-                    <url>http://localhost:9091/manager/text</url>
+                    <url>http://localhost:9090/manager/text</url>
                     <server>TomcatServer</server>
-                    <path>/Lab9</path>
+                    <path>/rentawear</path>
                 </configuration>
             </plugin>
         </plugins>
