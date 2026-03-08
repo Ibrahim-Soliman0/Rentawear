@@ -120,6 +120,7 @@
                       autocomplete="bday"
               />
             </div>
+            <div class="rw-field-error" id="dobError"></div>
           </div>
 
           <div class="rw-form-group">
