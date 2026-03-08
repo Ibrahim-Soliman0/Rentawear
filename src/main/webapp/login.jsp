@@ -1,13 +1,7 @@
 <%-- login.jsp — Rentawear Login Page --%>
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
 <%@ page isELIgnored="false" %>
-
-<%
-  String errorMsg    = (String) request.getAttribute("errorMsg");
-  String successMsg  = (String) request.getAttribute("successMsg");
-  String prefillEmail = request.getParameter("email") != null
-                        ? request.getParameter("email") : "";
-%>
+<%@ taglib prefix="c" uri="jakarta.tags.core" %>
 
 <jsp:include page="WEB-INF/layout.jsp">
   <jsp:param name="activePage"  value="account"/>
@@ -18,7 +12,6 @@
 <main class="rw-main rw-auth-bg">
   <div class="rw-auth-wrap">
 
-    <!-- Card -->
     <div class="rw-auth-card">
 
       <!-- Logo -->
@@ -28,16 +21,16 @@
       <p class="rw-auth-subtitle">Welcome back — sign in to continue</p>
 
       <!-- Server-side alerts -->
-      <% if (errorMsg != null && !errorMsg.isEmpty()) { %>
+      <c:if test="${not empty errorMsg}">
         <div class="rw-auth-alert rw-auth-alert--error">
-          <i class="bi bi-exclamation-circle-fill"></i> <%= errorMsg %>
+          <i class="bi bi-exclamation-circle-fill"></i> ${errorMsg}
         </div>
-      <% } %>
-      <% if (successMsg != null && !successMsg.isEmpty()) { %>
+      </c:if>
+      <c:if test="${not empty successMsg}">
         <div class="rw-auth-alert rw-auth-alert--success">
-          <i class="bi bi-check-circle-fill"></i> <%= successMsg %>
+          <i class="bi bi-check-circle-fill"></i> ${successMsg}
         </div>
-      <% } %>
+      </c:if>
 
       <!-- Form -->
       <form id="loginForm" action="${pageContext.request.contextPath}/LoginServlet" method="post" novalidate>
@@ -48,14 +41,14 @@
           <div class="rw-input-wrap">
             <i class="bi bi-envelope rw-input-icon"></i>
             <input
-              type="email"
-              id="loginEmail"
-              name="email"
-              class="rw-form-input"
-              placeholder="you@example.com"
-              value="<%= prefillEmail %>"
-              autocomplete="email"
-              required
+                    type="email"
+                    id="loginEmail"
+                    name="email"
+                    class="rw-form-input"
+                    placeholder="you@example.com"
+                    value="${param.email}"
+                    autocomplete="email"
+                    required
             />
           </div>
           <div class="rw-field-error" id="emailError"></div>
@@ -70,13 +63,13 @@
           <div class="rw-input-wrap">
             <i class="bi bi-lock rw-input-icon"></i>
             <input
-              type="password"
-              id="loginPassword"
-              name="password"
-              class="rw-form-input"
-              placeholder="Enter your password"
-              autocomplete="current-password"
-              required
+                    type="password"
+                    id="loginPassword"
+                    name="password"
+                    class="rw-form-input"
+                    placeholder="Enter your password"
+                    autocomplete="current-password"
+                    required
             />
             <button type="button" class="rw-eye-btn" data-target="loginPassword" aria-label="Toggle password">
               <i class="bi bi-eye"></i>
@@ -107,7 +100,7 @@
       <!-- Footer link -->
       <p class="rw-auth-switch">
         Don't have an account?
-        <a href="register.jsp">Create one free</a>
+        <a href="${pageContext.request.contextPath}/register.jsp">Create one free</a>
       </p>
 
     </div><!-- /.rw-auth-card -->
