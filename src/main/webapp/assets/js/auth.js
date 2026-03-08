@@ -127,9 +127,37 @@ const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
   function validateFullName() {
     const val = fullNameEl.value.trim();
-    if (!val)          { showError('fullName', 'fullNameError', 'Full name is required.'); return false; }
-    if (val.length < 2){ showError('fullName', 'fullNameError', 'Name must be at least 2 characters.'); return false; }
+    if (!val) {
+      showError('fullName', 'fullNameError', 'Full name is required.');
+      return false;
+    }
+    if (val.length < 2) {
+      showError('fullName', 'fullNameError', 'Name must be at least 2 characters.');
+      return false;
+    }
+    if (/\d/.test(val)) {
+      showError('fullName', 'fullNameError', 'Name cannot contain numbers.');
+      return false;
+    }
+    if (/[^a-zA-Z\s\-\']/.test(val)) {
+      showError('fullName', 'fullNameError', 'Name can only contain letters, spaces, hyphens, or apostrophes.');
+      return false;
+    }
     showOk('fullName', 'fullNameError');
+    return true;
+  }
+
+  function validateDob() {
+    const dobEl = document.getElementById('dob');
+    if (!dobEl || !dobEl.value) return true; // optional field
+    const selected = new Date(dobEl.value);
+    const today    = new Date();
+    today.setHours(0, 0, 0, 0);
+    if (selected > today) {
+      showError('dob', 'dobError', 'Date of birth cannot be in the future.');
+      return false;
+    }
+    showOk('dob', 'dobError');
     return true;
   }
 
