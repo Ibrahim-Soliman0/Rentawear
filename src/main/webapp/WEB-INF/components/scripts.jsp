@@ -5,6 +5,9 @@
   <!-- Bootstrap 5 JS bundle (includes Popper) -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css"/>
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+
   <%-- Load order matters:
        1. utils.js  — CTX and esc() used by all other files
        2. search.js — depends on utils.js

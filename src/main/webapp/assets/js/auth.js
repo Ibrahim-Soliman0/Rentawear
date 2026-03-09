@@ -122,10 +122,10 @@ const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   });
 
   /* ── Live blur validators ── */
-  fullNameEl?.addEventListener('blur', validateFullName);
-  emailEl?.addEventListener('blur',    validateRegEmail);
-  passwordEl?.addEventListener('blur', validateRegPassword);
-  dobEl?.addEventListener('blur',validateDob);
+  fullNameEl?.addEventListener('input', validateFullName);
+  emailEl?.addEventListener('input',    validateRegEmail);
+  passwordEl?.addEventListener('input', validateRegPassword);
+  dobEl?.addEventListener('change',validateDob);
 
   function validateFullName() {
     const val = fullNameEl.value.trim();
@@ -152,13 +152,24 @@ const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   function validateDob() {
     const dobEl = document.getElementById('dob');
     if (!dobEl || !dobEl.value) return true; // optional field
-    const selected = new Date(dobEl.value);
+
+    const parts    = dobEl.value.split('/');
+    const selected = new Date(parts[2], parts[0] - 1, parts[1]);
     const today    = new Date();
     today.setHours(0, 0, 0, 0);
+
     if (selected > today) {
       showError('dob', 'dobError', 'Date of birth cannot be in the future.');
       return false;
     }
+
+    const minAge = new Date(today);
+    minAge.setFullYear(minAge.getFullYear() - 18);
+    if (selected > minAge) {
+      showError('dob', 'dobError', 'You must be at least 18 years old.');
+      return false;
+    }
+
     showOk('dob', 'dobError');
     return true;
   }
@@ -213,3 +224,10 @@ const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     }
   });
 })();
+
+flatpickr('#dob', {
+    maxDate: 'today',
+    dateFormat: 'm/d/Y',
+    disableMobile: true,
+    allowInput: false,
+});

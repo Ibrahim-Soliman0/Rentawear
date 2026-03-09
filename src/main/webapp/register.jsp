@@ -109,12 +109,15 @@
           <div class="rw-form-group">
             <label for="dob" class="rw-form-label">Date of Birth</label>
             <div class="rw-input-wrap">
+              <i class="bi bi-calendar3 rw-input-icon"></i>
               <input
-                      type="date"
+                      type="text"
                       id="dob"
                       name="dob"
                       class="rw-form-input"
-                      autocomplete="bday"
+                      placeholder="MM/DD/YYYY"
+                      autocomplete="off"
+                      readonly
               />
             </div>
             <div class="rw-field-error" id="dobError"></div>
@@ -224,8 +227,10 @@
   </div><!-- /.rw-auth-wrap -->
 </main>
 
+
 <jsp:include page="WEB-INF/components/footer.jsp"/>
 <jsp:include page="WEB-INF/components/scripts.jsp">
   <jsp:param name="extraJS" value="${pageContext.request.contextPath}/assets/js/auth.js"/>
 </jsp:include>
+
 
