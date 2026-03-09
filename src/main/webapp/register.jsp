@@ -22,7 +22,7 @@
 
       <!-- Trust badges -->
       <div class="rw-trust-row">
-        <span class="rw-trust-badge"><i class="bi bi-shield-check-fill"></i> Secure</span>
+        <span class="rw-trust-badge"><i class="bi bi-shield-fill-check"></i> Secure</span>
         <span class="rw-trust-badge"><i class="bi bi-lock-fill"></i> Private</span>
         <span class="rw-trust-badge"><i class="bi bi-star-fill"></i> Free to join</span>
       </div>
