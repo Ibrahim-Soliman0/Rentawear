@@ -16,7 +16,6 @@ CREATE TABLE users
     birthday      DATE,
     job           VARCHAR(100),
     address       TEXT,
-    interests     TEXT,
     credit_limit  DECIMAL(10, 2) DEFAULT 0,
     role          ENUM('ADMIN','USER') DEFAULT 'USER',
     created_at    TIMESTAMP      DEFAULT CURRENT_TIMESTAMP,
@@ -55,7 +54,7 @@ CREATE TABLE user_category
     id          INT PRIMARY KEY AUTO_INCREMENT,
     category_id INT,
     user_id     INT,
-    UNIQUE(user_id, category_id),
+    UNIQUE (user_id, category_id),
     FOREIGN KEY (category_id) REFERENCES categories (id),
     FOREIGN KEY (user_id) REFERENCES users (id)
 );
@@ -81,10 +80,10 @@ CREATE TABLE products
 CREATE TABLE product_variants
 (
     id         INT PRIMARY KEY AUTO_INCREMENT,
-    product_id INT NOT NULL,
+    product_id INT         NOT NULL,
     size       VARCHAR(20),
-    color      VARCHAR(50),
-    quantity   INT NOT NULL,
+    color      VARCHAR(50) NOT NULL,
+    quantity   INT         NOT NULL,
     UNIQUE (product_id, color, size),
     FOREIGN KEY (product_id) REFERENCES products (id)
 );
@@ -98,6 +97,7 @@ CREATE TABLE product_images
     product_id INT,
     image_url  VARCHAR(255),
     color      VARCHAR(50),
+    UNIQUE (product_id, color, image_url),
     FOREIGN KEY (product_id) REFERENCES products (id)
 );
 
@@ -136,7 +136,7 @@ CREATE TABLE orders
     user_id      INT,
     total_amount DECIMAL(10, 2),
     created_at   TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    status       ENUM('ORDERED', 'CONFIRMED', 'CANCELLED', 'SHIPPED', 'DELIVERED'),
+    status       ENUM('ORDERED', 'CONFIRMED', 'CANCELLED', 'SHIPPED', 'DELIVERED') DEFAULT 'ORDERED',
     FOREIGN KEY (user_id) REFERENCES users (id)
 );
 

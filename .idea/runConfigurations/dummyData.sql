@@ -2,14 +2,14 @@
 -- USERS
 -- =========================================
 
-INSERT INTO users (id, name, email, password_hash, birthday, job, address, interests, credit_limit, role, gender)
-VALUES (1, 'System Admin', 'admin@shop.com', 'admin_hash', '1990-01-01', 'Administrator', 'Cairo', 'Management', 0,
+INSERT INTO users (id, name, email, password_hash, birthday, job, address, credit_limit, role, gender)
+VALUES (1, 'System Admin', 'admin@shop.com', 'admin_hash', '1990-01-01', 'Administrator', 'Cairo', 0,
         'ADMIN', 'MALE'),
-       (2, 'Ahmed Ali', 'ahmed@gmail.com', 'hash1', '1998-05-10', 'Engineer', 'Nasr City', 'Sports', 5000, 'USER',
+       (2, 'Ahmed Ali', 'ahmed@gmail.com', 'hash1', '1998-05-10', 'Engineer', 'Nasr City', 5000, 'USER',
         'MALE'),
-       (3, 'Sara Mohamed', 'sara@gmail.com', 'hash2', '1999-07-20', 'Designer', 'Maadi', 'Fashion', 3000, 'USER',
+       (3, 'Sara Mohamed', 'sara@gmail.com', 'hash2', '1999-07-20', 'Designer', 'Maadi', 3000, 'USER',
         'FEMALE'),
-       (4, 'Omar Hassan', 'omar@gmail.com', 'hash3', '1995-03-15', 'Teacher', 'Giza', 'Reading', 1500, 'USER', 'MALE');
+       (4, 'Omar Hassan', 'omar@gmail.com', 'hash3', '1995-03-15', 'Teacher', 'Giza', 1500, 'USER', 'MALE');
 -- =========================================
 -- CATEGORIES
 -- =========================================
