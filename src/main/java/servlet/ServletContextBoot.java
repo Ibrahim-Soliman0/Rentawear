@@ -10,15 +10,15 @@ public class ServletContextBoot implements ServletContextListener {
     @Override
     public void contextInitialized(ServletContextEvent sce) {
         EnvLoaderUtil.load();
-        System.out.println("Intialized Enviroment Variables...");
+        System.out.println("Initialized Environment Variables...");
         JPAUtil.getEntityManagerFactory();
-        System.out.println("Intialized JPA EntityManagerFactory...");
+        System.out.println("Initialized JPA EntityManagerFactory...");
     }
 
     @Override
     public void contextDestroyed(ServletContextEvent sce) {
-        EnvLoaderUtil.load();
-        System.out.println("Cleared Enviroment Variables...");
+        EnvLoaderUtil.unload();
+        System.out.println("Cleared Environment Variables...");
         JPAUtil.close();
         System.out.println("Closed JPA EntityManagerFactory...");
     }

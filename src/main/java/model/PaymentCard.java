@@ -99,14 +99,14 @@ public class PaymentCard {
     }
 
     @Override
-    public final boolean equals(Object o) {
-        if (!(o instanceof PaymentCard that)) return false;
-
-        return getId().equals(that.getId());
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof PaymentCard paymentCard)) return false;
+        return id != null && id.equals(paymentCard.getId());
     }
 
     @Override
     public int hashCode() {
-        return getId().hashCode();
+        return getClass().hashCode();
     }
 }
