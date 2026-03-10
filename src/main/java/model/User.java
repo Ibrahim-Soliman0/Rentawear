@@ -61,15 +61,15 @@ public class User {
     private Gender gender;
 
     @OneToMany(mappedBy = "user", fetch = FetchType.LAZY,
-            cascade = {CascadeType.PERSIST, CascadeType.REMOVE})
+            cascade =  CascadeType.ALL)
     private Set<UserCategory> interests = new HashSet<>();
 
     @OneToMany(mappedBy = "user", fetch = FetchType.LAZY,
-            cascade = {CascadeType.PERSIST, CascadeType.REMOVE},
+            cascade = CascadeType.ALL,
             orphanRemoval = true)
     private Set<PaymentCard> paymentCards = new HashSet<>();
 
-    @OneToOne(mappedBy = "user", cascade = {CascadeType.PERSIST})
+    @OneToOne(mappedBy = "user", cascade = {CascadeType.PERSIST, CascadeType.MERGE})
     private Cart cart;
 
     public Cart getCart() {
@@ -188,7 +188,13 @@ public class User {
     }
 
     public void removeInterest(Category category) {
-        interests.removeIf(uc -> uc.getCategory().equals(category));
+        interests.removeIf(uc -> {
+            if (uc.getCategory().equals(category)) {
+                uc.setUser(null);
+                return true;
+            }
+            return false;
+        });
     }
 
     public Set<UserCategory> getInterests() {

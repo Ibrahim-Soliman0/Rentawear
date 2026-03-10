@@ -93,7 +93,13 @@ public class Category {
     }
 
     public void removeUser(User user) {
-        users.removeIf(uc -> uc.getUser().equals(user));
+        users.removeIf(uc -> {
+            if (uc.getUser().equals(user)) {
+                uc.setCategory(null);
+                return true;
+            }
+            return false;
+        });
     }
 
     public List<UserCategory> getUsers() {

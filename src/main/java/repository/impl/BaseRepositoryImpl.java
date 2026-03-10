@@ -21,14 +21,15 @@ public abstract class BaseRepositoryImpl<T> implements Repository<T> {
     }
 
     @Override
-    public void save(T entity) {
+    public T save(T entity) {
         try (EntityManager em = JPAUtil.getEntityManager()) {
             EntityTransaction tx = em.getTransaction();
 
             try {
                 tx.begin();
-                em.merge(entity);
+                T mangedEntity = em.merge(entity);
                 tx.commit();
+                return mangedEntity;
             } catch (Exception e) {
                 if (tx.isActive()) {
                     tx.rollback();
