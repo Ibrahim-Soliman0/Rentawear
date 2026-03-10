@@ -49,6 +49,7 @@
                     placeholder="e.g. Jane Doe"
                     autocomplete="name"
                     required
+                    maxlength="60"
             />
           </div>
           <div class="rw-field-error" id="fullNameError"></div>
@@ -69,6 +70,7 @@
                       placeholder="jane@example.com"
                       autocomplete="email"
                       required
+                      maxlength="128"
               />
             </div>
             <div class="rw-field-error" id="regEmailError"></div>
@@ -86,6 +88,7 @@
                       placeholder="••••••••"
                       autocomplete="new-password"
                       required
+                      maxlength="100"
               />
               <button type="button" class="rw-eye-btn" data-target="regPassword" aria-label="Toggle password">
                 <i class="bi bi-eye"></i>
@@ -134,6 +137,7 @@
                       class="rw-form-input"
                       placeholder="e.g. Marketing Director"
                       autocomplete="organization-title"
+                      maxlength="60"
               />
             </div>
           </div>
@@ -151,6 +155,7 @@
                     placeholder="Enter your primary shipping address"
                     rows="3"
                     autocomplete="street-address"
+                    maxlength="250"
             ></textarea>
           </div>
         </div>
@@ -188,6 +193,7 @@
                       min="0"
                       step="500"
                       value="5000"
+                      max="999999"
               />
             </div>
           </div>

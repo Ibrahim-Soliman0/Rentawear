@@ -49,6 +49,7 @@
                     value="${param.email}"
                     autocomplete="email"
                     required
+                    maxlength="100"
             />
           </div>
           <div class="rw-field-error" id="emailError"></div>
@@ -70,6 +71,7 @@
                     placeholder="Enter your password"
                     autocomplete="current-password"
                     required
+                    maxlength="128"
             />
             <button type="button" class="rw-eye-btn" data-target="loginPassword" aria-label="Toggle password">
               <i class="bi bi-eye"></i>

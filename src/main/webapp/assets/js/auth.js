@@ -88,6 +88,7 @@ const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   const passwordEl  = document.getElementById('regPassword');
   const termsEl     = document.getElementById('agreeTerms');
   const dobEl = document.getElementById("dob");
+  const creditEl = document.getElementById("creditLimit");
 
   /* ── Password strength meter ── */
   const strengthFill  = document.getElementById('pwdStrengthFill');
@@ -118,6 +119,15 @@ const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
       strengthLabel.textContent = labels[score] || 'Weak';
     } else if (strengthLabel) {
       strengthLabel.textContent = '';
+    }
+  });
+
+  creditEl?.addEventListener('input', () => {
+    if (parseInt(creditEl.value) > 999999) {
+      creditEl.value = 999999;
+    }
+    if (parseInt(creditEl.value) < 0) {
+      creditEl.value = 0;
     }
   });
 

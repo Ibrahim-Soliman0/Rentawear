@@ -1200,7 +1200,7 @@ h1, h2, h3, h4, h5, h6 { font-weight: 700; color: var(--rw-dark); }
   gap: 0.85rem;
 }
 /* Stack two-column rows on small screens */
-@media (max-width: 600px) {
+@media (max-width: 650px) {
   .rw-form-row-2 {
     grid-template-columns: 1fr;
   }
