@@ -13,6 +13,12 @@ import java.util.Set;
 
 @Entity
 @Table(name = "users")
+@NamedQueries({
+        @NamedQuery(
+                name = "User.findByEmail",
+                query = "SELECT u FROM User u WHERE u.email = :email"
+        )
+})
 public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -55,15 +61,15 @@ public class User {
     private Gender gender;
 
     @OneToMany(mappedBy = "user", fetch = FetchType.LAZY,
-            cascade = {CascadeType.PERSIST, CascadeType.REMOVE})
+            cascade =  CascadeType.ALL, orphanRemoval = true)
     private Set<UserCategory> interests = new HashSet<>();
 
     @OneToMany(mappedBy = "user", fetch = FetchType.LAZY,
-            cascade = {CascadeType.PERSIST, CascadeType.REMOVE},
+            cascade = CascadeType.ALL,
             orphanRemoval = true)
     private Set<PaymentCard> paymentCards = new HashSet<>();
 
-    @OneToOne(mappedBy = "user", cascade = {CascadeType.PERSIST})
+    @OneToOne(mappedBy = "user", cascade = {CascadeType.PERSIST, CascadeType.MERGE})
     private Cart cart;
 
     public Cart getCart() {
@@ -182,7 +188,13 @@ public class User {
     }
 
     public void removeInterest(Category category) {
-        interests.removeIf(uc -> uc.getCategory().equals(category));
+        interests.removeIf(uc -> {
+            if (uc.getCategory().equals(category)) {
+                uc.setUser(null);
+                return true;
+            }
+            return false;
+        });
     }
 
     public Set<UserCategory> getInterests() {

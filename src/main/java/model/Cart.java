@@ -15,7 +15,7 @@ public class Cart {
     @Column(name = "id", nullable = false)
     private Integer id;
 
-    @OneToOne(fetch = FetchType.LAZY, cascade = {CascadeType.PERSIST})
+    @OneToOne(fetch = FetchType.LAZY, cascade = {CascadeType.PERSIST, CascadeType.MERGE})
     @JoinColumn(name = "user_id")
     private User user;
 
@@ -23,7 +23,7 @@ public class Cart {
     @Column(name = "created_at")
     private Instant createdAt;
 
-    @OneToMany(mappedBy = "cart", cascade = {CascadeType.PERSIST, CascadeType.REMOVE})
+    @OneToMany(mappedBy = "cart", cascade = {CascadeType.PERSIST, CascadeType.REMOVE, CascadeType.MERGE})
     private List<CartItem> cartItems = new ArrayList<>();
 
     public void addCartItem(CartItem cartItem) {

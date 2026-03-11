@@ -27,7 +27,7 @@ public class Product {
     @Column(name = "base_price", nullable = false, precision = 10, scale = 2)
     private BigDecimal basePrice;
 
-    @ManyToOne(fetch = FetchType.LAZY, cascade = {CascadeType.PERSIST})
+    @ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.PERSIST)
     @JoinColumn(name = "category_id")
     private Category category;
 
@@ -39,12 +39,12 @@ public class Product {
     private Instant createdAt;
 
     @OneToMany(mappedBy = "product",
-            cascade = {CascadeType.PERSIST, CascadeType.REMOVE},
+            cascade = {CascadeType.PERSIST, CascadeType.REMOVE, CascadeType.MERGE},
             orphanRemoval = true)
     private Set<ProductImage> productImages = new HashSet<>();
 
     @OneToMany(mappedBy = "product",
-            cascade = {CascadeType.PERSIST, CascadeType.REMOVE},
+            cascade = {CascadeType.PERSIST, CascadeType.REMOVE, CascadeType.MERGE},
             orphanRemoval = true)
     private Set<ProductVariant> productVariants = new HashSet<>();
 
