@@ -1655,3 +1655,43 @@ input::-ms-clear {
   color: var(--rw-teal);
   background: var(--rw-teal-light);
 }
+/* ── Style Interests grid ──────────────────────────────────── */
+.rw-interests-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+}
+.rw-interest-option {
+  cursor: pointer;
+}
+.rw-interest-check {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+.rw-interest-btn {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.45rem 1rem;
+  border: 1.5px solid var(--rw-gray-300);
+  border-radius: 50px;
+  font-size: 0.825rem;
+  font-weight: 500;
+  color: var(--rw-gray-700);
+  background: var(--rw-white);
+  box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+  transition: var(--rw-transition);
+  cursor: pointer;
+  white-space: nowrap;
+}
+.rw-interest-btn:hover {
+  border-color: var(--rw-teal);
+  color: var(--rw-teal);
+  background: var(--rw-teal-light);
+}
+.rw-interest-check:checked + .rw-interest-btn {
+  border-color: var(--rw-teal);
+  color: var(--rw-teal);
+  background: var(--rw-teal-light);
+}
