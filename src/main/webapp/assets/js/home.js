@@ -25,7 +25,7 @@
      logLabel : string,   // prefix for console.error
    }
    ────────────────────────────────────────────────────────────── */
-const SECTION_LIMIT = 10;
+const SECTION_LIMIT = 4;
 
 function loadSection({ id, url, limit = SECTION_LIMIT, logLabel = id }) {
     const container = document.getElementById(id);
@@ -97,47 +97,45 @@ const SECTIONS = [
 const OCCASIONS = [
     {
         label    : 'Wedding',
-        imageUrl : `${CTX}/assets/img/occasions/wedding.jpg`,
+        bgClass  : 'occ-wedding',
         href     : `${CTX}/products?occasion=wedding`,
     },
     {
         label    : 'Black Tie',
-        imageUrl : `${CTX}/assets/img/occasions/black-tie.jpg`,
+        bgClass  : 'occ-blacktie',
         href     : `${CTX}/products?occasion=black-tie`,
     },
     {
         label    : 'Garden Party',
-        imageUrl : `${CTX}/assets/img/occasions/garden-party.jpg`,
+        bgClass  : 'occ-garden',
         href     : `${CTX}/products?occasion=garden-party`,
     },
     {
         label    : 'Business',
-        imageUrl : `${CTX}/assets/img/occasions/business.jpg`,
+        bgClass  : 'occ-business',
         href     : `${CTX}/products?occasion=business`,
     },
     {
         label    : 'Cocktail',
-        imageUrl : `${CTX}/assets/img/occasions/cocktail.jpg`,
+        bgClass  : 'occ-cocktail',
         href     : `${CTX}/products?occasion=cocktail`,
     },
     {
         label    : 'Casual',
-        imageUrl : `${CTX}/assets/img/occasions/casual.jpg`,
+        bgClass  : 'occ-casual',
         href     : `${CTX}/products?occasion=casual`,
     },
 ];
 
 function buildOccasionCard(occasion) {
     const a = document.createElement('a');
-    a.className = 'rw-occasion-card';
+    a.className = 'occ-card';
     a.href      = occasion.href;
     a.innerHTML = `
-    <img src="${esc(occasion.imageUrl)}"
-         alt="${esc(occasion.label)}"
-         loading="lazy"/>
-    <div class="occasion-overlay">
-      <span class="occasion-label">${esc(occasion.label)}</span>
-    </div>`;
+      <div class="occ-bg ${esc(occasion.bgClass)}"></div>
+      <div class="occ-overlay">
+        <span class="occ-label">${esc(occasion.label)}</span>
+      </div>`;
     return a;
 }
 

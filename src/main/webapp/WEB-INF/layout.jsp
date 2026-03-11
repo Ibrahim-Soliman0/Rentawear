@@ -19,17 +19,26 @@
 </jsp:include>
 
 <%-- 2. Top navigation bar --%>
+<%-- 2a. Announcement bar (matches redesign HTML) --%>
+<div class="ann-bar">
+  Free delivery on orders over $60 <span>&middot;</span> Dry-cleaned &amp; insured <span>&middot;</span> Easy returns within 48 hrs
+</div>
+
+<%-- 2b. Top navigation bar --%>
 <jsp:include page="components/navbar.jsp">
   <jsp:param name="activePage" value="${param.activePage}"/>
 </jsp:include>
 
-<%-- 3. Search modal (hidden until search icon clicked) --%>
+<%-- 3. Search modal (custom overlay, hidden until search icon clicked) --%>
 <jsp:include page="components/search-modal.jsp"/>
 
-<%-- 4. Cart drawer (hidden until cart icon clicked) --%>
+<%-- 4. Cart drawer (custom overlay, hidden until cart icon clicked) --%>
 <jsp:include page="components/cart-drawer.jsp"/>
 
-<%-- 5. Mobile slide menu (hidden until hamburger clicked) --%>
+<%-- 5. Mobile drawer (custom overlay, hidden until hamburger clicked) --%>
 <jsp:include page="components/mobile-menu.jsp">
   <jsp:param name="activePage" value="${param.activePage}"/>
 </jsp:include>
+
+<%-- 6. Quick view overlay --%>
+<jsp:include page="components/quick-view.jsp"/>

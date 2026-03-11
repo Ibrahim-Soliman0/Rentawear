@@ -1,236 +1,156 @@
-/* ============================================================
-   card-factory.js — Product card rendering factory
-   Depends on : utils.js  (CTX, esc — must load first)
-   Loaded on  : every page that renders product cards
-                (home, category, search results)
-   Exports    : window.CardFactory
-
-   CardFactory.grid(product)       → HTMLElement  full grid card
-   CardFactory.skeleton()          → HTMLElement  shimmer placeholder
-   CardFactory.searchResult(p)     → HTMLElement  compact modal row
-
-   product shape (list endpoint):
-   {
-     id             : string | number,
-     name           : string,
-     brand          : string,
-     pricePerDay    : number,
-     imageUrl       : string,         // absolute path or full URL
-     isNew          : boolean,
-     isPopular      : boolean,
-     sizes          : string[],       // all declared sizes e.g. ["XS","S","M","L"]
-     availableSizes : string[]        // in-stock subset
-   }
-   ============================================================ */
-
-const CardFactory = (function () {
-
-    /* ──────────────────────────────────────────────────────────
-       PRIVATE HELPERS
-       ────────────────────────────────────────────────────────── */
-
-    /**
-     * Normalise a raw server product object.
-     * Fills every field with a safe default so the public methods
-     * never need to guard against missing or malformed data.
-     */
-    function _normalise(raw) {
-        return {
-            id             : raw.id            ?? '',
-            name           : raw.name          ?? '',
-            brand          : raw.brand         ?? '',
-            pricePerDay    : Number(raw.pricePerDay ?? 0),
-            imageUrl       : raw.imageUrl      || `${CTX}/assets/img/placeholder.jpg`,
-            isNew          : Boolean(raw.isNew),
-            isPopular      : Boolean(raw.isPopular),
-            sizes          : Array.isArray(raw.sizes)          ? raw.sizes          : [],
-            availableSizes : Array.isArray(raw.availableSizes) ? raw.availableSizes : [],
-        };
-    }
-
-    /**
-     * Build the badge HTML for a product.
-     * Popular is rendered first — the CSS sibling rule
-     * (.badge-popular + .badge-new) offsets the NEW badge below it
-     * when both are present.
-     */
-    function _badges(p) {
-        const popular = p.isPopular ? `<span class="badge-popular">Popular</span>` : '';
-        const isNew   = p.isNew    ? `<span class="badge-new">New</span>`          : '';
-        return popular + isNew;
-    }
-
-    /**
-     * Build the size chip row HTML.
-     * - No sizes declared  → returns empty string (chips row omitted)
-     * - Sizes declared but nothing in stock → "Unavailable" chip
-     * - Normal case        → up to 5 chips, out-of-stock ones struck through
-     */
-    function _sizeChips(p) {
-        if (!p.sizes.length) return '';
-
-        if (!p.availableSizes.length) {
-            return `<div class="rw-size-chips">
-                <span class="rw-size-chip unavailable">Unavailable</span>
-              </div>`;
+(function () {
+    /* card-factory.js — produces markup matching redesign classes */
+    const CardFactory = (function () {
+        function _normalise(raw) {
+            return {
+                id: String(raw.id ?? '') ?? '',
+                name: raw.name ?? '',
+                brand: raw.brand ?? '',
+                pricePerDay: Number(raw.pricePerDay ?? 0),
+                imageUrl: raw.imageUrl || `${CTX}/assets/img/placeholder.jpg`,
+                isNew: Boolean(raw.isNew),
+                isPopular: Boolean(raw.isPopular),
+                swatches: Array.isArray(raw.swatches) ? raw.swatches : [],
+                rrp: raw.rrp ?? null,
+                dates: raw.dates ?? null,
+                qty: raw.qty ?? 1
+            };
         }
 
-        const chips = p.sizes.slice(0, 5).map(s => {
-            const mod = p.availableSizes.includes(s) ? '' : ' unavailable';
-            return `<span class="rw-size-chip${mod}">${esc(s)}</span>`;
-        }).join('');
+        function _badgeHtml(p) {
+            if (p.isNew) return `<span class="product-badge new">New</span>`;
+            if (p.isPopular) return `<span class="product-badge">Trending</span>`;
+            return '';
+        }
 
-        return `<div class="rw-size-chips">${chips}</div>`;
-    }
+        function _swatchRow(p) {
+            if (!p.swatches.length) return '';
+            const chips = p.swatches.slice(0, 5).map((s, i) => {
+                const color = esc(s.color || s || '#ccc');
+                const active = i === 0 ? ' active' : '';
+                return `<span class="swatch${active}" style="background:${color}"></span>`;
+            }).join('');
+            return `<div class="swatch-row" style="margin-bottom:10px">${chips}</div>`;
+        }
 
-    /*
-     * COLOR CHIPS — ready for when color selection lands on the card.
-     * Uncomment this function and its call-site in grid() together,
-     * then uncomment the matching CSS block in styles.css §21.
-     *
-     * function _colorChips(p) {
-     *   const colors = Array.isArray(p.colors) ? p.colors : [];
-     *   if (!colors.length) return '';
-     *   const MAX  = 4;
-     *   const dots = colors.slice(0, MAX).map(c =>
-     *     `<span class="rw-color-dot"
-     *             style="background:${esc(c.hex)}"
-     *             title="${esc(c.name)}"></span>`).join('');
-     *   const more = colors.length > MAX
-     *     ? `<span class="rw-color-more">+${colors.length - MAX}</span>` : '';
-     *   return `<div class="rw-color-chips">${dots}${more}</div>`;
-     * }
-     */
+        function _wishlistSvg(active) {
+            // simple 15x15 heart used in markup sample
+            return `<svg viewBox="0 0 15 15" aria-hidden="true"><path d="M7.5 13S1 9 1 4.5a3.5 3.5 0 0 1 6.5-1.8A3.5 3.5 0 0 1 14 4.5C14 9 7.5 13 7.5 13z" stroke-width="1.8" ${active ? 'fill="currentColor"' : 'fill="none" stroke="currentColor"'}></path></svg>`;
+        }
 
-    /**
-     * Attach the wishlist heart toggle to a rendered card element.
-     * Client-side only for now — server persistence added in Slice 5.
-     */
-    function _attachWishlist(cardEl, product) {
-        const btn = cardEl.querySelector('.wishlist-btn');
-        if (!btn) return;
-
-        btn.addEventListener('click', e => {
-            e.preventDefault();
-            e.stopPropagation();
-            const active = btn.classList.toggle('active');
-            btn.querySelector('i').className = active ? 'bi bi-heart-fill' : 'bi bi-heart';
-            btn.setAttribute('aria-label',
-                `${active ? 'Remove' : 'Add'} ${product.name} ${active ? 'from' : 'to'} wishlist`);
-        });
-    }
-
-
-    /* ──────────────────────────────────────────────────────────
-       PUBLIC METHODS
-       ────────────────────────────────────────────────────────── */
-
-    /**
-     * skeleton()
-     * Shimmer loading placeholder. Matches the grid card's 3/4 image
-     * aspect ratio and three-line body so the layout doesn't shift when
-     * real cards replace it.
-     */
-    function skeleton() {
-        const el = document.createElement('div');
-        el.className = 'rw-card rw-card-skeleton';
-        el.setAttribute('aria-hidden', 'true');
-        el.innerHTML = `
-      <div class="card-img-wrap"></div>
-      <div class="card-body">
-        <span class="rw-skel-line rw-skel-line--brand"></span>
-        <span class="rw-skel-line rw-skel-line--name"></span>
-        <span class="rw-skel-line rw-skel-line--price"></span>
-      </div>`;
-        return el;
-    }
-
-
-    /**
-     * grid(rawProduct)
-     * Full product card for home grids, category pages, and the search
-     * results page. Includes hero image, badges, wishlist button,
-     * quick-view button, price, and size chips.
-     */
-    function grid(rawProduct) {
-        const p         = _normalise(rawProduct);
-        const id        = esc(String(p.id));
-        const available = p.availableSizes.length > 0;
-
-        const card = document.createElement('div');
-        card.className         = `rw-card${available ? '' : ' rw-card--unavailable'}`;
-        card.dataset.productId = String(p.id);
-
-        card.innerHTML = `
-      <a href="${CTX}/product?id=${id}"
-         class="card-img-wrap"
-         tabindex="-1"
-         aria-hidden="true">
-        <img src="${esc(p.imageUrl)}"
-             alt="${esc(p.name)}"
-             loading="lazy"
-             width="400" height="533"/>
-        ${_badges(p)}
-        <button class="wishlist-btn rw-icon-btn"
-                data-product-id="${id}"
-                aria-label="Add ${esc(p.name)} to wishlist"
-                type="button">
-          <i class="bi bi-heart" aria-hidden="true"></i>
-        </button>
-        <button class="rw-card-qv-btn"
-                data-qv-id="${id}"
-                aria-label="Quick view ${esc(p.name)}"
-                type="button">
-          <i class="bi bi-eye" aria-hidden="true"></i> Quick View
-        </button>
-      </a>
-      <div class="card-body">
-        <div class="brand-name">${esc(p.brand)}</div>
-        <a href="${CTX}/product?id=${id}"
-           class="product-name">${esc(p.name)}</a>
-        <div class="price">
-          $${p.pricePerDay.toFixed(2)}<span> / day</span>
+        function skeleton() {
+            const el = document.createElement('div');
+            el.className = 'product-card product-skel';
+            el.setAttribute('aria-hidden', 'true');
+            el.innerHTML = `
+        <div class="product-img-wrap">
+          <div class="product-img-bg pg-3" style="height:100%"></div>
         </div>
-        ${_sizeChips(p)}
-      </div>`;
+        <div class="product-footer">
+          <div class="product-info">
+            <div class="rw-skel-line rw-skel-line--brand"></div>
+            <div class="rw-skel-line rw-skel-line--name"></div>
+            <div class="rw-skel-line rw-skel-line--price"></div>
+          </div>
+        </div>`;
+            return el;
+        }
 
-        _attachWishlist(card, p);
-        return card;
-    }
-
-
-    /**
-     * searchResult(rawProduct)
-     * Compact horizontal row for the search modal results list.
-     * Same normalised product shape as grid() — no logic duplication.
-     * Omits wishlist, quick-view, and size chips by design.
-     */
-    function searchResult(rawProduct) {
-        const p  = _normalise(rawProduct);
-        const id = esc(String(p.id));
-
-        const el = document.createElement('a');
-        el.className = 'rw-result-item';
-        el.href      = `${CTX}/product?id=${id}`;
-        el.innerHTML = `
-      <img src="${esc(p.imageUrl)}"
-           alt="${esc(p.name)}"
-           loading="lazy"/>
-      <div class="rw-result-info">
-        <div class="rw-result-name">${esc(p.name)}</div>
-        <div class="rw-result-brand">${esc(p.brand)}</div>
-        <div class="rw-result-price">
-          $${p.pricePerDay.toFixed(2)}<span> / day</span>
+        function grid(rawProduct) {
+            const p = _normalise(rawProduct);
+            const el = document.createElement('div');
+            el.className = 'product-card';
+            el.innerHTML = `
+        <div class="product-img-wrap">
+          <div class="product-img-bg pg-3" style="height:100%;background-image:url('${esc(p.imageUrl)}');background-size:cover;background-position:center"
+></div>
+          ${_badgeHtml(p)}
+          <button class="product-wishlist" type="button" aria-label="Add to wishlist">${_wishlistSvg(false)}</button>
+          <button class="product-qv" type="button" aria-label="Quick view ${esc(p.name)}">
+            <svg viewBox="0 0 14 14" aria-hidden="true"><circle cx="7" cy="7" r="4"></circle><path d="M1 7s2-5 6-5 6 5 6 5-2 5-6 5-6-5-6-5z"></path></svg>
+            Quick View
+          </button>
         </div>
-      </div>`;
-        return el;
-    }
+        ${_swatchRow(p)}
+        <div class="product-footer">
+          <div class="product-info">
+            <p class="product-brand">${esc(p.brand)}</p>
+            <p class="product-name">${esc(p.name)}</p>
+            <p class="product-price">From <strong>£${p.pricePerDay.toFixed(0)}</strong>/day ${p.rrp ? `<s>RRP £${esc(String(p.rrp))}</s>` : ''}</p>
+          </div>
+        </div>
+      `.trim();
 
+            // attach wishlist toggle behaviour (keeps existing helper if present)
+            const btn = el.querySelector('.product-wishlist');
+            if (btn) {
+                btn.addEventListener('click', e => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    const active = btn.classList.toggle('active');
+                    btn.innerHTML = _wishlistSvg(active);
+                    btn.setAttribute('aria-label', `${active ? 'Remove' : 'Add'} ${p.name} ${active ? 'from' : 'to'} wishlist`);
+                });
+            }
 
-    return { skeleton, grid, searchResult };
+            // quick-view dataset for existing quick-view listener (safe to include)
+            const qv = el.querySelector('.product-qv');
+            if (qv) {
+                qv.dataset.qv = '';
+                qv.dataset.id = esc(p.id);
+                qv.dataset.name = esc(p.name);
+                qv.dataset.brand = esc(p.brand);
+                qv.dataset.price = String(p.pricePerDay);
+                qv.dataset.image = esc(p.imageUrl);
+            }
 
+            return el;
+        }
+
+        function searchResult(rawProduct) {
+            const p = _normalise(rawProduct);
+            const a = document.createElement('a');
+            a.className = 'search-result-item';
+            a.href = `${CTX || ''}/product?id=${esc(p.id)}`;
+            a.innerHTML = `
+        <div class="search-result-thumb pg-3" style="background-image:url('${esc(p.imageUrl)}');background-size:cover;background-position:center"></div>
+        <div class="search-result-info">
+          <p class="search-result-brand">${esc(p.brand)}</p>
+          <p class="search-result-name">${esc(p.name)}</p>
+          <p class="search-result-price">From £${p.pricePerDay.toFixed(0)}/day ${p.rrp ? `<span>RRP £${esc(String(p.rrp))}</span>` : ''}</p>
+        </div>
+      `.trim();
+            return a;
+        }
+
+        function cartItem(raw) {
+            const it = _normalise(raw);
+            const li = document.createElement('li');
+            li.className = 'cart-item';
+            li.dataset.id = it.id;
+            li.innerHTML = `
+        <div class="cart-item-img pg-3" tyle="border-radius:4px;background-image:url('${esc(it.imageUrl)}');background-size:cover;background-position:center" aria-hidden="true"></div>
+        <div class="cart-item-info">
+          <span class="cart-item-brand">${esc(it.brand)}</span>
+          <p class="cart-item-name">${esc(it.name)}</p>
+          <p class="cart-item-dates">${esc(it.dates ?? '')}</p>
+          <p class="cart-item-price">£${it.pricePerDay.toFixed(0)}/day</p>
+        </div>
+        <div class="cart-item-qty">
+          <button class="cart-remove" data-id="${esc(it.id)}" type="button" aria-label="Remove item">Remove</button>
+          <div class="qty-controls">
+            <button class="qty-btn" data-action="dec" data-id="${esc(it.id)}" type="button" aria-label="Decrease quantity">−</button>
+            <span class="qty-num">${esc(String(it.qty))}</span>
+            <button class="qty-btn" data-action="inc" data-id="${esc(it.id)}" type="button" aria-label="Increase quantity">+</button>
+          </div>
+        </div>
+      `.trim();
+
+            return li;
+        }
+
+        return { skeleton, grid, searchResult, cartItem };
+    })();
+
+    window.CardFactory = CardFactory;
 })();
-
-
-/* ── Export ─────────────────────────────────────────────────── */
-window.CardFactory = CardFactory;

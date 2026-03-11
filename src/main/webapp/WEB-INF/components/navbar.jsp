@@ -1,94 +1,123 @@
-<%-- navbar.jsp — Top navigation bar ONLY
-     Receives: activePage (e.g. "home", "women", "men", "new")
+<%-- navbar.jsp - Redesign nav (matches attached HTML)
+     Receives: activePage (e.g. "home", "women", "men", "new", "account")
 --%>
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
 <%@ page isELIgnored="false" %>
 
-<nav class="rw-topnav" aria-label="Main navigation">
-  <div class="container-lg d-flex align-items-center justify-content-between">
+<nav class="rw-nav" aria-label="Main navigation">
+  <div class="nav-inner">
 
-    <!-- LEFT: Logo (desktop) / Hamburger (mobile) -->
-    <div class="d-flex align-items-center">
-      <a href="${pageContext.request.contextPath}/" class="rw-logo d-none d-lg-inline-flex" aria-label="Rentawear Home">
-        <span class="logo-dark">renta</span><span class="logo-teal">wear</span>
+    <div class="nav-left">
+      <a href="${pageContext.request.contextPath}/" class="rw-logo" id="desktopLogo" aria-label="Rentawear Home">
+        renta<em>wear</em>
       </a>
-      <button class="rw-hamburger d-lg-none" type="button"
-              data-bs-toggle="offcanvas" data-bs-target="#mobileMenu"
-              aria-controls="mobileMenu" aria-label="Open menu">
+      <button class="nav-icon-btn nav-hamburger" id="drawerToggle" aria-label="Open menu" type="button">
         <i class="bi bi-list"></i>
       </button>
     </div>
 
-    <!-- CENTER: Logo on mobile -->
-    <a href="${pageContext.request.contextPath}/" class="rw-logo d-lg-none rw-logo-center" aria-label="Rentawear Home">
-      <span class="logo-dark">renta</span><span class="logo-teal">wear</span>
-    </a>
+    <div class="nav-center">
+      <a href="${pageContext.request.contextPath}/" class="rw-logo nav-logo-mobile" aria-label="Rentawear Home">
+        renta<em>wear</em>
+      </a>
 
-    <!-- CENTER: Desktop nav links + dropdowns -->
-    <div class="rw-desktop-nav align-items-center gap-1 d-none d-lg-flex">
+      <ul class="nav-links" id="desktopNav">
+        <li>
+          <a class="nav-link-btn ${param.activePage == 'home' ? 'active' : ''}"
+             href="${pageContext.request.contextPath}/">Home</a>
+        </li>
 
-      <a href="${pageContext.request.contextPath}/"
-         class="nav-link ${param.activePage == 'home' ? 'active' : ''}">Home</a>
+        <li id="dd-women">
+          <button class="nav-link-btn ${param.activePage == 'women' ? 'active' : ''}" aria-haspopup="true" type="button">
+            Women
+            <i class="bi bi-chevron-down rw-chevron"></i>          </button>
+          <div class="nav-dropdown wide" role="menu">
+            <div class="dropdown-col">
+              <div class="dropdown-col-label">Clothing</div>
+              <a href="${pageContext.request.contextPath}/women/dresses">Dresses <span class="dropdown-item-sub">Evening, midi, mini &amp; more</span></a>
+              <a href="${pageContext.request.contextPath}/women/tops">Tops &amp; Blouses</a>
+              <a href="${pageContext.request.contextPath}/women/jumpsuits">Jumpsuits &amp; Playsuits</a>
+              <a href="${pageContext.request.contextPath}/women/sets">Co-ords &amp; Sets</a>
+              <a href="${pageContext.request.contextPath}/women/skirts">Skirts</a>
+            </div>
+            <div class="dropdown-col">
+              <div class="dropdown-col-label">Accessories</div>
+              <a href="${pageContext.request.contextPath}/women/shoes">Shoes &amp; Heels</a>
+              <a href="${pageContext.request.contextPath}/women/bags">Bags &amp; Clutches</a>
+              <a href="${pageContext.request.contextPath}/women/jewellery">Jewellery</a>
+              <a href="${pageContext.request.contextPath}/women/wraps">Wraps &amp; Coverups</a>
+              <a href="${pageContext.request.contextPath}/products?category=women" class="dropdown-cta">View All Women's →</a>
+            </div>
+          </div>
+        </li>
 
-      <div class="dropdown">
-        <a href="#" class="nav-link dropdown-toggle ${param.activePage == 'women' ? 'active' : ''}"
-            aria-expanded="false">Women</a>
-        <ul class="dropdown-menu rw-dropdown">
-          <li><a class="dropdown-item" href="${pageContext.request.contextPath}/women/dresses">Dresses</a></li>
-          <li><a class="dropdown-item" href="${pageContext.request.contextPath}/women/tops">Tops</a></li>
-          <li><a class="dropdown-item" href="${pageContext.request.contextPath}/women/accessories">Accessories</a></li>
-          <li><a class="dropdown-item" href="${pageContext.request.contextPath}/women/shoes">Shoes</a></li>
-          <li><a class="dropdown-item" href="${pageContext.request.contextPath}/women/bags">Bags</a></li>
-        </ul>
-      </div>
+        <li id="dd-men">
+          <button class="nav-link-btn ${param.activePage == 'men' ? 'active' : ''}" aria-haspopup="true" type="button">
+            Men
+            <i class="bi bi-chevron-down rw-chevron"></i>          </button>
+          <div class="nav-dropdown wide" role="menu">
+            <div class="dropdown-col">
+              <div class="dropdown-col-label">Clothing</div>
+              <a href="${pageContext.request.contextPath}/men/suits">Suits &amp; Tailoring <span class="dropdown-item-sub">Tuxedos, slim-fit &amp; classic</span></a>
+              <a href="${pageContext.request.contextPath}/men/shirts">Shirts &amp; Tops</a>
+              <a href="${pageContext.request.contextPath}/men/trousers">Trousers &amp; Chinos</a>
+              <a href="${pageContext.request.contextPath}/men/blazers">Blazers &amp; Jackets</a>
+            </div>
+            <div class="dropdown-col">
+              <div class="dropdown-col-label">Accessories</div>
+              <a href="${pageContext.request.contextPath}/men/shoes">Shoes &amp; Oxfords</a>
+              <a href="${pageContext.request.contextPath}/men/ties">Ties &amp; Bowties</a>
+              <a href="${pageContext.request.contextPath}/men/cufflinks">Cufflinks &amp; Pins</a>
+              <a href="${pageContext.request.contextPath}/products?category=men" class="dropdown-cta">View All Men's →</a>
+            </div>
+          </div>
+        </li>
 
-      <div class="dropdown">
-        <a href="#" class="nav-link dropdown-toggle ${param.activePage == 'men' ? 'active' : ''}"
-            aria-expanded="false">Men</a>
-        <ul class="dropdown-menu rw-dropdown">
-          <li><a class="dropdown-item" href="${pageContext.request.contextPath}/men/suits">Suits &amp; Tailoring</a></li>
-          <li><a class="dropdown-item" href="${pageContext.request.contextPath}/men/shirts">Shirts</a></li>
-          <li><a class="dropdown-item" href="${pageContext.request.contextPath}/men/accessories">Accessories</a></li>
-          <li><a class="dropdown-item" href="${pageContext.request.contextPath}/men/shoes">Shoes</a></li>
-        </ul>
-      </div>
+        <li id="dd-new">
+          <button class="nav-link-btn ${param.activePage == 'new' ? 'active' : ''}" aria-haspopup="true" type="button">
+            New Arrivals
+            <i class="bi bi-chevron-down rw-chevron"></i>          </button>
+          <div class="nav-dropdown" role="menu">
+            <a href="${pageContext.request.contextPath}/new/this-week">This Week</a>
+            <a href="${pageContext.request.contextPath}/new/this-month">This Month</a>
+            <hr>
+            <a href="${pageContext.request.contextPath}/new/trending">Trending Now</a>
+            <a href="${pageContext.request.contextPath}/new/editors-picks">Editor's Picks</a>
+          </div>
+        </li>
 
-      <div class="dropdown">
-        <a href="#" class="nav-link dropdown-toggle ${param.activePage == 'new' ? 'active' : ''}"
-            aria-expanded="false">New Arrivals</a>
-        <ul class="dropdown-menu rw-dropdown">
-          <li><a class="dropdown-item" href="${pageContext.request.contextPath}/new/this-week">This Week</a></li>
-          <li><a class="dropdown-item" href="${pageContext.request.contextPath}/new/this-month">This Month</a></li>
-          <li><a class="dropdown-item" href="${pageContext.request.contextPath}/new/trending">Trending Now</a></li>
-        </ul>
-      </div>
-
+        <li id="dd-occ">
+          <button class="nav-link-btn" aria-haspopup="true" type="button">
+            Occasions
+            <i class="bi bi-chevron-down rw-chevron"></i>          </button>
+          <div class="nav-dropdown" role="menu">
+            <a href="${pageContext.request.contextPath}/products?occasion=wedding">Wedding</a>
+            <a href="${pageContext.request.contextPath}/products?occasion=black-tie">Black Tie</a>
+            <a href="${pageContext.request.contextPath}/products?occasion=garden-party">Garden Party</a>
+            <a href="${pageContext.request.contextPath}/products?occasion=cocktail">Cocktail</a>
+            <a href="${pageContext.request.contextPath}/products?occasion=business">Business</a>
+            <hr>
+            <a href="${pageContext.request.contextPath}/products">All Occasions</a>
+          </div>
+        </li>
+      </ul>
     </div>
 
-    <!-- RIGHT: Action icons -->
-    <div class="rw-nav-icons">
-
-      <button class="rw-icon-btn" data-bs-toggle="modal"
-              data-bs-target="#searchModal" aria-label="Search">
-        <i class="bi bi-search"></i>
+    <div class="nav-right">
+      <button class="nav-icon-btn" id="searchToggle" aria-label="Search" type="button">
+        <i class="bi bi-search"></i>      </button>
+      <button class="nav-icon-btn" id="cartToggle" aria-label="Shopping bag" type="button">
+        <i class="bi bi-bag"></i>
+        <span class="cart-badge" id="cartBadge">0</span>
       </button>
-
-      <a href="${pageContext.request.contextPath}/wishlist"
-         class="rw-icon-btn d-none d-lg-inline-flex" aria-label="Wishlist">
+      <a class="nav-icon-btn nav-desktop-only" aria-label="Wishlist" href="${pageContext.request.contextPath}/wishlist">
         <i class="bi bi-heart"></i>
       </a>
-
-      <button class="rw-icon-btn rw-cart-btn" data-bs-toggle="offcanvas"
-              data-bs-target="#cartDrawer" aria-controls="cartDrawer" aria-label="Shopping bag">
-        <i class="bi bi-bag"></i>
-        <span class="rw-cart-count d-none" id="cartCount">0</span>
-      </button>
-
-      <a href="${pageContext.request.contextPath}/profile"
-         class="rw-icon-btn d-none d-lg-inline-flex" aria-label="Profile">
-        <i class="bi bi-person-circle" style="font-size:1.25rem;"></i>
+      <a class="nav-icon-btn nav-desktop-only" aria-label="Profile" id="desktopProfile" href="${pageContext.request.contextPath}/profile">
+        <i class="bi bi-person"></i>
       </a>
-
     </div>
+
   </div>
 </nav>
+

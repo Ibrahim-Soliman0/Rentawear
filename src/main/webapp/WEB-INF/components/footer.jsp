@@ -9,7 +9,7 @@
       <!-- Brand blurb -->
       <div class="col-6 col-lg-3">
         <div class="rw-logo rw-footer-logo mb-3">
-          <span>renta</span><span class="logo-teal">wear</span>
+          renta<em>wear</em>
         </div>
         <p class="rw-footer-tagline">Rent premium fashion for every occasion. Sustainable, stylish, and affordable.</p>
       </div>
