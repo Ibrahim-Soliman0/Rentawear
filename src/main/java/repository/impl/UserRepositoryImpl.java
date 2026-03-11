@@ -6,8 +6,6 @@ import model.User;
 import repository.UserRepository;
 import util.JPAUtil;
 
-import java.util.Optional;
-
 public class UserRepositoryImpl extends BaseRepositoryImpl<User> implements UserRepository {
 
     public UserRepositoryImpl() {
