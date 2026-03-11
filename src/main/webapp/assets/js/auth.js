@@ -250,3 +250,46 @@ flatpickr('#dob', {
     disableMobile: true,
     allowInput: false,
 });
+// Style Interests tag selector
+(function () {
+  const select      = document.getElementById('styleInterestsSelect');
+  const tagsWrap    = document.getElementById('styleTagsWrap');
+  const hiddenWrap  = document.getElementById('styleHiddenInputs');
+  if (!select) return;
+
+  const selected = new Set(); // track selected values
+
+  select.addEventListener('change', () => {
+    const val   = select.value;
+    const label = select.options[select.selectedIndex].text;
+
+    // reset dropdown
+    select.value = '';
+
+    // skip if already selected
+    if (selected.has(val)) return;
+    selected.add(val);
+
+    // create tag
+    const tag = document.createElement('span');
+    tag.className   = 'rw-tag';
+    tag.dataset.val = val;
+    tag.innerHTML   = `${label} <i class="bi bi-x"></i>`;
+    tag.addEventListener('click', () => removeTag(val));
+    tagsWrap.appendChild(tag);
+
+    // create hidden input for form submission
+    const input = document.createElement('input');
+    input.type  = 'hidden';
+    input.name  = 'styleInterests';
+    input.value = val;
+    input.id    = `si_${val}`;
+    hiddenWrap.appendChild(input);
+  });
+
+  function removeTag(val) {
+    selected.delete(val);
+    tagsWrap.querySelector(`[data-val="${val}"]`)?.remove();
+    document.getElementById(`si_${val}`)?.remove();
+  }
+})();
