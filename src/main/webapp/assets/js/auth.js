@@ -172,7 +172,6 @@ const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
       showError('dob', 'dobError', 'Date of birth cannot be in the future.');
       return false;
     }
-
     const minAge = new Date(today);
     minAge.setFullYear(minAge.getFullYear() - 18);
     if (selected > minAge) {
@@ -210,10 +209,21 @@ const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return true;
   }
 
+  function validateGender() {
+    const selected = document.querySelector('input[name="gender"]:checked');
+    const err = document.getElementById('genderError');
+    if (!selected) {
+      if (err) { err.textContent = 'Please select a gender.'; err.classList.add('visible'); }
+      return false;
+    }
+    if (err) { err.textContent = ''; err.classList.remove('visible'); }
+    return true;
+  }
   /* ── Submit ── */
   form.addEventListener('submit', e => {
     const ok = [
       validateFullName(),
+      validateGender(),
       validateRegEmail(),
       validateRegPassword(),
       validateDob(),
