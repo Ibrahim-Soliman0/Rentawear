@@ -48,7 +48,7 @@ public class UserServlet extends HttpServlet {
         user = userService.save(user);
 
         User returenedUser = userService.getById(user.getId());
-        User returenedUser2 = userService.getUserByEmail("ibrahimsoliman269@gmail.com");
+        User returenedUser2 = userService.getUserByEmail("ibrahimsoliman269@gmail.com").get();
 
         PrintWriter out = resp.getWriter();
         out.println(returenedUser.getName());

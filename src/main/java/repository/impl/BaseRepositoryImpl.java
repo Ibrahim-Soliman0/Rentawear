@@ -27,9 +27,9 @@ public abstract class BaseRepositoryImpl<T> implements Repository<T> {
 
             try {
                 tx.begin();
-                T mangedEntity = em.merge(entity);
+                T managedEntity = em.merge(entity);
                 tx.commit();
-                return mangedEntity;
+                return managedEntity;
             } catch (Exception e) {
                 if (tx.isActive()) {
                     tx.rollback();

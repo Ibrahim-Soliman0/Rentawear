@@ -4,6 +4,8 @@ import model.User;
 import repository.UserRepository;
 import repository.impl.UserRepositoryImpl;
 
+import java.util.Optional;
+
 public class UserService extends BaseService<User> {
 
     private final UserRepository userRepository;
@@ -17,7 +19,7 @@ public class UserService extends BaseService<User> {
         this.userRepository = userRepository;
     }
 
-    public User getUserByEmail(String email) {
-        return userRepository.findByEmail(email);
+    public Optional<User> getUserByEmail(String email) {
+        return Optional.ofNullable(userRepository.findByEmail(email));
     }
 }

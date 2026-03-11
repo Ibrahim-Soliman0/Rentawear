@@ -1,9 +1,12 @@
 package repository.impl;
 
 import jakarta.persistence.EntityManager;
+import jakarta.persistence.NoResultException;
 import model.User;
 import repository.UserRepository;
 import util.JPAUtil;
+
+import java.util.Optional;
 
 public class UserRepositoryImpl extends BaseRepositoryImpl<User> implements UserRepository {
 
@@ -13,11 +16,15 @@ public class UserRepositoryImpl extends BaseRepositoryImpl<User> implements User
 
     @Override
     public User findByEmail(String email) {
+        User user = null;
         try (EntityManager em = JPAUtil.getEntityManager()) {
-
-            return em.createNamedQuery("User.findByEmail", User.class)
+            user = em.createNamedQuery("User.findByEmail", User.class)
                     .setParameter("email", email)
                     .getSingleResult();
+        } catch (NoResultException e) {
+            System.out.println("Email not found!");
         }
+
+        return user;
     }
 }

@@ -1,11 +1,8 @@
 package service;
 
 import model.Cart;
-import model.User;
 import repository.CartRepository;
-import repository.UserRepository;
 import repository.impl.CartRepositoryImpl;
-import repository.impl.UserRepositoryImpl;
 
 public class CartService extends BaseService<Cart> {
 

@@ -61,7 +61,7 @@ public class User {
     private Gender gender;
 
     @OneToMany(mappedBy = "user", fetch = FetchType.LAZY,
-            cascade =  CascadeType.ALL)
+            cascade =  CascadeType.ALL, orphanRemoval = true)
     private Set<UserCategory> interests = new HashSet<>();
 
     @OneToMany(mappedBy = "user", fetch = FetchType.LAZY,
