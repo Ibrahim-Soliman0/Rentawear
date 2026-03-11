@@ -1655,43 +1655,33 @@ input::-ms-clear {
   color: var(--rw-teal);
   background: var(--rw-teal-light);
 }
-/* ── Style Interests grid ──────────────────────────────────── */
-.rw-interests-grid {
+
+/* ── Interest tags ─────────────────────────────────────────── */
+.rw-tags-wrap {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.6rem;
+  gap: 0.5rem;
+  margin-top: 0.6rem;
+  min-height: 0;
 }
-.rw-interest-option {
-  cursor: pointer;
-}
-.rw-interest-check {
-  position: absolute;
-  opacity: 0;
-  width: 0;
-  height: 0;
-}
-.rw-interest-btn {
+.rw-tag {
   display: inline-flex;
   align-items: center;
-  padding: 0.45rem 1rem;
-  border: 1.5px solid var(--rw-gray-300);
+  gap: 0.4rem;
+  padding: 0.35rem 0.75rem;
+  background: var(--rw-teal-light);
+  border: 1.5px solid var(--rw-teal);
   border-radius: 50px;
-  font-size: 0.825rem;
-  font-weight: 500;
-  color: var(--rw-gray-700);
-  background: var(--rw-white);
-  box-shadow: 0 1px 4px rgba(0,0,0,0.08);
-  transition: var(--rw-transition);
+  font-size: 0.8rem;
+  color: var(--rw-teal);
   cursor: pointer;
-  white-space: nowrap;
+  transition: var(--rw-transition);
 }
-.rw-interest-btn:hover {
-  border-color: var(--rw-teal);
-  color: var(--rw-teal);
-  background: var(--rw-teal-light);
+.rw-tag:hover {
+  background: #fde8e8;
+  border-color: #e74c3c;
+  color: #e74c3c;
 }
-.rw-interest-check:checked + .rw-interest-btn {
-  border-color: var(--rw-teal);
-  color: var(--rw-teal);
-  background: var(--rw-teal-light);
+.rw-tag i {
+  font-size: 0.75rem;
 }

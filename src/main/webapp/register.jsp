@@ -198,53 +198,34 @@
           </div>
         </div>
 
-        <!-- Style Interests — full width -->
+        <!-- Style Interests -->
         <div class="rw-form-group">
           <label class="rw-form-label">Style Interests</label>
-          <div class="rw-interests-grid">
-            <label class="rw-interest-option">
-              <input type="checkbox" name="styleInterests" value="casual" class="rw-interest-check"/>
-              <span class="rw-interest-btn">Casual</span>
-            </label>
-            <label class="rw-interest-option">
-              <input type="checkbox" name="styleInterests" value="formal" class="rw-interest-check"/>
-              <span class="rw-interest-btn">Formal</span>
-            </label>
-            <label class="rw-interest-option">
-              <input type="checkbox" name="styleInterests" value="evening" class="rw-interest-check"/>
-              <span class="rw-interest-btn">Evening Wear</span>
-            </label>
-            <label class="rw-interest-option">
-              <input type="checkbox" name="styleInterests" value="business" class="rw-interest-check"/>
-              <span class="rw-interest-btn">Business</span>
-            </label>
-            <label class="rw-interest-option">
-              <input type="checkbox" name="styleInterests" value="wedding" class="rw-interest-check"/>
-              <span class="rw-interest-btn">Wedding</span>
-            </label>
-            <label class="rw-interest-option">
-              <input type="checkbox" name="styleInterests" value="streetwear" class="rw-interest-check"/>
-              <span class="rw-interest-btn">Streetwear</span>
-            </label>
-            <label class="rw-interest-option">
-              <input type="checkbox" name="styleInterests" value="resort" class="rw-interest-check"/>
-              <span class="rw-interest-btn">Resort / Vacation</span>
-            </label>
-            <label class="rw-interest-option">
-              <input type="checkbox" name="styleInterests" value="sport" class="rw-interest-check"/>
-              <span class="rw-interest-btn">Sportswear</span>
-            </label>
-            <label class="rw-interest-option">
-              <input type="checkbox" name="styleInterests" value="vintage" class="rw-interest-check"/>
-              <span class="rw-interest-btn">Vintage</span>
-            </label>
-            <label class="rw-interest-option">
-              <input type="checkbox" name="styleInterests" value="luxury" class="rw-interest-check"/>
-              <span class="rw-interest-btn">Luxury</span>
-            </label>
-          </div>
-        </div>
 
+          <!-- Dropdown to pick from -->
+          <div class="rw-input-wrap rw-input-wrap--select">
+            <select id="styleInterestsSelect" class="rw-form-input rw-form-select">
+              <option value="" disabled selected>Select categories</option>
+              <option value="casual">Casual</option>
+              <option value="formal">Formal</option>
+              <option value="evening">Evening Wear</option>
+              <option value="business">Business</option>
+              <option value="wedding">Wedding</option>
+              <option value="streetwear">Streetwear</option>
+              <option value="resort">Resort / Vacation</option>
+              <option value="sport">Sportswear</option>
+              <option value="vintage">Vintage</option>
+              <option value="luxury">Luxury</option>
+            </select>
+            <i class="bi bi-chevron-down rw-select-chevron"></i>
+          </div>
+
+          <!-- Selected tags appear here -->
+          <div class="rw-tags-wrap" id="styleTagsWrap"></div>
+
+          <!-- Hidden inputs submitted to backend -->
+          <div id="styleHiddenInputs"></div>
+        </div>
         <!-- Terms checkbox -->
         <div class="rw-form-group">
           <label class="rw-checkbox-label">
