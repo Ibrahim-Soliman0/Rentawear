@@ -179,45 +179,70 @@
             ></textarea>
           </div>
         </div>
-
-        <!-- Style Interests + Credit Limit row -->
-        <div class="rw-form-row-2">
-
-          <div class="rw-form-group">
-            <label for="styleInterests" class="rw-form-label">Style Interests</label>
-            <div class="rw-input-wrap rw-input-wrap--select">
-              <select id="styleInterests" name="styleInterests" class="rw-form-input rw-form-select">
-                <option value="" disabled selected>Select categories</option>
-                <option value="casual">Casual</option>
-                <option value="formal">Formal</option>
-                <option value="evening">Evening Wear</option>
-                <option value="business">Business</option>
-                <option value="wedding">Wedding</option>
-                <option value="streetwear">Streetwear</option>
-                <option value="resort">Resort / Vacation</option>
-              </select>
-              <i class="bi bi-chevron-down rw-select-chevron"></i>
-            </div>
+        <!-- Credit Limit — single field -->
+        <div class="rw-form-group">
+          <label for="creditLimit" class="rw-form-label">Requested Credit Limit</label>
+          <div class="rw-input-wrap">
+            <span class="rw-input-prefix">$</span>
+            <input
+                    type="number"
+                    id="creditLimit"
+                    name="creditLimit"
+                    class="rw-form-input"
+                    placeholder="5,000"
+                    min="0"
+                    step="500"
+                    value="5000"
+                    max="999999"
+            />
           </div>
+        </div>
 
-          <div class="rw-form-group">
-            <label for="creditLimit" class="rw-form-label">Requested Credit Limit</label>
-            <div class="rw-input-wrap">
-              <span class="rw-input-prefix">$</span>
-              <input
-                      type="number"
-                      id="creditLimit"
-                      name="creditLimit"
-                      class="rw-form-input"
-                      placeholder="5,000"
-                      min="0"
-                      step="500"
-                      value="5000"
-                      max="999999"
-              />
-            </div>
+        <!-- Style Interests — full width -->
+        <div class="rw-form-group">
+          <label class="rw-form-label">Style Interests</label>
+          <div class="rw-interests-grid">
+            <label class="rw-interest-option">
+              <input type="checkbox" name="styleInterests" value="casual" class="rw-interest-check"/>
+              <span class="rw-interest-btn">Casual</span>
+            </label>
+            <label class="rw-interest-option">
+              <input type="checkbox" name="styleInterests" value="formal" class="rw-interest-check"/>
+              <span class="rw-interest-btn">Formal</span>
+            </label>
+            <label class="rw-interest-option">
+              <input type="checkbox" name="styleInterests" value="evening" class="rw-interest-check"/>
+              <span class="rw-interest-btn">Evening Wear</span>
+            </label>
+            <label class="rw-interest-option">
+              <input type="checkbox" name="styleInterests" value="business" class="rw-interest-check"/>
+              <span class="rw-interest-btn">Business</span>
+            </label>
+            <label class="rw-interest-option">
+              <input type="checkbox" name="styleInterests" value="wedding" class="rw-interest-check"/>
+              <span class="rw-interest-btn">Wedding</span>
+            </label>
+            <label class="rw-interest-option">
+              <input type="checkbox" name="styleInterests" value="streetwear" class="rw-interest-check"/>
+              <span class="rw-interest-btn">Streetwear</span>
+            </label>
+            <label class="rw-interest-option">
+              <input type="checkbox" name="styleInterests" value="resort" class="rw-interest-check"/>
+              <span class="rw-interest-btn">Resort / Vacation</span>
+            </label>
+            <label class="rw-interest-option">
+              <input type="checkbox" name="styleInterests" value="sport" class="rw-interest-check"/>
+              <span class="rw-interest-btn">Sportswear</span>
+            </label>
+            <label class="rw-interest-option">
+              <input type="checkbox" name="styleInterests" value="vintage" class="rw-interest-check"/>
+              <span class="rw-interest-btn">Vintage</span>
+            </label>
+            <label class="rw-interest-option">
+              <input type="checkbox" name="styleInterests" value="luxury" class="rw-interest-check"/>
+              <span class="rw-interest-btn">Luxury</span>
+            </label>
           </div>
-
         </div>
 
         <!-- Terms checkbox -->

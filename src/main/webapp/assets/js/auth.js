@@ -16,7 +16,6 @@ document.querySelectorAll('.rw-eye-btn').forEach(btn => {
   });
 });
 
-
 /* ── Field error helpers ────────────────────────────────────── */
 function showError(fieldId, errorId, message) {
   const wrap  = document.getElementById(fieldId)?.closest('.rw-input-wrap');
