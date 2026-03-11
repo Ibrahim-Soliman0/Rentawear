@@ -55,6 +55,26 @@
           <div class="rw-field-error" id="fullNameError"></div>
         </div>
 
+        <!-- Gender -->
+        <div class="rw-form-group">
+          <label class="rw-form-label">Gender</label>
+          <div class="rw-gender-row">
+            <label class="rw-gender-option">
+              <input type="radio" name="gender" value="male" class="rw-gender-radio" required/>
+              <span class="rw-gender-btn">
+        <i class="bi bi-gender-male"></i> Male
+      </span>
+            </label>
+            <label class="rw-gender-option">
+              <input type="radio" name="gender" value="female" class="rw-gender-radio" required/>
+              <span class="rw-gender-btn">
+        <i class="bi bi-gender-female"></i> Female
+      </span>
+            </label>
+          </div>
+          <div class="rw-field-error" id="genderError"></div>
+        </div>
+
         <!-- Email + Password row -->
         <div class="rw-form-row-2">
 
