@@ -1,53 +1,58 @@
-<%-- cart-drawer.jsp — Cart slide-out drawer ONLY
-     No parameters needed. Opened via data-bs-target="#cartDrawer".
-     Items are injected dynamically by app.js (Cart module).
+<%-- cart-drawer.jsp - Redesign cart drawer (matches attached HTML)
+     Items injected by assets/js/cart.js using CardFactory.cartItem
 --%>
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
 <%@ page isELIgnored="false" %>
 
-<div class="offcanvas offcanvas-end rw-cart-drawer"
-     tabindex="-1" id="cartDrawer" aria-labelledby="cartDrawerLabel">
+<div class="cart-drawer" id="cartDrawer" aria-hidden="true">
+  <div class="cart-drawer-backdrop" id="cartBackdrop"></div>
+  <div class="cart-panel" role="dialog" aria-label="Cart drawer">
 
-  <!-- Header -->
-  <div class="offcanvas-header rw-cart-header">
-    <h5 class="rw-cart-title" id="cartDrawerLabel">
-      <i class="bi bi-bag me-2"></i>My Bag
-      <span class="rw-cart-header-count" id="cartHeaderCount">0 items</span>
-    </h5>
-    <button type="button" class="btn-close"
-            data-bs-dismiss="offcanvas" aria-label="Close"></button>
-  </div>
-
-  <!-- Body: scrollable item list, populated by app.js -->
-  <div class="offcanvas-body rw-cart-body" id="cartItemsList">
-    <div class="rw-cart-empty" id="cartEmpty">
-      <i class="bi bi-bag-x"></i>
-      <p>Your bag is empty</p>
-      <span>Add items to get started</span>
-    </div>
-  </div>
-
-  <!-- Footer: order summary + action buttons, always visible -->
-  <div class="rw-cart-footer" id="cartFooter">
-
-    <div class="rw-cart-summary">
-      <div class="rw-cart-summary-row">
-        <span>Subtotal</span>
-        <span id="cartSubtotal">$0.00</span>
+    <div class="cart-header">
+      <div class="cart-header-left">
+        <h2 class="cart-title">My Bag</h2>
+        <span class="cart-count-label" id="cartCountLabel">0 items</span>
       </div>
-      <div class="rw-cart-summary-row rw-cart-summary-total">
-        <span>Total</span>
-        <span id="cartTotal">$0.00</span>
-      </div>
-    </div>
-
-    <div class="rw-cart-actions">
-      <button class="rw-cart-btn-secondary" data-bs-dismiss="offcanvas">
-        <i class="bi bi-arrow-left me-2"></i>Continue Shopping
+      <button class="cart-close" id="cartClose" aria-label="Close cart" type="button">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
       </button>
-      <a href="${pageContext.request.contextPath}/checkout" class="rw-cart-btn-primary">
-        Proceed to Checkout<i class="bi bi-arrow-right ms-2"></i>
+    </div>
+
+    <div class="cart-body" id="cartBody">
+      <div class="cart-empty" id="cartEmpty">
+        <div class="cart-empty-icon">
+          <i class="bi bi-bag"></i>
+        </div>
+        <h3>Your bag is empty</h3>
+        <p>Add items to your bag to get started</p>
+      </div>
+
+      <%-- Cart items container - CardFactory.cartItem li nodes will be appended here --%>
+      <ul class="cart-items" id="cartItems" style="display:none;"></ul>
+    </div>
+
+    <div class="cart-footer" id="cartFooter">
+      <div class="cart-summary" id="cartSummary">
+        <div class="cart-summary-row">
+          <span>Rental subtotal</span>
+          <span id="cartSubtotal">$0.00</span>
+        </div>
+        <div class="cart-summary-row">
+          <span>Delivery</span>
+          <span id="cartDelivery">Free</span>
+        </div>
+        <div class="cart-summary-row total">
+          <span>Total</span>
+          <span id="cartTotal">$0.00</span>
+        </div>
+      </div>
+
+      <%--TODO: Hide Button If cart is Empty--%>
+      <a class="cart-cta" href="${pageContext.request.contextPath}/checkout">
+        Proceed to Checkout →
       </a>
+
+      <span class="cart-continue" id="cartContinue" role="button" tabindex="0">← Continue Shopping</span>
     </div>
 
   </div>
