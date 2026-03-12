@@ -28,14 +28,14 @@
       </div>
 
       <!-- Server-side error -->
-      <c:if test="${not empty errorMsg}">
+      <c:if test="${not empty requestScope.errorMsg}">
         <div class="rw-auth-alert rw-auth-alert--error">
-          <i class="bi bi-exclamation-circle-fill"></i> ${errorMsg}
+          <i class="bi bi-exclamation-circle-fill"></i> ${requestScope.errorMsg}
         </div>
       </c:if>
 
       <!-- Form -->
-      <form id="registerForm" action="${pageContext.request.contextPath}/RegisterServlet" method="post" novalidate>
+      <form id="registerForm" action="${pageContext.request.contextPath}/register" method="post" novalidate>
 
         <!-- Full Name -->
         <div class="rw-form-group">

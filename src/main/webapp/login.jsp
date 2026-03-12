@@ -21,19 +21,19 @@
       <p class="rw-auth-subtitle">Welcome back — sign in to continue</p>
 
       <!-- Server-side alerts -->
-      <c:if test="${not empty errorMsg}">
+      <c:if test="${not empty requestScope.errorMsg}">
         <div class="rw-auth-alert rw-auth-alert--error">
-          <i class="bi bi-exclamation-circle-fill"></i> ${errorMsg}
+          <i class="bi bi-exclamation-circle-fill"></i> ${requestScope.errorMsg}
         </div>
       </c:if>
-      <c:if test="${not empty successMsg}">
+      <c:if test="${not empty param.successMsg}">
         <div class="rw-auth-alert rw-auth-alert--success">
-          <i class="bi bi-check-circle-fill"></i> ${successMsg}
+          <i class="bi bi-check-circle-fill"></i> ${param.successMsg}
         </div>
       </c:if>
 
       <!-- Form -->
-      <form id="loginForm" action="${pageContext.request.contextPath}/LoginServlet" method="post" novalidate>
+      <form id="loginForm" action="${pageContext.request.contextPath}/login" method="post" novalidate>
 
         <!-- Email -->
         <div class="rw-form-group">
