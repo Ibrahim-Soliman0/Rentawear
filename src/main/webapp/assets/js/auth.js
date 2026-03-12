@@ -130,9 +130,16 @@ const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     }
   });
 
-  /* ── Live blur validators ── */
+  /* ── Live input validators ── */
   fullNameEl?.addEventListener('input', validateFullName);
-  emailEl?.addEventListener('input',    validateRegEmail);
+  let emailDebounce = null;
+  emailEl?.addEventListener('input', () => {
+    const formatOk = validateRegEmail();
+    if (!formatOk) return;
+
+    clearTimeout(emailDebounce);
+    emailDebounce = setTimeout(checkEmailAvailability, 500);
+  });
   passwordEl?.addEventListener('input', validateRegPassword);
   dobEl?.addEventListener('change',validateDob);
 
@@ -184,12 +191,55 @@ const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
   function validateRegEmail() {
     const val = emailEl.value.trim();
+    const errorEl = document.getElementById('regEmailError');
+
+    // Always reset color to red before any error check
+    if (errorEl) errorEl.style.color = '';
+
     if (!val)                { showError('regEmail', 'regEmailError', 'Email is required.'); return false; }
     if (!EMAIL_RE.test(val)) { showError('regEmail', 'regEmailError', 'Enter a valid email address.'); return false; }
     showOk('regEmail', 'regEmailError');
     return true;
   }
 
+  function checkEmailAvailability() {
+    const errorEl = document.getElementById('regEmailError');
+
+    // Show checking state
+    if (errorEl) {
+      errorEl.style.color = 'var(--rw-gray-500)';
+      errorEl.textContent = 'Checking availability...';
+      errorEl.classList.add('visible');
+    }
+
+    let req;
+    if (window.XMLHttpRequest)
+      req = new XMLHttpRequest();
+    else
+      req = new ActiveXObject("Microsoft.XMLHTTP");
+
+    req.onreadystatechange = function () {
+      if (req.readyState === 4 && req.status === 200) {
+        const data = JSON.parse(req.responseText);
+
+        if (data.taken) {
+          errorEl.style.color = '';
+          showError('regEmail', 'regEmailError', 'This email is already registered.');
+        } else {
+          const wrap = emailEl.closest('.rw-input-wrap');
+          if (wrap) { wrap.classList.remove('rw-input--error'); wrap.classList.add('rw-input--ok'); }
+          if (errorEl) {
+            errorEl.style.color = '#27ae60';
+            errorEl.textContent = 'Email is available!';
+            errorEl.classList.add('visible');
+          }
+        }
+      }
+    };
+
+    req.open("GET", CTX + "/checkRegisteredEmail?email=" + encodeURIComponent(emailEl.value.trim()), true);
+    req.send();
+  }
   function validateRegPassword() {
     const val = passwordEl.value;
     if (!val)           { showError('regPassword', 'regPasswordError', 'Password is required.'); return false; }
