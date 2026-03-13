@@ -60,13 +60,13 @@
           <label class="rw-form-label">Gender</label>
           <div class="rw-gender-row">
             <label class="rw-gender-option">
-              <input type="radio" name="gender" value="male" class="rw-gender-radio" required/>
+              <input type="radio" name="gender" value="MALE" class="rw-gender-radio" required/>
               <span class="rw-gender-btn">
         <i class="bi bi-gender-male"></i> Male
       </span>
             </label>
             <label class="rw-gender-option">
-              <input type="radio" name="gender" value="female" class="rw-gender-radio" required/>
+              <input type="radio" name="gender" value="FEMALE" class="rw-gender-radio" required/>
               <span class="rw-gender-btn">
         <i class="bi bi-gender-female"></i> Female
       </span>
