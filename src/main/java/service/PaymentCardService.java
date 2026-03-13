@@ -1,6 +1,6 @@
 package service;
 
-import model.PaymentCard;
+import entity.PaymentCard;
 import repository.PaymentCardRepository;
 import repository.impl.PaymentCardRepositoryImpl;
 

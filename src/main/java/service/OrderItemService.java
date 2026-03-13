@@ -1,6 +1,6 @@
 package service;
 
-import model.OrderItem;
+import entity.OrderItem;
 import repository.OrderItemRepository;
 import repository.impl.OrderItemRepositoryImpl;
 

@@ -1,6 +1,6 @@
 package repository;
 
-import model.ProductVariant;
+import entity.ProductVariant;
 
 public interface ProductVariantRepository extends Repository<ProductVariant> {
 

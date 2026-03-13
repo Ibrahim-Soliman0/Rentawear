@@ -5,11 +5,11 @@ import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import model.PaymentCard;
-import model.User;
-import model.enums.CardType;
-import model.enums.Gender;
-import model.enums.UserRole;
+import entity.PaymentCard;
+import entity.User;
+import entity.enums.CardType;
+import entity.enums.Gender;
+import entity.enums.UserRole;
 import service.UserService;
 
 import java.io.IOException;
@@ -46,13 +46,24 @@ public class UserServlet extends HttpServlet {
         UserService userService = new UserService();
         user = userService.save(user);
 
-        User returenedUser = userService.getById(user.getId());
-        User returenedUser2 = userService.getUserByEmail("ibrahimsoliman269@gmail.com").get();
+        User returenedUser = userService.getById(user.getId()).get();
+
+        userService.delete(user);
+
+        var hopfullyUser = userService.getUserByEmail("ibrahimsoliman269@gmail.com");
+        User returenedUser2 = new User();
+
+        if (hopfullyUser.isPresent()) {
+            returenedUser2 = hopfullyUser.get();
+        }
 
         PrintWriter out = resp.getWriter();
         out.println(returenedUser.getName());
-        out.println(returenedUser2.getName());
-
-        userService.delete(user);
+        out.println(returenedUser.getInterests().size());
+        out.println(returenedUser.getPaymentCards().size());
+        out.println(returenedUser.getPaymentCards().iterator().next());
+        out.println(returenedUser.getCreatedAt().toString());
+        out.println(paymentCard);
+        out.println(returenedUser2);
     }
 }

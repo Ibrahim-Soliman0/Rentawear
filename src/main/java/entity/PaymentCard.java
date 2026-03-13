@@ -1,7 +1,7 @@
-package model;
+package entity;
 
 import jakarta.persistence.*;
-import model.enums.CardType;
+import entity.enums.CardType;
 
 @Entity
 @Table(name = "payment_cards")

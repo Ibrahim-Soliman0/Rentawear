@@ -1,8 +1,6 @@
-package model;
+package entity;
 
 import jakarta.persistence.*;
-
-import java.util.Objects;
 
 @Entity
 @Table(name = "product_images")

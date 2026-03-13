@@ -1,6 +1,6 @@
 package repository;
 
-import model.Product;
+import entity.Product;
 
 public interface ProductRepository extends Repository<Product> {
 

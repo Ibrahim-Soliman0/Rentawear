@@ -1,6 +1,6 @@
 package repository;
 
-import model.UserCategory;
+import entity.UserCategory;
 
 public interface UserCategoryRepository extends Repository<UserCategory> {
 

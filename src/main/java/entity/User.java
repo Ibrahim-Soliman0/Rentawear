@@ -1,8 +1,8 @@
-package model;
+package entity;
 
+import entity.enums.Gender;
+import entity.enums.UserRole;
 import jakarta.persistence.*;
-import model.enums.Gender;
-import model.enums.UserRole;
 import org.hibernate.annotations.ColumnDefault;
 
 import java.math.BigDecimal;
@@ -52,7 +52,6 @@ public class User {
     @Enumerated(EnumType.STRING)
     private UserRole role;
 
-    @ColumnDefault("CURRENT_TIMESTAMP")
     @Column(name = "created_at")
     private Instant createdAt;
 
@@ -170,6 +169,13 @@ public class User {
 
     public void setGender(Gender gender) {
         this.gender = gender;
+    }
+
+    @PrePersist
+    public void prePersist() {
+        if (createdAt == null) {
+            createdAt = Instant.now();
+        }
     }
 
     public void addInterest(Category category) {

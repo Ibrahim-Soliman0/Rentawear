@@ -1,6 +1,6 @@
 package repository;
 
-import model.ProductImage;
+import entity.ProductImage;
 
 public interface ProductImageRepository extends Repository<ProductImage> {
 

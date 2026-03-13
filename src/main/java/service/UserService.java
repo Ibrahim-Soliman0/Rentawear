@@ -1,6 +1,6 @@
 package service;
 
-import model.User;
+import entity.User;
 import repository.UserRepository;
 import repository.impl.UserRepositoryImpl;
 

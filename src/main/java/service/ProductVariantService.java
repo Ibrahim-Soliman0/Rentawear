@@ -1,6 +1,6 @@
 package service;
 
-import model.ProductVariant;
+import entity.ProductVariant;
 import repository.ProductVariantRepository;
 import repository.impl.ProductVariantRepositoryImpl;
 
