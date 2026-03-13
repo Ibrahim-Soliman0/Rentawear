@@ -2,6 +2,8 @@ package service;
 
 import repository.Repository;
 
+import java.util.List;
+
 import java.util.Optional;
 
 public abstract class BaseService<T> {
@@ -23,4 +25,6 @@ public abstract class BaseService<T> {
     public void delete(T entity) {
         repository.delete(entity);
     }
+
+    public List<T> getAll(){ return repository.findAll();}
 }
