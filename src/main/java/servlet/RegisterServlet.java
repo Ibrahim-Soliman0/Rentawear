@@ -8,6 +8,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import model.User;
 import model.enums.Gender;
+import service.CategoryService;
 import service.UserService;
 
 import java.io.IOException;
@@ -20,6 +21,8 @@ import java.time.format.DateTimeParseException;
 public class RegisterServlet extends HttpServlet {
 
     private final UserService userService = new UserService();
+    private final CategoryService categoryService = new CategoryService();
+
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         HttpSession session = req.getSession();
@@ -27,6 +30,7 @@ public class RegisterServlet extends HttpServlet {
             resp.sendRedirect("index.jsp");
             return;
         }
+        req.setAttribute("categories", categoryService.getAll());
         req.getRequestDispatcher("/register.jsp").forward(req,resp);
     }
 
