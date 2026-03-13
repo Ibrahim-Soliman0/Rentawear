@@ -1,11 +1,13 @@
 package servlet;
 
+import exception.EmailAlreadyExistsException;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
+import model.Category;
 import model.User;
 import model.enums.Gender;
 import service.CategoryService;
@@ -87,15 +89,26 @@ public class RegisterServlet extends HttpServlet {
             user.setCreditLimit(BigDecimal.ZERO);
         }
 
-        //TODO: add the interests of the user by getting it from the category
+        if(styleInterests != null){
+            for(String categoryId : styleInterests){
+               Category category = categoryService.getById(Integer.parseInt(categoryId));
+               if(category!=null){
+                   user.addInterest(category);
+               }
+            }
+        }
 
         // Register via service
         try {
             userService.register(user);
             resp.sendRedirect(req.getContextPath() +
                     "/login.jsp?success=Account+created+successfully.+Please+sign+in.");
+
+        } catch (EmailAlreadyExistsException e) {
+            forwardWithError(req, resp, "An account with this email already exists,.");
+
         } catch (Exception e) {
-            forwardWithError(req, resp, e.getMessage());
+            forwardWithError(req, resp, "Something went wrong. Please try again.");
         }
 
     }
@@ -105,6 +118,7 @@ public class RegisterServlet extends HttpServlet {
     private void forwardWithError(HttpServletRequest req, HttpServletResponse resp, String message)
             throws ServletException, IOException {
         req.setAttribute("errorMsg", message);
+        req.setAttribute("categories", categoryService.getAll());
         req.getRequestDispatcher("/register.jsp").forward(req, resp);
     }
 }
