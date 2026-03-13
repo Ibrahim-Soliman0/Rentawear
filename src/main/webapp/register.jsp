@@ -206,16 +206,9 @@
           <div class="rw-input-wrap rw-input-wrap--select">
             <select id="styleInterestsSelect" class="rw-form-input rw-form-select">
               <option value="" disabled selected>Select categories</option>
-              <option value="casual">Casual</option>
-              <option value="formal">Formal</option>
-              <option value="evening">Evening Wear</option>
-              <option value="business">Business</option>
-              <option value="wedding">Wedding</option>
-              <option value="streetwear">Streetwear</option>
-              <option value="resort">Resort / Vacation</option>
-              <option value="sport">Sportswear</option>
-              <option value="vintage">Vintage</option>
-              <option value="luxury">Luxury</option>
+              <c:forEach var="category" items="${requestScope.categories}">
+                <option value="${category.id}">${category.name}</option>
+              </c:forEach>
             </select>
             <i class="bi bi-chevron-down rw-select-chevron"></i>
           </div>
