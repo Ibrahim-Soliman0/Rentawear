@@ -44,8 +44,8 @@ const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   const emailEl    = document.getElementById('loginEmail');
   const passwordEl = document.getElementById('loginPassword');
 
-  emailEl?.addEventListener('blur',    () => validateLoginEmail());
-  passwordEl?.addEventListener('blur', () => validateLoginPassword());
+  emailEl?.addEventListener('input',    () => validateLoginEmail());
+  passwordEl?.addEventListener('input', () => validateLoginPassword());
 
   function validateLoginEmail() {
     const val = emailEl.value.trim();
@@ -132,8 +132,11 @@ const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
   /* ── Live input validators ── */
   fullNameEl?.addEventListener('input', validateFullName);
+
+  let emailTaken = false;
   let emailDebounce = null;
   emailEl?.addEventListener('input', () => {
+    emailTaken=false;
     const formatOk = validateRegEmail();
     if (!formatOk) return;
 
@@ -198,6 +201,7 @@ const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
     if (!val)                { showError('regEmail', 'regEmailError', 'Email is required.'); return false; }
     if (!EMAIL_RE.test(val)) { showError('regEmail', 'regEmailError', 'Enter a valid email address.'); return false; }
+    if (emailTaken)          { showError('regEmail', 'regEmailError', 'This email is already registered.'); return false; }
     showOk('regEmail', 'regEmailError');
     return true;
   }
@@ -223,9 +227,11 @@ const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         const data = JSON.parse(req.responseText);
 
         if (data.taken) {
+          emailTaken = true;
           errorEl.style.color = '';
           showError('regEmail', 'regEmailError', 'This email is already registered.');
         } else {
+          emailTaken = false;
           const wrap = emailEl.closest('.rw-input-wrap');
           if (wrap) { wrap.classList.remove('rw-input--error'); wrap.classList.add('rw-input--ok'); }
           if (errorEl) {
