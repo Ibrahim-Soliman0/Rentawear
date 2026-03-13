@@ -1,5 +1,7 @@
 package service;
 
+import exception.EmailAlreadyExistsException;
+import model.User;
 import dto.UserProfileDTO;
 import entity.User;
 import mapper.UserMapper;
@@ -29,9 +31,9 @@ public class UserService extends BaseService<User> {
         return Optional.ofNullable(userRepository.findByEmail(email));
     }
 
-    public void register(User user) throws Exception {
+    public void register(User user) throws EmailAlreadyExistsException {
         if (getUserByEmail(user.getEmail()).isPresent()) {
-            throw new Exception("An account with this email already exists.");
+            throw new EmailAlreadyExistsException(user.getEmail());
         }
         user.setPasswordHash(HashUtil.hashPassword(user.getPasswordHash()));
         userRepository.save(user);
