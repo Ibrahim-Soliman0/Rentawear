@@ -5,6 +5,8 @@ import jakarta.persistence.EntityTransaction;
 import repository.Repository;
 import util.JPAUtil;
 
+import java.util.List;
+
 public abstract class BaseRepositoryImpl<T> implements Repository<T> {
 
     private final Class<T> entityClass;
@@ -55,6 +57,14 @@ public abstract class BaseRepositoryImpl<T> implements Repository<T> {
                 }
                 throw new RuntimeException(e);
             }
+        }
+    }
+
+    public List<T> findAll() {
+        try (EntityManager em = JPAUtil.getEntityManager()) {
+            return em.createQuery(
+                            "SELECT e FROM " + entityClass.getSimpleName() + " e", entityClass)
+                    .getResultList();
         }
     }
 }
