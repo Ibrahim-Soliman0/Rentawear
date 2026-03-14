@@ -57,7 +57,8 @@ const Cart = (function () {
     if (items.length === 0) {
       if (empty) empty.style.display = 'flex';
       wrap.style.display = 'none';
-      wrap.innerHTML = '';
+      // clear children safely
+      while (wrap.firstChild) wrap.removeChild(wrap.firstChild);
       if (el.subtotal()) el.subtotal().textContent = '£0.00';
       if (el.total())    el.total().textContent    = '£0.00';
       if (cta) cta.style.display = 'none';
@@ -74,8 +75,11 @@ const Cart = (function () {
     const listChanged = JSON.stringify(existingIds) !== JSON.stringify(currentIds);
 
     if (listChanged) {
-      wrap.innerHTML = '';
-      items.forEach(item => wrap.appendChild(CardFactory.cartItem(item)));
+      // clear and rebuild (batched)
+      while (wrap.firstChild) wrap.removeChild(wrap.firstChild);
+      const frag = document.createDocumentFragment();
+      items.forEach(item => frag.appendChild(CardFactory.cartItem(item)));
+      wrap.appendChild(frag);
     } else {
       items.forEach(item => {
         const li  = wrap.querySelector(`.cart-item[data-id="${item.id}"]`);

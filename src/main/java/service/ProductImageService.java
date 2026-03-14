@@ -43,15 +43,15 @@ public class ProductImageService extends BaseService<ProductImage> {
         long imageCount = productImageRepository
                 .countByProductIdAndColor(product.getId(), uploadedColor);
 
-        // Not the first image for this color — nothing to update
+        // Not the first image for this color, nothing to update
         if (imageCount != 1) return;
 
         List<ProductVariant> variants =
                 productVariantRepository.findByProductId(product.getId());
         if (variants.isEmpty()) return;
 
-        String defaultColor = variants.getFirst().getColor();
-        if (uploadedColor.equals(defaultColor)) {
+        String defaultColor = variants.get(0).getColor();
+        if (uploadedColor != null && uploadedColor.equals(defaultColor)) {
             product.setImageUrl(newBasePath);
             productRepository.save(product);
         }

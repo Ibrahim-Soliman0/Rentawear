@@ -54,27 +54,30 @@
 
         // ── Badge ─────────────────────────────────────────────────────
         // Only isNew badge — isPopular and rrp not used in this project.
-        function _badgeHtml(p) {
-            if (p.isNew) return `<span class="product-badge new">New</span>`;
-            return '';
+        function _badgeNode(p) {
+            if (!p.isNew) return null;
+            const span = document.createElement('span');
+            span.className = 'product-badge new';
+            span.textContent = 'New';
+            return span;
         }
 
         // ── Product image with srcset ─────────────────────────────────
         // Uses a real <img> so srcset works (background-image has no srcset).
         // object-fit:cover in CSS makes it behave like background-size:cover.
         // loading="lazy" defers off-screen images automatically.
-        function _productImg(base, name) {
-            return `
-          <img src="${imgUrl(base, 'md')}"
-               srcset="${imgUrl(base, 'sm')} 400w,
-                       ${imgUrl(base, 'md')} 800w,
-                       ${imgUrl(base, 'lg')} 1400w"
-               sizes="(max-width:480px) 100vw,
-                      (max-width:900px) 50vw,
-                      33vw"
-               alt="${esc(name)}"
-               loading="lazy"
-               decoding="async">`.trim();
+        function _productImgNode(base, name) {
+            const div = document.createElement('div');
+            div.className = 'product-img-inner';
+            const img = document.createElement('img');
+            img.src = imgUrl(base, 'md');
+            img.srcset = `${imgUrl(base,'sm')} 400w, ${imgUrl(base,'md')} 800w, ${imgUrl(base,'lg')} 1400w`;
+            img.sizes = '(max-width:480px) 100vw, (max-width:900px) 50vw, 33vw';
+            img.alt = name ? String(name) : '';
+            img.loading = 'lazy';
+            img.decoding = 'async';
+            div.appendChild(img);
+            return div;
         }
 
         // ── Swatch row ────────────────────────────────────────────────
@@ -84,27 +87,33 @@
         //           stored on dataset so quick-view can read it
         // s.slug  → URL/path slug         (midnight-navy)
         //           stored on dataset so JS can build image paths
-        function _swatchRow(p) {
-            if (!p.swatches.length) return '';
-            const chips = p.swatches.slice(0, 5).map((s, i) => {
-                const active = i === 0 ? ' active' : '';
-                return `<span class="swatch${active}"
-                              style="background:${esc(s.hex || '#ccc')}"
-                              title="${esc(s.name || '')}"
-                              data-color="${esc(s.color || '')}"
-                              data-slug="${esc(s.slug || '')}"></span>`;
-            }).join('');
-            return `<div class="swatch-row">${chips}</div>`;
+        function _swatchRowNode(p) {
+            if (!p.swatches || !p.swatches.length) return null;
+            const wrap = document.createElement('div');
+            wrap.className = 'swatch-row';
+            p.swatches.slice(0,5).forEach((s, i) => {
+                const span = document.createElement('span');
+                span.className = 'swatch' + (i===0 ? ' active' : '');
+                span.style.background = esc(s.hex || s || '#ccc');
+                span.title = s.name || '';
+                if (s.color) span.dataset.color = s.color;
+                if (s.slug) span.dataset.slug = s.slug;
+                wrap.appendChild(span);
+            });
+            return wrap;
         }
 
         // ── Wishlist heart SVG ────────────────────────────────────────
-        function _wishlistSvg(active) {
-            return `<svg viewBox="0 0 15 15" aria-hidden="true">
-              <path d="M7.5 13S1 9 1 4.5a3.5 3.5 0 0 1 6.5-1.8A3.5 3.5 0 0 1 14 4.5C14 9 7.5 13 7.5 13z"
-                    stroke-width="1.8"
-                    ${active ? 'fill="currentColor"' : 'fill="none" stroke="currentColor"'}>
-              </path>
-            </svg>`;
+        function _wishlistSvgNode(active) {
+            const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+            svg.setAttribute('viewBox','0 0 15 15');
+            svg.setAttribute('aria-hidden','true');
+            const path = document.createElementNS('http://www.w3.org/2000/svg','path');
+            path.setAttribute('d','M7.5 13S1 9 1 4.5a3.5 3.5 0 0 1 6.5-1.8A3.5 3.5 0 0 1 14 4.5C14 9 7.5 13 7.5 13z');
+            path.setAttribute('stroke-width','1.8');
+            if (active) path.setAttribute('fill','currentColor'); else { path.setAttribute('fill','none'); path.setAttribute('stroke','currentColor'); }
+            svg.appendChild(path);
+            return svg;
         }
 
         // ── Skeleton ──────────────────────────────────────────────────
@@ -113,16 +122,16 @@
         function skeleton() {
             const el = document.createElement('div');
             el.className = 'product-card product-skel';
-            el.setAttribute('aria-hidden', 'true');
-            el.innerHTML = `
-        <div class="product-img-wrap product-img-wrap--skel"></div>
-        <div class="product-footer">
-          <div class="product-info">
-            <div class="rw-skel-line rw-skel-line--brand"></div>
-            <div class="rw-skel-line rw-skel-line--name"></div>
-            <div class="rw-skel-line rw-skel-line--price"></div>
-          </div>
-        </div>`.trim();
+            el.setAttribute('aria-hidden','true');
+
+            const imgWrap = document.createElement('div'); imgWrap.className = 'product-img-wrap product-img-wrap--skel';
+            const footer = document.createElement('div'); footer.className = 'product-footer';
+            const info = document.createElement('div'); info.className = 'product-info';
+            const l1 = document.createElement('div'); l1.className = 'rw-skel-line rw-skel-line--brand';
+            const l2 = document.createElement('div'); l2.className = 'rw-skel-line rw-skel-line--name';
+            const l3 = document.createElement('div'); l3.className = 'rw-skel-line rw-skel-line--price';
+            info.appendChild(l1); info.appendChild(l2); info.appendChild(l3); footer.appendChild(info);
+            el.appendChild(imgWrap); el.appendChild(footer);
             return el;
         }
 
@@ -131,61 +140,62 @@
         // Image: _md at desktop, browser picks smaller via srcset on mobile.
         // QV dataset: all fields quick-view.js needs for Phase 1 open.
         function grid(rawProduct) {
-            const p  = _normalise(rawProduct);
-            const el = document.createElement('div');
-            el.className = 'product-card';
+            const p = _normalise(rawProduct);
+            const el = document.createElement('div'); el.className = 'product-card';
 
-            el.innerHTML = `
-        <div class="product-img-wrap">
-          ${_productImg(p.imageUrl, p.name)}
-          ${_badgeHtml(p)}
-          <button class="product-wishlist" type="button" aria-label="Add to wishlist">
-            ${_wishlistSvg(false)}
-          </button>
-          <button class="product-qv" type="button" aria-label="Quick view ${esc(p.name)}">
-            <svg viewBox="0 0 14 14" aria-hidden="true">
-              <circle cx="7" cy="7" r="4"></circle>
-              <path d="M1 7s2-5 6-5 6 5 6 5-2 5-6 5-6-5-6-5z"></path>
-            </svg>
-            Quick View
-          </button>
-        </div>
-        ${_swatchRow(p)}
-        <div class="product-footer">
-          <div class="product-info">
-            <p class="product-brand">${esc(p.brand)}</p>
-            <p class="product-name">${esc(p.name)}</p>
-            <p class="product-price">From <strong>£${p.pricePerDay.toFixed(0)}/day</strong></p>
-          </div>
-        </div>`.trim();
+            const imgWrap = document.createElement('div'); imgWrap.className = 'product-img-wrap';
+            imgWrap.appendChild(_productImgNode(p.imageUrl, p.name));
 
-            // Wishlist toggle — local only (no server sync needed for guests)
-            // const wishBtn = el.querySelector('.product-wishlist');
-            // if (wishBtn) {
-            //     wishBtn.addEventListener('click', e => {
-            //         e.preventDefault();
-            //         e.stopPropagation();
-            //         const active = wishBtn.classList.toggle('active');
-            //         // wishBtn.innerHTML = _wishlistSvg(active);
-            //         wishBtn.setAttribute('aria-label',
-            //             `${active ? 'Remove' : 'Add'} ${p.name} ${active ? 'from' : 'to'} wishlist`);
-            //     });
-            // }
+            const badge = _badgeNode(p); if (badge) imgWrap.appendChild(badge);
 
-            // QV dataset — quick-view.js reads all of these in its click handler.
-            // Phase 1 (immediate): name, brand, price, image, desc, sizes
-            // Phase 2 (async):     id is used to fetch action=images
-            const qvBtn = el.querySelector('.product-qv');
+            const wishBtn = document.createElement('button');
+            wishBtn.className = 'product-wishlist'; wishBtn.type = 'button'; wishBtn.setAttribute('aria-label','Add to wishlist');
+            wishBtn.appendChild(_wishlistSvgNode(false));
+
+            const qvBtn = document.createElement('button');
+            qvBtn.className = 'product-qv'; qvBtn.type = 'button'; qvBtn.setAttribute('aria-label', `Quick view ${p.name}`);
+            // small eye icon
+            const qvSvg = document.createElementNS('http://www.w3.org/2000/svg','svg'); qvSvg.setAttribute('viewBox','0 0 14 14'); qvSvg.setAttribute('aria-hidden','true');
+            const circ = document.createElementNS('http://www.w3.org/2000/svg','circle'); circ.setAttribute('cx','7'); circ.setAttribute('cy','7'); circ.setAttribute('r','4');
+            const pth = document.createElementNS('http://www.w3.org/2000/svg','path'); pth.setAttribute('d','M1 7s2-5 6-5 6 5 6 5-2 5-6 5-6-5-6-5z');
+            qvSvg.appendChild(circ); qvSvg.appendChild(pth); qvBtn.appendChild(qvSvg); qvBtn.appendChild(document.createTextNode(' Quick View'));
+
+            imgWrap.appendChild(wishBtn); imgWrap.appendChild(qvBtn);
+
+            const swatchNode = _swatchRowNode(p);
+
+            const footer = document.createElement('div'); footer.className = 'product-footer';
+            const info = document.createElement('div'); info.className = 'product-info';
+            const brandP = document.createElement('p'); brandP.className = 'product-brand'; brandP.textContent = p.brand;
+            const nameP = document.createElement('p'); nameP.className = 'product-name'; nameP.textContent = p.name;
+            const priceP = document.createElement('p'); priceP.className = 'product-price';
+            const strong = document.createElement('strong'); strong.textContent = `£${p.pricePerDay.toFixed(0)}`;
+            priceP.appendChild(document.createTextNode('From ')); priceP.appendChild(strong); priceP.appendChild(document.createTextNode('/day'));
+
+            info.appendChild(brandP); info.appendChild(nameP); info.appendChild(priceP); footer.appendChild(info);
+
+            el.appendChild(imgWrap); if (swatchNode) el.appendChild(swatchNode); el.appendChild(footer);
+
+            // quick-view dataset
             if (qvBtn) {
-                qvBtn.dataset.qv    = '';
-                qvBtn.dataset.id    = p.id;
-                qvBtn.dataset.name  = p.name;
+                qvBtn.dataset.qv = '';
+                qvBtn.dataset.id = String(p.id);
+                qvBtn.dataset.name = p.name;
                 qvBtn.dataset.brand = p.brand;
                 qvBtn.dataset.price = String(p.pricePerDay);
                 qvBtn.dataset.image = p.imageUrl;
-                qvBtn.dataset.desc  = p.description;
-                qvBtn.dataset.sizes = p.sizes.join(',');
+                qvBtn.dataset.desc = p.description || '';
+                qvBtn.dataset.sizes = (p.sizes || []).join(',');
             }
+
+            // wishlist toggle
+            wishBtn.addEventListener('click', (e) => {
+                e.preventDefault(); e.stopPropagation();
+                const active = wishBtn.classList.toggle('active');
+                while (wishBtn.firstChild) wishBtn.removeChild(wishBtn.firstChild);
+                wishBtn.appendChild(_wishlistSvgNode(active));
+                wishBtn.setAttribute('aria-label', `${active ? 'Remove' : 'Add'} ${p.name} ${active ? 'from' : 'to'} wishlist`);
+            });
 
             return el;
         }
@@ -194,23 +204,17 @@
         // Used by: search modal results list.
         // Image: _sm — smallest surface, smallest file.
         // Entire row is a link to the PDP.
-        function searchResult(rawProduct) {
-            const p = _normalise(rawProduct);
-            const a = document.createElement('a');
-            a.className = 'search-result-item';
-            a.href      = `${CTX}/product?id=${esc(p.id)}`;
-            a.innerHTML = `
-        <div class="search-result-thumb">
-          <img src="${imgUrl(p.imageUrl, 'sm')}"
-               alt="${esc(p.name)}"
-               loading="lazy"
-               decoding="async">
-        </div>
-        <div class="search-result-info">
-          <p class="search-result-brand">${esc(p.brand)}</p>
-          <p class="search-result-name">${esc(p.name)}</p>
-          <p class="search-result-price">From <span>£${p.pricePerDay.toFixed(0)}/day</span></p>
-        </div>`.trim();
+        function searchResult(raw) {
+            const p = _normalise(raw);
+            const a = document.createElement('a'); a.className = 'search-result-item'; a.href = `${CTX}/product?id=${encodeURIComponent(p.id)}`;
+            const thumb = document.createElement('div'); thumb.className = 'search-result-thumb';
+            const img = document.createElement('img'); img.src = imgUrl(p.imageUrl,'sm'); img.alt = p.name || ''; img.loading = 'lazy'; img.decoding = 'async'; thumb.appendChild(img);
+            const info = document.createElement('div'); info.className = 'search-result-info';
+            const brand = document.createElement('p'); brand.className = 'search-result-brand'; brand.textContent = p.brand;
+            const name = document.createElement('p'); name.className = 'search-result-name'; name.textContent = p.name;
+            const price = document.createElement('p'); price.className = 'search-result-price'; price.textContent = `From £${p.pricePerDay.toFixed(0)}/day`;
+            info.appendChild(brand); info.appendChild(name); info.appendChild(price);
+            a.appendChild(thumb); a.appendChild(info);
             return a;
         }
 
@@ -220,41 +224,26 @@
         // Qty controls and remove button wired by cart.js via event delegation.
         function cartItem(raw) {
             const it = _normalise(raw);
-            const li = document.createElement('li');
-            li.className  = 'cart-item';
-            li.dataset.id = it.id;
-            li.innerHTML  = `
-        <div class="cart-item-img" aria-hidden="true">
-          <img src="${imgUrl(it.imageUrl, 'sm')}"
-               alt="${esc(it.name)}"
-               loading="lazy"
-               decoding="async">
-        </div>
-        <div class="cart-item-info">
-          <span class="cart-item-brand">${esc(it.brand)}</span>
-          <p class="cart-item-name">${esc(it.name)}</p>
-          <p class="cart-item-dates">${esc(it.dates ?? '')}</p>
-          <p class="cart-item-price">£${it.pricePerDay.toFixed(0)}/day</p>
-        </div>
-        <div class="cart-item-qty">
-          <button class="cart-remove"
-                  data-id="${esc(it.id)}"
-                  type="button"
-                  aria-label="Remove ${esc(it.name)} from bag">Remove</button>
-          <div class="qty-controls">
-            <button class="qty-btn"
-                    data-action="dec"
-                    data-id="${esc(it.id)}"
-                    type="button"
-                    aria-label="Decrease quantity">−</button>
-            <span class="qty-num">${esc(String(it.qty))}</span>
-            <button class="qty-btn"
-                    data-action="inc"
-                    data-id="${esc(it.id)}"
-                    type="button"
-                    aria-label="Increase quantity">+</button>
-          </div>
-        </div>`.trim();
+            const li = document.createElement('li'); li.className = 'cart-item'; li.dataset.id = String(it.id);
+            const imgWrap = document.createElement('div'); imgWrap.className = 'cart-item-img';
+            const img = document.createElement('img'); img.src = imgUrl(it.imageUrl,'sm'); img.alt = it.name || ''; img.loading = 'lazy'; img.decoding = 'async'; imgWrap.appendChild(img);
+            const info = document.createElement('div'); info.className = 'cart-item-info';
+            const brand = document.createElement('span'); brand.className = 'cart-item-brand'; brand.textContent = it.brand;
+            const name = document.createElement('p'); name.className = 'cart-item-name'; name.textContent = it.name;
+            const dates = document.createElement('p'); dates.className = 'cart-item-dates'; dates.textContent = it.dates || '';
+            const price = document.createElement('p'); price.className = 'cart-item-price'; price.textContent = `£${it.pricePerDay.toFixed(0)}/day`;
+            info.appendChild(brand); info.appendChild(name); info.appendChild(dates); info.appendChild(price);
+
+            const actions = document.createElement('div'); actions.className = 'cart-item-qty';
+            const removeBtn = document.createElement('button'); removeBtn.className = 'cart-remove'; removeBtn.dataset.id = String(it.id); removeBtn.type = 'button'; removeBtn.setAttribute('aria-label', `Remove ${it.name} from bag`); removeBtn.textContent = 'Remove';
+            const qtyControls = document.createElement('div'); qtyControls.className = 'qty-controls';
+            const dec = document.createElement('button'); dec.className = 'qty-btn'; dec.dataset.action = 'dec'; dec.dataset.id = String(it.id); dec.type = 'button'; dec.setAttribute('aria-label','Decrease quantity'); dec.textContent = '−';
+            const num = document.createElement('span'); num.className = 'qty-num'; num.textContent = String(it.qty);
+            const inc = document.createElement('button'); inc.className = 'qty-btn'; inc.dataset.action = 'inc'; inc.dataset.id = String(it.id); inc.type = 'button'; inc.setAttribute('aria-label','Increase quantity'); inc.textContent = '+';
+            qtyControls.appendChild(dec); qtyControls.appendChild(num); qtyControls.appendChild(inc);
+            actions.appendChild(removeBtn); actions.appendChild(qtyControls);
+
+            li.appendChild(imgWrap); li.appendChild(info); li.appendChild(actions);
             return li;
         }
 
@@ -263,3 +252,4 @@
 
     window.CardFactory = CardFactory;
 })();
+

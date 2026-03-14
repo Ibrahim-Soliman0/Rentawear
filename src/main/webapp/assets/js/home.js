@@ -11,190 +11,121 @@
      #occasionScroll  — Shop by Occasion   (static data)
    ============================================================ */
 
-
-/* ── Generic product section loader ───────────────────────────
-   loadSection(config) handles every product scroll strip on the
-   home page. Adding a new section = adding one config object
-   to the SECTIONS array below, no new functions needed.
-
-   config shape:
-   {
-     id       : string,   // id of the .rw-home-scroll element
-     url      : string,   // full fetch URL
-     limit    : number,   // how many cards to show  (default 10)
-     logLabel : string,   // prefix for console.error
-   }
-   ────────────────────────────────────────────────────────────── */
 const SECTION_LIMIT = 4;
+const _controllers = new Map();
 
-function loadSection({ id, url, limit = SECTION_LIMIT, logLabel = id }) {
-    const container = document.getElementById(id);
-    if (!container) return;
+// Use shared fetchJson from utils if available, otherwise use window.fetchJson (should exist after utils loads)
+const _fetchJson = window.fetchJson || (async (url, { outerSignal = null, timeout = 8000 } = {}) => {
+  if (window.fetchJson) return window.fetchJson(url, { outerSignal, timeout });
+  // As a last resort: simple fetch (may not have timeout support)
+  const res = await fetch(url);
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  return await res.json();
+});
 
-    /* Skeletons while fetch is in-flight */
-    container.innerHTML = '';
-    for (let i = 0; i < limit; i++) {
-        container.appendChild(CardFactory.skeleton());
+async function loadSection({ id, url, limit = SECTION_LIMIT, logLabel = id } = {}) {
+  const container = document.getElementById(id);
+  if (!container) return;
+
+  // skeletons (batched)
+  const skel = document.createDocumentFragment();
+  for (let i = 0; i < limit; i++) skel.appendChild(CardFactory.skeleton());
+  container.replaceChildren(skel);
+
+  if (_controllers.has(id)) try { _controllers.get(id).abort(); } catch (e) { /* ignore */ }
+  const controller = new AbortController();
+  _controllers.set(id, controller);
+
+  try {
+    const data = await _fetchJson(url, { outerSignal: controller.signal, timeout: 8000 });
+    _controllers.delete(id);
+
+    const products = Array.isArray(data) ? data : (data && Array.isArray(data.results) ? data.results : []);
+    if (!products.length) {
+      const p = document.createElement('p');
+      p.className = 'rw-no-results';
+      p.textContent = 'No products found.';
+      container.replaceChildren(p);
+      return;
     }
 
-    fetch(url)
-        .then(res => {
-            if (!res.ok) throw new Error(`HTTP ${res.status}`);
-            return res.json();
-        })
-        .then(data => {
-            container.innerHTML = '';
-            const products = Array.isArray(data) ? data : (data.results ?? []);
-            if (!products.length) {
-                container.innerHTML = `<p class="rw-no-results">No products found.</p>`;
-                return;
-            }
-            products.forEach(p => container.appendChild(CardFactory.grid(p)));
-        })
-        .catch(err => {
-            console.error(`[home.js] ${logLabel}:`, err);
-            container.innerHTML =
-                `<p class="text-muted py-3 ps-1">Unable to load — please refresh.</p>`;
-        });
+    const frag = document.createDocumentFragment();
+    for (const prod of products) frag.appendChild(CardFactory.grid(prod));
+    container.replaceChildren(frag);
+  } catch (err) {
+    _controllers.delete(id);
+    if (err && err.name === 'AbortError') return;
+    console.error(`[home.js] ${logLabel}:`, err);
+    const p = document.createElement('p');
+    p.className = 'text-muted py-3 ps-1';
+    p.textContent = 'Unable to load — please refresh.';
+    container.replaceChildren(p);
+  }
 }
 
-
-/* ── Section configs ───────────────────────────────────────────
-   To add another product section to the home page:
-   1. Add a <div class="rw-home-scroll" id="newScroll"> in index.jsp
-   2. Push a config object here — nothing else changes.
-   ────────────────────────────────────────────────────────────── */
 const SECTIONS = [
-    {
-        id       : 'trendingScroll',
-        url      : `${CTX}/ProductServlet?action=list&limit=${SECTION_LIMIT}`,
-        logLabel : 'Trending',
-    },
-    {
-        id       : 'newArrivalsScroll',
-        url      : `${CTX}/ProductServlet?action=list&sort=new&limit=${SECTION_LIMIT}`,
-        logLabel : 'New Arrivals',
-    },
-    {
-        id       : 'womenScroll',
-        url      : `${CTX}/ProductServlet?action=list&category=women&limit=${SECTION_LIMIT}`,
-        logLabel : "Women's",
-    },
-    {
-        id       : 'menScroll',
-        url      : `${CTX}/ProductServlet?action=list&category=men&limit=${SECTION_LIMIT}`,
-        logLabel : "Men's",
-    },
+  { id: 'trendingScroll', url: `${CTX}/ProductServlet?action=list&limit=${SECTION_LIMIT}`, logLabel: 'Trending' },
+  { id: 'newArrivalsScroll', url: `${CTX}/ProductServlet?action=list&sort=new&limit=${SECTION_LIMIT}`, logLabel: 'New Arrivals' },
+  { id: 'womenScroll', url: `${CTX}/ProductServlet?action=list&category=women&limit=${SECTION_LIMIT}`, logLabel: "Women's" },
+  { id: 'menScroll', url: `${CTX}/ProductServlet?action=list&category=men&limit=${SECTION_LIMIT}`, logLabel: "Men's" },
 ];
 
-
-/* ── Occasion section ──────────────────────────────────────────
-   Static editorial data — no servlet needed yet.
-   To pull from the DB later: replace the OCCASIONS array with a
-   fetch and call loadSection() instead. buildOccasionCard() and
-   loadOccasions() stay unchanged.
-   ────────────────────────────────────────────────────────────── */
 const OCCASIONS = [
-    {
-        label    : 'Wedding',
-        bgClass  : 'occ-wedding',
-        href     : `${CTX}/products?occasion=wedding`,
-    },
-    {
-        label    : 'Black Tie',
-        bgClass  : 'occ-blacktie',
-        href     : `${CTX}/products?occasion=black-tie`,
-    },
-    {
-        label    : 'Garden Party',
-        bgClass  : 'occ-garden',
-        href     : `${CTX}/products?occasion=garden-party`,
-    },
-    {
-        label    : 'Business',
-        bgClass  : 'occ-business',
-        href     : `${CTX}/products?occasion=business`,
-    },
-    {
-        label    : 'Cocktail',
-        bgClass  : 'occ-cocktail',
-        href     : `${CTX}/products?occasion=cocktail`,
-    },
-    {
-        label    : 'Casual',
-        bgClass  : 'occ-casual',
-        href     : `${CTX}/products?occasion=casual`,
-    },
+  { label: 'Wedding', bgClass: 'occ-wedding', href: `${CTX}/products?occasion=wedding` },
+  { label: 'Black Tie', bgClass: 'occ-blacktie', href: `${CTX}/products?occasion=black-tie` },
+  { label: 'Garden Party', bgClass: 'occ-garden', href: `${CTX}/products?occasion=garden-party` },
+  { label: 'Business', bgClass: 'occ-business', href: `${CTX}/products?occasion=business` },
+  { label: 'Cocktail', bgClass: 'occ-cocktail', href: `${CTX}/products?occasion=cocktail` },
+  { label: 'Casual', bgClass: 'occ-casual', href: `${CTX}/products?occasion=casual` },
 ];
 
-function buildOccasionCard(occasion) {
-    const a = document.createElement('a');
-    a.className = 'occ-card';
-    a.href      = occasion.href;
-    a.innerHTML = `
-      <div class="occ-bg ${esc(occasion.bgClass)}"></div>
-      <div class="occ-overlay">
-        <span class="occ-label">${esc(occasion.label)}</span>
-      </div>`;
-    return a;
+function buildOccasionCard(o) {
+  const a = document.createElement('a');
+  a.className = 'occ-card';
+  if (o.href) a.href = o.href;
+  const bg = document.createElement('div'); bg.className = 'occ-bg';
+  if (o.bgClass) o.bgClass.split(/\s+/).filter(Boolean).forEach(c => bg.classList.add(esc(c)));
+  const overlay = document.createElement('div'); overlay.className = 'occ-overlay';
+  const span = document.createElement('span'); span.className = 'occ-label'; span.textContent = o.label || '';
+  overlay.appendChild(span); a.appendChild(bg); a.appendChild(overlay);
+  return a;
 }
 
 function loadOccasions() {
-    const container = document.getElementById('occasionScroll');
-    if (!container) return;
-    container.innerHTML = '';
-    OCCASIONS.forEach(o => container.appendChild(buildOccasionCard(o)));
+  const container = document.getElementById('occasionScroll'); if (!container) return;
+  const frag = document.createDocumentFragment(); for (const o of OCCASIONS) frag.appendChild(buildOccasionCard(o));
+  container.replaceChildren(frag);
 }
 
-
-/* ── Init ───────────────────────────────────────────────────── */
-document.addEventListener('DOMContentLoaded', () => {
-    SECTIONS.forEach(loadSection);
-    loadOccasions();
-    loadInterests();
-});
-
-/* ── Based on Your Interests ───────────────────────────────────
-   Only runs when #interestsScroll exists in the DOM.
-   The JSP only renders that element when the user is logged in
-   AND has interests saved — so this function never needs to know
-   about auth state itself.
-
-   Behaviour:
-   • Shows skeletons → fetches action=interests (servlet reads
-     session user's interests and returns matched products).
-   • If the response is empty (interests set but no matching
-     products), the entire section is hidden so the user never
-     sees an empty strip.
-   • On any fetch error the section is also hidden silently —
-     a broken personalisation strip is worse than no strip.
-   ────────────────────────────────────────────────────────────── */
 function loadInterests() {
-    const section   = document.getElementById('interestsSection');
-    const container = document.getElementById('interestsScroll');
-    if (!section || !container) return;   // not logged in — JSP never rendered it
+  const section = document.getElementById('interestsSection');
+  const container = document.getElementById('interestsScroll');
+  if (!section || !container) return;
 
-    /* Skeletons while in-flight */
-    for (let i = 0; i < SECTION_LIMIT; i++) {
-        container.appendChild(CardFactory.skeleton());
-    }
+  const sk = document.createDocumentFragment(); for (let i = 0; i < SECTION_LIMIT; i++) sk.appendChild(CardFactory.skeleton());
+  container.replaceChildren(sk);
 
-    fetch(`${CTX}/ProductServlet?action=interests&limit=${SECTION_LIMIT}`)
-        .then(res => {
-            if (!res.ok) throw new Error(`HTTP ${res.status}`);
-            return res.json();
-        })
-        .then(products => {
-            container.innerHTML = '';
-            if (!products.length) {
-                /* No matches — hide the whole section cleanly */
-                section.hidden = true;
-                return;
-            }
-            products.forEach(p => container.appendChild(CardFactory.grid(p)));
-        })
-        .catch(err => {
-            console.error('[home.js] Interests:', err);
-            section.hidden = true;   // hide rather than show an error in a personalised section
-        });
+  const key = 'interests'; if (_controllers.has(key)) try { _controllers.get(key).abort(); } catch (e) { }
+  const controller = new AbortController(); _controllers.set(key, controller);
+
+  fetchJson(`${CTX}/ProductServlet?action=interests&limit=${SECTION_LIMIT}`, { outerSignal: controller.signal, timeout: 8000 })
+    .then(data => {
+      _controllers.delete(key);
+      const products = Array.isArray(data) ? data : (data && Array.isArray(data.results) ? data.results : []);
+      if (!products.length) { section.hidden = true; return; }
+      const frag = document.createDocumentFragment(); for (const p of products) frag.appendChild(CardFactory.grid(p));
+      container.replaceChildren(frag);
+    })
+    .catch(err => {
+      _controllers.delete(key);
+      if (err && err.name === 'AbortError') return;
+      console.error('[home.js] Interests:', err);
+      section.hidden = true;
+    });
 }
+
+document.addEventListener('DOMContentLoaded', () => {
+  for (const s of SECTIONS) loadSection(s);
+  loadOccasions();
+  loadInterests();
+});

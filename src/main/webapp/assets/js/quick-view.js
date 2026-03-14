@@ -14,6 +14,7 @@
   const sizesEl  = document.getElementById('qvSizes');
   const addBtn   = document.getElementById('qvAdd');
 
+
   let active      = null;
   let activeColor = null;
   let activeSize  = null;
@@ -32,8 +33,12 @@
     setMainImage(data.image);
 
     // Clear any previous gallery state
-    if (thumbsEl) thumbsEl.innerHTML = '';
-    if (colorsEl) colorsEl.innerHTML = '';
+    if (thumbsEl) {
+      while (thumbsEl.firstChild) thumbsEl.removeChild(thumbsEl.firstChild);
+    }
+    if (colorsEl) {
+      while (colorsEl.firstChild) colorsEl.removeChild(colorsEl.firstChild);
+    }
 
     renderSizes(data.sizes);
 
@@ -43,9 +48,8 @@
 
   async function loadImages(productId) {
     try {
-      const resp = await fetch(`${CTX}/ProductServlet?action=images&id=${productId}`);
-      if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
-      const dto = await resp.json();
+      const url = `${CTX}/ProductServlet?action=images&id=${productId}`;
+      const dto = await (window.fetchJson ? window.fetchJson(url, { timeout: 8000 }) : (await fetch(url)).json());
 
       activeColor = dto.defaultColor;
       renderColors(dto.colorGroups);
@@ -56,7 +60,6 @@
 
     } catch (e) {
       console.error('[quick-view] image fetch failed:', e);
-
     }
   }
 
@@ -67,7 +70,7 @@
 
   function renderColors(groups) {
     if (!colorsEl) return;
-    colorsEl.innerHTML = '';
+    while (colorsEl.firstChild) colorsEl.removeChild(colorsEl.firstChild);
     groups.forEach(g => {
       const btn = document.createElement('button');
       btn.type             = 'button';
@@ -92,7 +95,7 @@
 
   function renderThumbs(images) {
     if (!thumbsEl) return;
-    thumbsEl.innerHTML = '';
+    while (thumbsEl.firstChild) thumbsEl.removeChild(thumbsEl.firstChild);
     images.forEach((img, i) => {
       const btn = document.createElement('button');
       btn.type  = 'button';
@@ -109,9 +112,13 @@
   }
 
   function renderSizes(sizes) {
-    sizesEl.innerHTML = '';
+    if (!sizesEl) return;
+    while (sizesEl.firstChild) sizesEl.removeChild(sizesEl.firstChild);
     if (!sizes || !sizes.length) {
-      sizesEl.innerHTML = '<span class="qv-size">One size</span>';
+      const span = document.createElement('span');
+      span.className = 'qv-size';
+      span.textContent = 'One size';
+      sizesEl.appendChild(span);
       activeSize = 'OS';
       return;
     }

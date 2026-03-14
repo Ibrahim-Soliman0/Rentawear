@@ -127,11 +127,37 @@ public class ProductRepositoryImpl extends BaseRepositoryImpl<Product>
                     .getResultList();
         }
     }
+
+    @Override
+    public Object[] getMinMaxPrice(String gender, List<Integer> categoryIds) {
+        try (EntityManager em = JPAUtil.getEntityManager()) {
+            if (categoryIds != null && !categoryIds.isEmpty()) {
+                Object[] row = (Object[]) em.createQuery(
+                        "SELECT MIN(p.basePrice), MAX(p.basePrice) FROM Product p LEFT JOIN p.category c " +
+                                "WHERE c.id IN :ids AND (:gender IS NULL OR c.gender = :gender)")
+                        .setParameter("ids", categoryIds)
+                        .setParameter("gender", toGender(gender))
+                        .getSingleResult();
+                return row;
+            }
+
+            Object[] row = (Object[]) em.createQuery(
+                    "SELECT MIN(p.basePrice), MAX(p.basePrice) FROM Product p LEFT JOIN p.category c " +
+                            "WHERE (:gender IS NULL OR c.gender = :gender)")
+                    .setParameter("gender", toGender(gender))
+                    .getSingleResult();
+            return row;
+        }
+    }
     // Helpers
 
     private Gender toGender(String gender) {
         if (gender == null || gender.isEmpty()) return null;
-        return Gender.valueOf(gender.toUpperCase());
+        try {
+            return Gender.valueOf(gender.toUpperCase());
+        } catch (IllegalArgumentException e) {
+            return null;
+        }
     }
 
     private java.math.BigDecimal toBigDecimal(Double value) {

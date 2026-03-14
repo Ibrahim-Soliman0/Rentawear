@@ -1,5 +1,6 @@
 package service;
 
+import dto.PriceRangeDTO;
 import dto.ProductDTO;
 import model.Product;
 import repository.ProductRepository;
@@ -53,6 +54,14 @@ public class ProductService extends BaseService<Product> {
 
     public List<ProductDTO> getByInterests(List<Integer> categoryIds,String gender, int limit) {
         return toProductDTOs(productRepository.findByInterests(categoryIds,gender, limit));
+    }
+
+    public PriceRangeDTO getPriceRange(String gender, List<Integer> categoryIds) {
+        Object[] row = productRepository.getMinMaxPrice(gender, categoryIds);
+        if (row == null) return new PriceRangeDTO(null, null);
+        Double min = row[0] == null ? null : ((java.math.BigDecimal) row[0]).doubleValue();
+        Double max = row[1] == null ? null : ((java.math.BigDecimal) row[1]).doubleValue();
+        return new PriceRangeDTO(min, max);
     }
 
     private List<ProductDTO> toProductDTOs(List<Product> products) {

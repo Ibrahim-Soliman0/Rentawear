@@ -48,6 +48,7 @@ public class ProductServlet extends HttpServlet {
 
         try {
             if      ("images".equals(action))    handleImages(req, resp);
+            else if ("priceRange".equals(action)) handlePriceRange(req, resp);
             else if ("search".equals(action))    handleSearch(req, resp);
 //            else if ("interests".equals(action)) handleInterests(req, resp, limit);
             else                                 handleList(req, resp, limit, offset);
@@ -210,6 +211,13 @@ public class ProductServlet extends HttpServlet {
 //
 //        JsonUtil.writeJson(resp, dtos);
 //    }
+
+    private void handlePriceRange(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+        String gender = toGender(req.getParameter("category"));
+        List<Integer> catIds = parseCategoryIds(req.getParameter("categoryIds"));
+        dto.PriceRangeDTO pr = productService.getPriceRange(gender, catIds);
+        JsonUtil.writeJson(resp, Map.of("min", pr.min, "max", pr.max));
+    }
 
     //Helpers
 
