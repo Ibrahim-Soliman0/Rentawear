@@ -4,6 +4,44 @@ import jakarta.persistence.*;
 
 import java.util.Objects;
 
+@NamedQueries({
+
+        // Full image list for a product — used by getGroupedByColor in service
+        @NamedQuery(
+                name = "ProductImage.findByProductId",
+                query = "SELECT pi FROM ProductImage pi " +
+                        "WHERE pi.product.id = :pid " +
+                        "ORDER BY pi.color ASC, pi.id ASC"
+        ),
+
+        // Primary image per color — lowest id per color group
+        // Note: uses native query in impl (see below) — this is here for documentation
+        // Named native queries are defined separately via @NamedNativeQuery
+        @NamedQuery(
+                name = "ProductImage.findByProductIdAndColor",
+                query = "SELECT pi FROM ProductImage pi " +
+                        "WHERE pi.product.id = :pid " +
+                        "AND pi.color = :color " +
+                        "ORDER BY pi.id ASC"
+        ),
+
+        // Count images for a product+color — used to determine if uploaded
+        // image is the first (and therefore becomes primary)
+        @NamedQuery(
+                name = "ProductImage.countByProductIdAndColor",
+                query = "SELECT COUNT(pi) FROM ProductImage pi " +
+                        "WHERE pi.product.id = :pid " +
+                        "AND pi.color = :color"
+        ),
+
+        // Bulk delete by color — called when admin removes a color variant
+        @NamedQuery(
+                name = "ProductImage.deleteByProductIdAndColor",
+                query = "DELETE FROM ProductImage pi " +
+                        "WHERE pi.product.id = :pid " +
+                        "AND pi.color = :color"
+        )
+})
 @Entity
 @Table(name = "product_images")
 public class ProductImage {

@@ -100,7 +100,6 @@ body {
   flex-direction: column;
   overflow-x: hidden;
 }
-
 .rw-main { flex: 1; }
 img  { display: block; width: 100%; object-fit: cover; }
 a    { text-decoration: none; color: inherit; transition: var(--rw-transition); }
@@ -591,6 +590,12 @@ h1, h2, h3, h4, h5, h6 {
 
 .cart-item-img  { width: 80px; height: 100px; border-radius: 4px; overflow: hidden; flex-shrink: 0; background-size: cover; background-position: center; background-color: var(--rw-stone); }
 .cart-item-img div { width: 100%; height: 100%; }
+.cart-item-img img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center top;
+}
 .cart-remove { font-size: 0.72rem; color: var(--rw-muted); letter-spacing: 0.06em; text-transform: uppercase; background: none; border: none; cursor: pointer; padding: 0; transition: color 0.15s; font-family: var(--rw-font-body); }
 .cart-remove:hover { color: var(--rw-danger); }
 .cart-item-info  { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
@@ -604,7 +609,11 @@ h1, h2, h3, h4, h5, h6 {
 .qty-btn         { width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; font-size: 1rem; color: var(--rw-charcoal); transition: background 0.15s; line-height: 1; }
 .qty-btn:hover   { background: var(--rw-stone); }
 .qty-num         { width: 28px; text-align: center; font-size: 0.82rem; color: var(--rw-charcoal); font-weight: 500; border-left: 1px solid var(--rw-stone); border-right: 1px solid var(--rw-stone); line-height: 28px; }
-
+.cart-item-name,
+.cart-item-dates,
+.cart-item-price {
+  margin: 0;
+}
 /* Cart footer */
 .cart-footer {
   padding: 20px 28px;
@@ -736,12 +745,23 @@ h1, h2, h3, h4, h5, h6 {
 }
 .search-result-item:last-of-type { border-bottom: none; }
 .search-result-item:hover        { background: var(--rw-cream); }
-.search-result-thumb  { width: 52px; height: 66px; border-radius: 4px; flex-shrink: 0; background-size: cover; background-position: center; background-color: var(--rw-stone); }
+.search-result-thumb  { width: 52px; height: 66px; border-radius: 4px; flex-shrink: 0; background-size: cover; background-position: center; background-color: var(--rw-stone); overflow: hidden;  }
+.search-result-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center top;
+}
 .search-result-info   { min-width: 0; }
 .search-result-brand  { font-size: 0.65rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--rw-muted); margin-bottom: 2px; }
 .search-result-name   { font-family: var(--rw-font-display); font-size: 0.95rem; font-weight: 400; color: var(--rw-ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.search-result-price  { font-size: 0.8rem; color: var(--rw-teal); margin-top: 2px; }
-.search-result-price span { color: var(--rw-muted); }
+.search-result-price  { font-size: 0.8rem; color: var(--rw-muted); margin-top: 2px; }
+.search-result-price span { color: var(--rw-teal); }
+.search-result-brand,
+.search-result-name,
+.search-result-price {
+  margin: 0;
+}
 .search-view-all {
   display: block; text-align: center; padding: 14px 0 4px;
   margin-top: 8px; border-top: 1px solid rgba(0,0,0,.06);
@@ -900,6 +920,14 @@ h1, h2, h3, h4, h5, h6 {
   position: relative; overflow: hidden;
   border-radius: 4px; aspect-ratio: 3/4; margin-bottom: 14px;
 }
+.product-img-wrap img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center top;
+  vertical-align: bottom;
+}
 .product-img-bg {
   width: 100%; height: 100%;
   background-size: cover;        /* ADD */
@@ -933,7 +961,7 @@ h1, h2, h3, h4, h5, h6 {
   background: rgba(26,21,18,0.88); color: #fff;
   text-align: center; font-size: 0.72rem; letter-spacing: 0.1em; text-transform: uppercase;
   padding: 13px 14px;
-  transform: translateY(100%); transition: transform 0.3s var(--rw-ease-out);
+  transform: translateY(calc(100% + 2px)); transition: transform 0.3s var(--rw-ease-out);
   display: flex; align-items: center; justify-content: center; gap: 7px;
   cursor: pointer; border: none;
 }
@@ -954,42 +982,6 @@ h1, h2, h3, h4, h5, h6 {
 
 
 /* ── 13. Product Image Placeholders ──────────────────────── */
-
-.pg-1 { background: linear-gradient(160deg,#C8B4A8,#907060); }
-.pg-2 { background: linear-gradient(160deg,#2A3040,#506080); }
-.pg-3 { background: linear-gradient(160deg,#8C6878,#C09090); }
-.pg-4 { background: linear-gradient(160deg,#6A7860,#90A080); }
-.pg-5 { background: linear-gradient(160deg,#C4A860,#8A7040); }
-.pg-6 { background: linear-gradient(160deg,#405060,#708090); }
-.pg-7 { background: linear-gradient(160deg,#8C5060,#C08070); }
-.pg-8 { background: linear-gradient(160deg,#504060,#806890); }
-
-.pg-1b { background: linear-gradient(160deg,#3A2C28,#5A3C30); }
-.pg-1c { background: linear-gradient(160deg,#E8D8C8,#C8B0A0); }
-.pg-1d { background: linear-gradient(160deg,#506878,#789090); }
-.pg-2b { background: linear-gradient(160deg,#1A2010,#3A4020); }
-.pg-2c { background: linear-gradient(160deg,#8A7060,#B09080); }
-.pg-3b { background: linear-gradient(160deg,#1C2840,#384060); }
-.pg-3c { background: linear-gradient(160deg,#F0E8D0,#D8C8A0); }
-.pg-3d { background: linear-gradient(160deg,#2C4030,#486048); }
-.pg-4b { background: linear-gradient(160deg,#3A2835,#604850); }
-.pg-4c { background: linear-gradient(160deg,#C8B890,#A89870); }
-.pg-5b { background: linear-gradient(160deg,#2A3038,#485060); }
-.pg-5c { background: linear-gradient(160deg,#B87060,#D09080); }
-.pg-6b { background: linear-gradient(160deg,#4A2820,#703830); }
-.pg-6c { background: linear-gradient(160deg,#C0C8B0,#A0A890); }
-.pg-7b { background: linear-gradient(160deg,#F0D8C0,#D8B898); }
-.pg-7c { background: linear-gradient(160deg,#203038,#385060); }
-.pg-8b { background: linear-gradient(160deg,#382818,#604030); }
-.pg-8c { background: linear-gradient(160deg,#C8D0D8,#A8B0C0); }
-
-/* Editorial grid gradients */
-.ed-c1 { background: linear-gradient(160deg,#C8B4A8,#907060); }
-.ed-c2 { background: linear-gradient(160deg,#8C6878,#C09090); }
-.ed-c3 { background: linear-gradient(160deg,#5A4048,#907070); }
-.ed-c4 { background: linear-gradient(160deg,#8070A0,#C0A8C8); }
-.ed-c5 { background: linear-gradient(160deg,#405060,#708090); }
-
 
 /* ── 14. Color Swatches ──────────────────────────────────── */
 

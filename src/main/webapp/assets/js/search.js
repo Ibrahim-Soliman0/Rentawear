@@ -102,8 +102,10 @@
     setLoading();
 
     try {
-      const url = `${CTX}/SearchServlet?q=${encodeURIComponent(q)}&category=${activeCategory}&minPrice=0&maxPrice=999999&limit=6`;
+      // const url = `${CTX}/SearchServlet?q=${encodeURIComponent(q)}&category=${activeCategory}&minPrice=0&maxPrice=999999&limit=6`;
+      const url = `${CTX}/ProductServlet?action=search&q=${encodeURIComponent(q)}&category=${activeCategory}&limit=6`
       const res = await fetch(url);
+
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data = await res.json();
       renderResults(data.results, data.total, q);

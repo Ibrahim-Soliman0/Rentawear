@@ -5,10 +5,88 @@ import org.hibernate.annotations.ColumnDefault;
 
 import java.math.BigDecimal;
 import java.time.Instant;
-import java.util.HashSet;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
+@NamedQueries({
 
+        @NamedQuery(
+                name = "Product.findNew",
+                query = "SELECT DISTINCT p FROM Product p " +
+                        "JOIN FETCH p.productVariants " +
+                        "LEFT JOIN FETCH p.category " +
+                        "WHERE p.createdAt >= :cutoff " +
+                        "ORDER BY p.createdAt DESC"
+        ),
+
+        @NamedQuery(
+                name = "Product.findFiltered",
+                query = "SELECT DISTINCT p FROM Product p " +
+                        "JOIN FETCH p.productVariants " +
+                        "LEFT JOIN FETCH p.category c " +
+                        "WHERE (:gender    IS NULL OR c.gender        = :gender) " +
+                        "AND   (:minPrice  IS NULL OR p.basePrice    >= :minPrice) " +
+                        "AND   (:maxPrice  IS NULL OR p.basePrice    <= :maxPrice) " +
+                        "ORDER BY p.createdAt DESC"
+        ),
+
+        @NamedQuery(
+                name = "Product.countFiltered",
+                query = "SELECT COUNT(DISTINCT p) FROM Product p " +
+                        "LEFT JOIN p.category c " +
+                        "WHERE (:gender    IS NULL OR c.gender        = :gender) " +
+                        "AND   (:minPrice  IS NULL OR p.basePrice    >= :minPrice) " +
+                        "AND   (:maxPrice  IS NULL OR p.basePrice    <= :maxPrice)"
+        ),
+
+        @NamedQuery(
+                name = "Product.searchPaged",
+                query = "SELECT DISTINCT p FROM Product p " +
+                        "JOIN FETCH p.productVariants " +
+                        "LEFT JOIN FETCH p.category c " +
+                        "WHERE (LOWER(p.name) LIKE :q) " +
+                        "AND   (:gender IS NULL OR c.gender = :gender) " +
+                        "ORDER BY p.createdAt DESC"
+        ),
+
+        @NamedQuery(
+                name = "Product.countSearch",
+                query = "SELECT COUNT(DISTINCT p) FROM Product p " +
+                        "LEFT JOIN p.category c " +
+                        "WHERE (LOWER(p.name) LIKE :q) " +
+                        "AND   (:gender IS NULL OR c.gender = :gender)"
+        ),
+
+        @NamedQuery(
+                name = "Product.findByInterests",
+                query = "SELECT DISTINCT p FROM Product p " +
+                        "JOIN FETCH p.productVariants " +
+                        "LEFT JOIN FETCH p.category c " +
+                        "WHERE c.id IN :ids " +
+                        "AND (:gender IS NULL OR c.gender = :gender) " +
+                        "ORDER BY p.createdAt DESC"
+        ),
+
+        @NamedQuery(
+                name = "Product.findByCategories",
+                query = "SELECT DISTINCT p FROM Product p " +
+                        "JOIN FETCH p.productVariants " +
+                        "LEFT JOIN FETCH p.category c " +
+                        "WHERE c.id IN :ids " +
+                        "AND (:gender   IS NULL OR c.gender     = :gender) " +
+                        "AND (:minPrice IS NULL OR p.basePrice >= :minPrice) " +
+                        "AND (:maxPrice IS NULL OR p.basePrice <= :maxPrice) " +
+                        "ORDER BY p.createdAt DESC"
+        ),
+
+        @NamedQuery(
+                name = "Product.countByCategories",
+                query = "SELECT COUNT(DISTINCT p) FROM Product p " +
+                        "LEFT JOIN p.category c " +
+                        "WHERE c.id IN :ids " +
+                        "AND (:gender   IS NULL OR c.gender     = :gender) " +
+                        "AND (:minPrice IS NULL OR p.basePrice >= :minPrice) " +
+                        "AND (:maxPrice IS NULL OR p.basePrice <= :maxPrice)"
+        )
+})
 @Entity
 @Table(name = "products")
 public class Product {
@@ -41,12 +119,14 @@ public class Product {
     @OneToMany(mappedBy = "product",
             cascade = {CascadeType.PERSIST, CascadeType.REMOVE, CascadeType.MERGE},
             orphanRemoval = true)
-    private Set<ProductImage> productImages = new HashSet<>();
+    @OrderBy("id ASC") // to ensure we always get the first image uploaded per color
+    private List<ProductImage> productImages = new ArrayList<>();
 
     @OneToMany(mappedBy = "product",
             cascade = {CascadeType.PERSIST, CascadeType.REMOVE, CascadeType.MERGE},
             orphanRemoval = true)
-    private Set<ProductVariant> productVariants = new HashSet<>();
+    @OrderBy("id ASC")
+    private List<ProductVariant> productVariants = new ArrayList<>();
 
     public void addProductVariant(ProductVariant productVariant) {
         productVariant.setProduct(this);
@@ -69,9 +149,11 @@ public class Product {
         productImage.setProduct(null);
     }
 
-    public Set<ProductImage> getProductImages() {
+    public List<ProductImage> getProductImages() {
         return productImages;
     }
+
+    public List<ProductVariant> getProductVariants() {return productVariants;}
 
     public Integer getId() {
         return id;

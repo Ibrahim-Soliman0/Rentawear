@@ -42,11 +42,11 @@ function loadSection({ id, url, limit = SECTION_LIMIT, logLabel = id }) {
             if (!res.ok) throw new Error(`HTTP ${res.status}`);
             return res.json();
         })
-        .then(products => {
+        .then(data => {
             container.innerHTML = '';
+            const products = Array.isArray(data) ? data : (data.results ?? []);
             if (!products.length) {
-                container.innerHTML =
-                    `<p class="text-muted py-3 ps-1">No products found.</p>`;
+                container.innerHTML = `<p class="rw-no-results">No products found.</p>`;
                 return;
             }
             products.forEach(p => container.appendChild(CardFactory.grid(p)));
@@ -67,7 +67,7 @@ function loadSection({ id, url, limit = SECTION_LIMIT, logLabel = id }) {
 const SECTIONS = [
     {
         id       : 'trendingScroll',
-        url      : `${CTX}/ProductServlet?action=list&sort=popular&limit=${SECTION_LIMIT}`,
+        url      : `${CTX}/ProductServlet?action=list&limit=${SECTION_LIMIT}`,
         logLabel : 'Trending',
     },
     {
