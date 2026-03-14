@@ -48,8 +48,6 @@ public class UserServlet extends HttpServlet {
 
         User returenedUser = userService.getById(user.getId()).get();
 
-        userService.delete(user);
-
         var hopfullyUser = userService.getUserByEmail("ibrahimsoliman269@gmail.com");
         User returenedUser2 = new User();
 
@@ -63,7 +61,12 @@ public class UserServlet extends HttpServlet {
         out.println(returenedUser.getPaymentCards().size());
         out.println(returenedUser.getPaymentCards().iterator().next());
         out.println(returenedUser.getCreatedAt().toString());
-        out.println(paymentCard);
         out.println(returenedUser2);
+
+        var dto = userService.getProfileDetails(user.getId());
+        out.println(dto);
+        out.println(dto.paymentCards());
+
+        userService.delete(user);
     }
 }
