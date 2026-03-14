@@ -39,6 +39,19 @@ public class UserService extends BaseService<User> {
         userRepository.save(user);
     }
 
+    public Optional<User> login(String email, String password) {
+        Optional<User> userOpt = getUserByEmail(email);
+
+        // Check user exists and password matches
+        if (userOpt.isEmpty()) return Optional.empty();
+
+        User user = userOpt.get();
+        if (!HashUtil.verifyPassword(password,user.getPasswordHash())) {
+            return Optional.empty();
+        }
+        return Optional.of(user);
+    }
+
     public Optional<UserProfileDTO> getProfileDetails(Integer id) {
 
         User user = userRepository.findById(id);
