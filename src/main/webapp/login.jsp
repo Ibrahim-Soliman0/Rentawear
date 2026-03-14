@@ -102,7 +102,7 @@
       <!-- Footer link -->
       <p class="rw-auth-switch" style="margin-top: 1.25rem">
         Don't have an account?
-        <a href="${pageContext.request.contextPath}/register.jsp">Create one free</a>
+        <a href="${pageContext.request.contextPath}/register">Create one free</a>
       </p>
 
     </div><!-- /.rw-auth-card -->
