@@ -2,6 +2,8 @@ package service;
 
 import repository.Repository;
 
+import java.util.Optional;
+
 public abstract class BaseService<T> {
 
     protected final Repository<T> repository;
@@ -10,8 +12,8 @@ public abstract class BaseService<T> {
         this.repository = repository;
     }
 
-    public T getById(Integer id) {
-        return repository.findById(id);
+    public Optional<T> getById(Integer id) {
+        return Optional.ofNullable(repository.findById(id));
     }
 
     public T save(T entity) {

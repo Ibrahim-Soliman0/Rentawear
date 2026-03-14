@@ -4,6 +4,16 @@
 
 <web-app>
 
+  <filter>
+    <filter-name>EntityManagerFilter</filter-name>
+    <filter-class>filter.EntityManagerFilter</filter-class>
+  </filter>
+
+  <filter-mapping>
+    <filter-name>EntityManagerFilter</filter-name>
+    <url-pattern>/*</url-pattern>
+  </filter-mapping>
+
   <listener>
     <listener-class>servlet.ServletContextBoot</listener-class>
   </listener>

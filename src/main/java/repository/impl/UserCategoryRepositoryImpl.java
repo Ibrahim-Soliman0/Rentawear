@@ -1,6 +1,6 @@
 package repository.impl;
 
-import model.UserCategory;
+import entity.UserCategory;
 import repository.UserCategoryRepository;
 
 public class UserCategoryRepositoryImpl extends BaseRepositoryImpl<UserCategory> implements UserCategoryRepository {

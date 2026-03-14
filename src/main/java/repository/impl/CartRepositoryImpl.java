@@ -1,6 +1,6 @@
 package repository.impl;
 
-import model.Cart;
+import entity.Cart;
 import repository.CartRepository;
 
 public class CartRepositoryImpl extends BaseRepositoryImpl<Cart> implements CartRepository {

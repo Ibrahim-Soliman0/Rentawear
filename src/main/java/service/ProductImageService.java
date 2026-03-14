@@ -1,6 +1,6 @@
 package service;
 
-import model.ProductImage;
+import entity.ProductImage;
 import repository.ProductImageRepository;
 import repository.impl.ProductImageRepositoryImpl;
 

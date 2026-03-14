@@ -1,6 +1,6 @@
 package service;
 
-import model.UserCategory;
+import entity.UserCategory;
 import repository.UserCategoryRepository;
 import repository.impl.UserCategoryRepositoryImpl;
 

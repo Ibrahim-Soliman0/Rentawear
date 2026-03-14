@@ -1,6 +1,6 @@
 package repository;
 
-import model.PaymentCard;
+import entity.PaymentCard;
 
 public interface PaymentCardRepository extends Repository<PaymentCard> {
 

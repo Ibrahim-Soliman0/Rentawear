@@ -1,6 +1,6 @@
 package service;
 
-import model.Category;
+import entity.Category;
 import repository.CategoryRepository;
 import repository.impl.CategoryRepositoryImpl;
 

@@ -1,6 +1,6 @@
 package service;
 
-import model.Cart;
+import entity.Cart;
 import repository.CartRepository;
 import repository.impl.CartRepositoryImpl;
 

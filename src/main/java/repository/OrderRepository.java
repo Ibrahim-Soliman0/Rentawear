@@ -1,6 +1,6 @@
 package repository;
 
-import model.Order;
+import entity.Order;
 
 public interface OrderRepository extends Repository<Order> {
 

@@ -1,6 +1,6 @@
 package repository.impl;
 
-import model.ProductImage;
+import entity.ProductImage;
 import repository.ProductImageRepository;
 
 public class ProductImageRepositoryImpl extends BaseRepositoryImpl<ProductImage> implements ProductImageRepository {
