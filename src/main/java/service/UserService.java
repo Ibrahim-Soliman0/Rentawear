@@ -28,10 +28,10 @@ public class UserService extends BaseService<User> {
         return Optional.ofNullable(userRepository.findByEmail(email));
     }
 
-    public UserProfileDTO getProfileDetails(Integer id) {
+    public Optional<UserProfileDTO> getProfileDetails(Integer id) {
 
         User user = userRepository.findById(id);
 
-        return mapper.toProfileDto(user);
+        return Optional.ofNullable(mapper.toProfileDto(user));
     }
 }

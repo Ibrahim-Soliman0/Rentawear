@@ -63,7 +63,7 @@ public class UserServlet extends HttpServlet {
         out.println(returenedUser.getCreatedAt().toString());
         out.println(returenedUser2);
 
-        var dto = userService.getProfileDetails(user.getId());
+        var dto = userService.getProfileDetails(user.getId()).get();
         out.println(dto);
         out.println(dto.paymentCards());
 
