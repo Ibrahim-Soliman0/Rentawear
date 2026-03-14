@@ -46,7 +46,7 @@
                     name="email"
                     class="rw-form-input"
                     placeholder="you@example.com"
-                    value="${param.email}"
+                    value="${not empty requestScope.prefillEmail ? requestScope.prefillEmail : param.email}"
                     autocomplete="email"
                     required
                     maxlength="100"
