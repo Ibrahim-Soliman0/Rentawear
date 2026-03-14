@@ -6,7 +6,6 @@ import repository.Repository;
 
 import java.util.List;
 
-import java.util.List;
 
 public abstract class BaseRepositoryImpl<T> implements Repository<T> {
 
@@ -43,19 +42,10 @@ public abstract class BaseRepositoryImpl<T> implements Repository<T> {
         em().remove(managedEntity);
     }
 
+    @Override
     public List<T> findAll() {
-        try (EntityManager em = JPAUtil.getEntityManager()) {
-            return em.createQuery(
-                            "SELECT e FROM " + entityClass.getSimpleName() + " e", entityClass)
-                    .getResultList();
-        }
-    }
-
-    public List<T> findAll() {
-        try (EntityManager em = JPAUtil.getEntityManager()) {
-            return em.createQuery(
-                            "SELECT e FROM " + entityClass.getSimpleName() + " e", entityClass)
-                    .getResultList();
-        }
+        return em().createQuery(
+                        "SELECT e FROM " + entityClass.getSimpleName() + " e", entityClass)
+                .getResultList();
     }
 }
