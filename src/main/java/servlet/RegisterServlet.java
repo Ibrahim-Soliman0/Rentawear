@@ -7,9 +7,8 @@ import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
-import model.Category;
-import model.User;
-import model.enums.Gender;
+import entity.User;
+import entity.enums.Gender;
 import service.CategoryService;
 import service.UserService;
 
@@ -92,12 +91,11 @@ public class RegisterServlet extends HttpServlet {
             user.setCreditLimit(BigDecimal.ZERO);
         }
 
-        if(styleInterests != null){
-            for(String categoryId : styleInterests){
-               Category category = categoryService.getById(Integer.parseInt(categoryId));
-               if(category!=null){
-                   user.addInterest(category);
-               }
+        if (styleInterests != null) {
+            for (String categoryId : styleInterests) {
+                categoryService
+                        .getById(Integer.parseInt(categoryId))
+                        .ifPresent(user::addInterest);
             }
         }
 
