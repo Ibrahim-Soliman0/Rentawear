@@ -52,9 +52,11 @@ public class RegisterServlet extends HttpServlet {
         // Server-side validation
         if (isEmpty(fullName) || isEmpty(email) || isEmpty(password) || isEmpty(gender)) {
             forwardWithError(req, resp, "Please fill in all required fields.");
+            return;
         }
         if(password.length()<8){
             forwardWithError(req,resp,"Password must be at leats 8 characters.");
+            return;
         }
 
         // Build User object
@@ -73,6 +75,7 @@ public class RegisterServlet extends HttpServlet {
                 user.setBirthday(LocalDate.parse(dobStr, fmt));
             } catch (DateTimeParseException e) {
                 forwardWithError(req, resp, "Invalid date of birth format.");
+                return;
             }
         }
 
