@@ -39,42 +39,58 @@ const Cart = (function () {
   function render() {
     const count = items.reduce((sum, i) => sum + i.qty, 0);
 
+    // Badge and header count — unchanged
     const badge = el.badge();
     if (badge) {
       badge.textContent = String(count);
       badge.classList.toggle('visible', count > 0);
     }
-
     const hdr = el.countLabel();
     if (hdr) hdr.textContent = count === 0 ? '0 items' : `${count} item${count !== 1 ? 's' : ''}`;
 
-    const wrap = el.itemsWrap();
+    const wrap  = el.itemsWrap();
     const empty = el.empty();
     if (!wrap) return;
 
-    // Clear old cards
-    wrap.innerHTML = '';
+    const cta = document.querySelector('.cart-cta');
 
     if (items.length === 0) {
       if (empty) empty.style.display = 'flex';
       wrap.style.display = 'none';
-      if (el.subtotal()) el.subtotal().textContent = '$0.00';
-      if (el.total()) el.total().textContent = '$0.00';
+      // clear children safely
+      while (wrap.firstChild) wrap.removeChild(wrap.firstChild);
+      if (el.subtotal()) el.subtotal().textContent = '£0.00';
+      if (el.total())    el.total().textContent    = '£0.00';
+      if (cta) cta.style.display = 'none';
       return;
     }
 
     if (empty) empty.style.display = 'none';
-    wrap.style.display = 'block';
+    wrap.style.display = 'flex';
+    if (cta) cta.style.display = 'flex';
 
-    // Use CardFactory.cartItem for consistent markup
-    items.forEach(item => {
-      const card = CardFactory.cartItem(item);
-      wrap.appendChild(card);
-    });
+    const existingIds = [...wrap.querySelectorAll('.cart-item')]
+        .map(li => li.dataset.id);
+    const currentIds  = items.map(i => String(i.id));
+    const listChanged = JSON.stringify(existingIds) !== JSON.stringify(currentIds);
+
+    if (listChanged) {
+      // clear and rebuild (batched)
+      while (wrap.firstChild) wrap.removeChild(wrap.firstChild);
+      const frag = document.createDocumentFragment();
+      items.forEach(item => frag.appendChild(CardFactory.cartItem(item)));
+      wrap.appendChild(frag);
+    } else {
+      items.forEach(item => {
+        const li  = wrap.querySelector(`.cart-item[data-id="${item.id}"]`);
+        const num = li?.querySelector('.qty-num');
+        if (num) num.textContent = String(item.qty);
+      });
+    }
 
     const sub = subtotal();
-    if (el.subtotal()) el.subtotal().textContent = `$${sub.toFixed(2)}`;
-    if (el.total()) el.total().textContent = `$${sub.toFixed(2)}`;
+    if (el.subtotal()) el.subtotal().textContent = `£${sub.toFixed(2)}`;
+    if (el.total())    el.total().textContent    = `£${sub.toFixed(2)}`;
   }
 
   function remove(id) {
