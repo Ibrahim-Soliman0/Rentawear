@@ -2163,3 +2163,454 @@ input::-ms-clear {
 .rw-tag i {
   font-size: 0.75rem;
 }
+/* ── 32. Account / Profile Pages ────────────────────────────
+   Append this block to the bottom of styles.css.
+   All values use the existing --rw-* design tokens.
+   No new colours, radii, or fonts are introduced.
+   ──────────────────────────────────────────────────────────── */
+
+
+/* ── Page layout ─────────────────────────────────────────── */
+.account-layout {
+  display: flex;
+  min-height: calc(100vh - var(--rw-nav-h));
+  background: var(--rw-cream);
+}
+
+
+/* ── Sidebar ──────────────────────────────────────────────── */
+.account-sidebar {
+  width: 260px;
+  flex-shrink: 0;
+  background: var(--rw-warm-white);
+  border-right: 1px solid var(--rw-stone);
+  padding: 32px 20px 28px;
+  display: flex;
+  flex-direction: column;
+  position: sticky;
+  top: var(--rw-nav-h);
+  height: calc(100vh - var(--rw-nav-h));
+  overflow-y: auto;
+}
+
+/* Avatar + name block at top of sidebar */
+.account-sidebar-identity {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 24px;
+}
+
+.account-avatar-ring {
+  position: relative;
+  width: 46px;
+  height: 46px;
+  flex-shrink: 0;
+}
+
+.account-avatar-ring--lg {
+  width: 72px;
+  height: 72px;
+}
+
+.account-avatar {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid var(--rw-stone);
+  display: block;
+}
+
+/* Camera overlay on avatar */
+.account-avatar-cam {
+  position: absolute;
+  bottom: 1px;
+  right: 1px;
+  width: 24px;
+  height: 24px;
+  background: var(--rw-charcoal);
+  border-radius: 50%;
+  border: 2px solid var(--rw-warm-white);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.account-avatar-cam:hover { background: var(--rw-teal); }
+
+.account-sidebar-name-block { min-width: 0; }
+
+.account-sidebar-name {
+  font-family: var(--rw-font-display);
+  font-size: 1rem;
+  font-weight: 400;
+  color: var(--rw-ink);
+  margin: 0 0 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.account-sidebar-email {
+  font-size: 0.72rem;
+  color: var(--rw-muted);
+  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Divider lines */
+.account-sidebar-divider {
+  height: 1px;
+  background: var(--rw-stone);
+  margin: 8px -20px 16px;
+}
+
+.account-sidebar-divider--push { margin-top: auto; margin-bottom: 12px; }
+
+/* Nav label (uppercase section header) */
+.account-nav-label {
+  font-size: 0.62rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--rw-muted);
+  margin: 0 0 4px 10px;
+}
+
+/* Nav links */
+.account-nav-link {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  font-size: 0.84rem;
+  color: var(--rw-charcoal);
+  border-radius: var(--rw-radius);
+  transition: background 0.15s, color 0.15s;
+  margin-bottom: 2px;
+  text-decoration: none;
+}
+
+.account-nav-link svg { flex-shrink: 0; opacity: 0.6; }
+
+.account-nav-link:hover {
+  background: var(--rw-cream);
+  color: var(--rw-ink);
+}
+
+.account-nav-link:hover svg { opacity: 1; }
+
+.account-nav-link.active {
+  background: var(--rw-teal-light);
+  color: var(--rw-teal-dark);
+  font-weight: 500;
+}
+
+.account-nav-link.active svg { opacity: 1; color: var(--rw-teal); }
+
+/* Log out link */
+.account-nav-logout { color: var(--rw-muted); }
+.account-nav-logout:hover { color: var(--rw-danger); background: #fff5f5; }
+
+
+/* ── Main content area ────────────────────────────────────── */
+.account-content {
+  flex: 1;
+  padding: 40px 48px 64px;
+  min-width: 0;
+  background: var(--rw-cream);
+}
+
+
+/* ── Breadcrumb ───────────────────────────────────────────── */
+.account-breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.75rem;
+  color: var(--rw-muted);
+  margin-bottom: 32px;
+}
+
+.account-breadcrumb a { color: var(--rw-muted); }
+.account-breadcrumb a:hover { color: var(--rw-teal); }
+.account-breadcrumb svg { opacity: 0.5; flex-shrink: 0; }
+.account-breadcrumb span { color: var(--rw-charcoal); }
+
+
+/* ── Tab visibility ───────────────────────────────────────── */
+.account-tab { display: none; }
+.account-tab.active { display: block; }
+
+
+/* ── Page header ──────────────────────────────────────────── */
+.account-page-header { margin-bottom: 28px; }
+
+.account-page-title {
+  font-family: var(--rw-font-display);
+  font-size: 2rem;
+  font-weight: 300;
+  color: var(--rw-ink);
+  margin: 4px 0 0;
+  line-height: 1.2;
+}
+
+.account-page-sub {
+  font-size: 0.84rem;
+  color: var(--rw-muted);
+  margin: -16px 0 28px;
+}
+
+
+/* ── Section card ─────────────────────────────────────────── */
+.account-section {
+  background: var(--rw-warm-white);
+  border: 1px solid var(--rw-stone);
+  border-radius: var(--rw-radius);
+  padding: 28px 32px;
+  margin-bottom: 16px;
+}
+
+.account-section-header { margin-bottom: 20px; }
+
+.account-section-title {
+  font-family: var(--rw-font-display);
+  font-size: 1.1rem;
+  font-weight: 400;
+  color: var(--rw-ink);
+  margin: 0 0 4px;
+}
+
+.account-section-sub {
+  font-size: 0.8rem;
+  color: var(--rw-muted);
+  margin: 0;
+}
+
+
+/* ── Avatar card (inside section) ────────────────────────── */
+.account-avatar-card {
+  display: flex;
+  align-items: center;
+  gap: 28px;
+}
+
+.account-avatar-meta { min-width: 0; }
+
+.account-avatar-name {
+  font-family: var(--rw-font-display);
+  font-size: 1.15rem;
+  font-weight: 400;
+  color: var(--rw-ink);
+  margin: 0 0 4px;
+}
+
+.account-avatar-hint {
+  font-size: 0.75rem;
+  color: var(--rw-muted);
+  margin: 0 0 14px;
+}
+
+.account-avatar-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+
+/* ── Form grid ────────────────────────────────────────────── */
+.account-form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0 24px;
+}
+
+.account-form-full { grid-column: 1 / -1; }
+
+.account-field-hint {
+  font-size: 0.75rem;
+  color: var(--rw-muted);
+  margin: 6px 0 0;
+}
+
+
+/* ── Form actions row ─────────────────────────────────────── */
+.account-form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  padding-top: 8px;
+}
+
+
+/* ── Small button modifier (works on btn-rw-primary/outline) ─ */
+.btn-rw--sm {
+  padding: 10px 22px;
+  font-size: 0.72rem;
+}
+
+
+/* ── Group heading for rental sections ───────────────────── */
+.account-group-label {
+  font-size: 0.65rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--rw-muted);
+  margin: 0 0 12px;
+}
+
+
+/* ── Rental card ──────────────────────────────────────────── */
+.account-section--rental { padding: 20px 24px; }
+
+.account-rental-card {
+  display: flex;
+  gap: 20px;
+  align-items: flex-start;
+}
+
+.account-rental-img {
+  width: 76px;
+  height: 104px;
+  flex-shrink: 0;
+  border-radius: var(--rw-radius);
+  overflow: hidden;
+  background: var(--rw-stone);
+}
+
+.account-rental-img img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center top;
+  display: block;
+}
+
+.account-rental-body { flex: 1; min-width: 0; }
+
+.account-rental-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.account-rental-name {
+  font-family: var(--rw-font-display);
+  font-size: 1rem;
+  font-weight: 400;
+  color: var(--rw-ink);
+  margin: 0 0 3px;
+  line-height: 1.3;
+}
+
+.account-rental-sub {
+  font-size: 0.78rem;
+  color: var(--rw-muted);
+  margin: 0;
+}
+
+.account-rental-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px 20px;
+  font-size: 0.75rem;
+  color: var(--rw-muted);
+  margin-bottom: 14px;
+}
+
+.account-rental-meta span {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.account-rental-meta svg { flex-shrink: 0; opacity: 0.7; }
+
+.account-rental-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+
+/* ── Status badges ────────────────────────────────────────── */
+.account-status {
+  display: inline-block;
+  padding: 4px 12px;
+  border-radius: 2px;
+  font-size: 0.68rem;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.account-status--active   { background: var(--rw-teal-light); color: var(--rw-teal-dark); }
+.account-status--delivery { background: #FEF8E8; color: #926B0A; }
+.account-status--returned { background: var(--rw-stone); color: var(--rw-muted); }
+
+
+/* ── Empty state ──────────────────────────────────────────── */
+.account-empty-state {
+  background: var(--rw-warm-white);
+  border: 1px solid var(--rw-stone);
+  border-radius: var(--rw-radius);
+  padding: 60px 32px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
+
+.account-empty-label {
+  font-family: var(--rw-font-display);
+  font-size: 1.1rem;
+  font-weight: 300;
+  color: var(--rw-muted);
+  margin: 0;
+}
+
+
+/* ── Responsive ───────────────────────────────────────────── */
+@media (max-width: 960px) {
+  .account-layout { flex-direction: column; }
+
+  .account-sidebar {
+    width: 100%;
+    position: static;
+    height: auto;
+    border-right: none;
+    border-bottom: 1px solid var(--rw-stone);
+    padding: 20px 16px;
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 4px;
+    overflow: visible;
+  }
+
+  .account-sidebar-identity { width: 100%; margin-bottom: 12px; }
+  .account-nav-label { display: none; }
+  .account-sidebar-divider { display: none; }
+  .account-nav-logout { margin-left: auto; }
+
+  .account-content { padding: 28px 20px 48px; }
+}
+
+@media (max-width: 640px) {
+  .account-form-grid { grid-template-columns: 1fr; }
+  .account-form-full { grid-column: 1; }
+  .account-section { padding: 20px 18px; }
+  .account-content { padding: 20px 14px 48px; }
+  .account-avatar-card { flex-direction: column; align-items: flex-start; gap: 16px; }
+  .account-rental-top { flex-direction: column; }
+  .account-rental-top .account-status { align-self: flex-start; }
+}
