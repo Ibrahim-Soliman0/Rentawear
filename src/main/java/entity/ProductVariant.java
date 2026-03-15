@@ -2,6 +2,40 @@ package entity;
 
 import jakarta.persistence.*;
 
+@NamedQueries({
+
+        @NamedQuery(
+                name = "ProductVariant.findByProductId",
+                query = "SELECT pv FROM ProductVariant pv " +
+                        "WHERE pv.product.id = :pid " +
+                        "ORDER BY pv.id ASC"
+        ),
+
+        // for rendering color swatches
+        @NamedQuery(
+                name = "ProductVariant.findDistinctColorsByProductId",
+                query = "SELECT DISTINCT pv.color FROM ProductVariant pv " +
+                        "WHERE pv.product.id = :pid " +
+                        "ORDER BY pv.color ASC"
+        ),
+
+        // Used when a color variant is deleted, remove all size rows for that color
+        @NamedQuery(
+                name = "ProductVariant.deleteByProductIdAndColor",
+                query = "DELETE FROM ProductVariant pv " +
+                        "WHERE pv.product.id = :pid " +
+                        "AND pv.color = :color"
+        ),
+
+        // sizes available for one specific color
+        @NamedQuery(
+                name = "ProductVariant.findSizesByProductIdAndColor",
+                query = "SELECT pv.size FROM ProductVariant pv " +
+                        "WHERE pv.product.id = :pid " +
+                        "AND pv.color = :color " +
+                        "ORDER BY pv.id ASC"
+        )
+})
 @Entity
 @Table(name = "product_variants")
 public class ProductVariant {

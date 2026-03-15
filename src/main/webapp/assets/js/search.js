@@ -20,16 +20,68 @@
   const trending = document.getElementById('searchTrending');
   const results = document.getElementById('searchResults');
 
+  // Price range UI
+  const priceContainer = document.getElementById('searchPrice');
+  const priceMinInput = document.getElementById('searchPriceMin');
+  const priceMaxInput = document.getElementById('searchPriceMax');
+  const rangeMin = document.getElementById('searchRangeMin');
+  const rangeMax = document.getElementById('searchRangeMax');
+
   if (!modal || !input || !results) return;
 
   let debounceTimer = null;
   let activeCategory = 'all';
+  let priceBounds = { min: 0, max: 1000 };
+  let selectedPrice = { min: null, max: null };
 
   function openSearch() {
     modal.classList.add('open');
     modal.setAttribute('aria-hidden', 'false');
     document.body.style.overflow = 'hidden';
     setTimeout(() => input.focus(), 0);
+    // // fetch price bounds for current category
+    // loadPriceBounds(activeCategory);
+  }
+
+  async function loadPriceBounds(category) {
+    try {
+      const url = `${CTX}/ProductServlet?action=priceRange&category=${encodeURIComponent(category)}`;
+      const data = await fetchJson(url, { timeout: 8000 });
+      const min = data.min ?? 0;
+      const max = data.max ?? 0;
+      priceBounds = { min: Math.floor(min || 0), max: Math.ceil(max || 0) };
+      selectedPrice.min = priceBounds.min;
+      selectedPrice.max = priceBounds.max;
+      renderPriceUI();
+    } catch (e) {
+      // keep UI hidden if price load fails
+      console.error('[search.js] priceRange:', e);
+      if (priceContainer) priceContainer.setAttribute('aria-hidden', 'true');
+    }
+  }
+
+  function renderPriceUI() {
+    if (!priceContainer) return;
+    priceContainer.setAttribute('aria-hidden', 'false');
+    const min = priceBounds.min; const max = priceBounds.max;
+    rangeMin.min = min; rangeMin.max = max; rangeMin.value = selectedPrice.min ?? min;
+    rangeMax.min = min; rangeMax.max = max; rangeMax.value = selectedPrice.max ?? max;
+    priceMinInput.value = selectedPrice.min;
+    priceMaxInput.value = selectedPrice.max;
+  }
+
+  function clampPrices() {
+    if (!rangeMin || !rangeMax) return;
+    let a = Number(rangeMin.value);
+    let b = Number(rangeMax.value);
+    if (a > b) {
+      // swap to keep min <= max
+      const tmp = a; a = b; b = tmp;
+    }
+    selectedPrice.min = Math.max(priceBounds.min, Math.min(priceBounds.max, Math.floor(a)));
+    selectedPrice.max = Math.max(priceBounds.min, Math.min(priceBounds.max, Math.ceil(b)));
+    priceMinInput.value = selectedPrice.min;
+    priceMaxInput.value = selectedPrice.max;
   }
 
   function closeSearch() {
@@ -43,35 +95,46 @@
     input.value = '';
     clearBtn?.classList.remove('show');
     results.style.display = 'none';
-    results.innerHTML = '';
+    // clear children safely
+    while (results.firstChild) results.removeChild(results.firstChild);
     if (trending) trending.style.display = 'block';
     activeCategory = 'all';
     document.querySelectorAll('.filter-pill').forEach((p, i) => p.classList.toggle('active', i === 0));
   }
 
+  function _placeholderNode(text) {
+    const div = document.createElement('div');
+    div.className = 'search-placeholder';
+    div.textContent = text;
+    return div;
+  }
+
   function setLoading() {
     if (trending) trending.style.display = 'none';
     results.style.display = 'block';
-    results.innerHTML = '<div class="search-placeholder">Searching...</div>';
+    while (results.firstChild) results.removeChild(results.firstChild);
+    results.appendChild(_placeholderNode('Searching...'));
   }
 
   function setEmpty() {
     if (trending) trending.style.display = 'none';
     results.style.display = 'block';
-    results.innerHTML = '<div class="search-placeholder">No results found.</div>';
+    while (results.firstChild) results.removeChild(results.firstChild);
+    results.appendChild(_placeholderNode('No results found.'));
   }
 
   function setError() {
     if (trending) trending.style.display = 'none';
     results.style.display = 'block';
-    results.innerHTML = '<div class="search-placeholder">Could not load results. Try again.</div>';
+    while (results.firstChild) results.removeChild(results.firstChild);
+    results.appendChild(_placeholderNode('Could not load results. Try again.'));
   }
 
   function renderResults(items, total, q) {
     if (!items?.length) return setEmpty();
 
     results.style.display = 'block';
-    results.innerHTML = '';
+    while (results.firstChild) results.removeChild(results.firstChild);
     const frag = document.createDocumentFragment();
 
     // Use CardFactory.searchResult for consistent markup
@@ -82,7 +145,10 @@
     if (total > items.length) {
       const a = document.createElement('a');
       a.className = 'search-view-all';
-      a.href = `${CTX}/search?q=${encodeURIComponent(q)}&category=${activeCategory}`;
+      // include selected price range in query params
+      const minP = selectedPrice.min ?? priceBounds.min;
+      const maxP = selectedPrice.max ?? priceBounds.max;
+      a.href = `${CTX}/search?q=${encodeURIComponent(q)}&category=${activeCategory}&minPrice=${minP}&maxPrice=${maxP}`;
       a.textContent = `View all ${total} results`;
       frag.appendChild(a);
     }
@@ -94,7 +160,7 @@
     const q = input.value.trim();
     if (q.length < 2) {
       results.style.display = 'none';
-      results.innerHTML = '';
+      while (results.firstChild) results.removeChild(results.firstChild);
       if (trending) trending.style.display = 'block';
       return;
     }
@@ -102,10 +168,11 @@
     setLoading();
 
     try {
-      const url = `${CTX}/SearchServlet?q=${encodeURIComponent(q)}&category=${activeCategory}&minPrice=0&maxPrice=999999&limit=6`;
-      const res = await fetch(url);
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const data = await res.json();
+      // include price bounds in the search request so server can filter results
+      const minP = selectedPrice.min ?? priceBounds.min;
+      const maxP = selectedPrice.max ?? priceBounds.max;
+      const url = `${CTX}/ProductServlet?action=search&q=${encodeURIComponent(q)}&category=${activeCategory}&minPrice=${minP}&maxPrice=${maxP}&limit=6`;
+      const data = await fetchJson(url, { timeout: 8000 });
       renderResults(data.results, data.total, q);
     } catch (e) {
       console.error('[search.js] Search error:', e);
@@ -133,16 +200,22 @@
     input.value = '';
     clearBtn.classList.remove('show');
     results.style.display = 'none';
-    results.innerHTML = '';
+    while (results.firstChild) results.removeChild(results.firstChild);
     if (trending) trending.style.display = 'block';
     input.focus();
   });
+
+  // Range slider events
+  rangeMin?.addEventListener('input', () => { clampPrices(); });
+  rangeMax?.addEventListener('input', () => { clampPrices(); });
 
   document.querySelectorAll('.filter-pill[data-cat]').forEach(pill => {
     pill.addEventListener('click', () => {
       document.querySelectorAll('.filter-pill[data-cat]').forEach(p => p.classList.remove('active'));
       pill.classList.add('active');
       activeCategory = pill.dataset.cat || 'all';
+      // refetch price bounds for selected category
+      // loadPriceBounds(activeCategory);
       runSearch();
     });
   });

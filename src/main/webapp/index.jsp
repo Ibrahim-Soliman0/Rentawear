@@ -35,22 +35,6 @@
 
     <div class="hero-image">
       <div class="hero-image-placeholder">
-<%--        <svg width="260" height="420" viewBox="0 0 260 420" fill="none" xmlns="http://www.w3.org/2000/svg" style="filter:drop-shadow(0 24px 64px rgba(0,0,0,0.3))" aria-hidden="true">--%>
-<%--          <ellipse cx="130" cy="52" rx="28" ry="32" fill="rgba(210,185,165,0.9)"/>--%>
-<%--          <rect x="121" y="80" width="18" height="20" rx="4" fill="rgba(210,185,165,0.9)"/>--%>
-<%--          <path d="M90 100 Q130 92 170 100 L185 200 Q180 280 130 310 Q80 280 75 200 Z" fill="rgba(255,255,255,0.88)"/>--%>
-<%--          <path d="M75 200 Q60 290 40 380 Q85 360 130 370 Q175 360 220 380 Q200 290 185 200 Q180 280 130 310 Q80 280 75 200Z" fill="rgba(255,255,255,0.85)"/>--%>
-<%--          <path d="M85 195 Q130 205 175 195" stroke="rgba(180,160,140,0.4)" stroke-width="1" fill="none"/>--%>
-<%--          <path d="M90 105 Q55 140 50 180" stroke="rgba(210,185,165,0.9)" stroke-width="16" stroke-linecap="round" fill="none"/>--%>
-<%--          <path d="M170 105 Q205 140 210 180" stroke="rgba(210,185,165,0.9)" stroke-width="16" stroke-linecap="round" fill="none"/>--%>
-<%--          <path d="M102 40 Q130 10 158 40 Q165 55 162 70 Q158 60 130 55 Q102 60 98 70 Q95 55 102 40Z" fill="rgba(60,40,25,0.85)"/>--%>
-<%--          <path d="M110 110 Q130 108 150 110" stroke="rgba(255,255,255,0.5)" stroke-width="1" fill="none"/>--%>
-<%--          <path d="M100 140 Q130 135 160 140" stroke="rgba(255,255,255,0.3)" stroke-width="1" fill="none"/>--%>
-<%--          <rect x="108" y="368" width="18" height="40" rx="6" fill="rgba(210,185,165,0.7)"/>--%>
-<%--          <rect x="134" y="368" width="18" height="40" rx="6" fill="rgba(210,185,165,0.7)"/>--%>
-<%--          <ellipse cx="117" cy="410" rx="16" ry="7" fill="rgba(40,25,15,0.8)"/>--%>
-<%--          <ellipse cx="143" cy="410" rx="16" ry="7" fill="rgba(40,25,15,0.8)"/>--%>
-<%--        </svg>--%>
   <img src="assets/img/hero.jpg"
        alt="assets/img/hero.jpg"
        loading="lazy"/>
