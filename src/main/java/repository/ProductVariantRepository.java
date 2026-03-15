@@ -1,6 +1,6 @@
 package repository;
 
-import model.ProductVariant;
+import entity.ProductVariant;
 
 import java.util.List;
 

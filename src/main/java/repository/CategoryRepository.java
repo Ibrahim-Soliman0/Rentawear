@@ -1,6 +1,6 @@
 package repository;
 
-import model.Category;
+import entity.Category;
 
 public interface CategoryRepository extends Repository<Category> {
 

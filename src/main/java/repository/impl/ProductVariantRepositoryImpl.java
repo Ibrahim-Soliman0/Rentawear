@@ -2,7 +2,7 @@ package repository.impl;
 
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityTransaction;
-import model.ProductVariant;
+import entity.ProductVariant;
 import repository.ProductVariantRepository;
 import util.JPAUtil;
 

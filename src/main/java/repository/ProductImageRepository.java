@@ -1,6 +1,6 @@
 package repository;
 
-import model.ProductImage;
+import entity.ProductImage;
 
 import java.util.List;
 

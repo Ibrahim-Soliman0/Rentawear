@@ -2,7 +2,7 @@ package service;
 
 import dto.PriceRangeDTO;
 import dto.ProductDTO;
-import model.Product;
+import entity.Product;
 import repository.ProductRepository;
 import repository.impl.ProductRepositoryImpl;
 
@@ -12,6 +12,10 @@ import java.util.stream.Collectors;
 public class ProductService extends BaseService<Product> {
 
     private final ProductRepository productRepository;
+
+    public ProductService() {
+        this(new ProductRepositoryImpl());
+    }
 
     public ProductService(ProductRepository productRepository) {
         super(productRepository);

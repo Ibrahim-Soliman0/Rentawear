@@ -1,6 +1,9 @@
 package service;
 
-import model.User;
+import dto.UserProfileDTO;
+import entity.User;
+import mapper.UserMapper;
+import org.mapstruct.factory.Mappers;
 import repository.UserRepository;
 import repository.impl.UserRepositoryImpl;
 
@@ -9,6 +12,8 @@ import java.util.Optional;
 public class UserService extends BaseService<User> {
 
     private final UserRepository userRepository;
+
+    private final UserMapper mapper = Mappers.getMapper(UserMapper.class);
 
     public UserService() {
         this(new UserRepositoryImpl());
@@ -21,5 +26,12 @@ public class UserService extends BaseService<User> {
 
     public Optional<User> getUserByEmail(String email) {
         return Optional.ofNullable(userRepository.findByEmail(email));
+    }
+
+    public Optional<UserProfileDTO> getProfileDetails(Integer id) {
+
+        User user = userRepository.findById(id);
+
+        return Optional.ofNullable(mapper.toProfileDto(user));
     }
 }

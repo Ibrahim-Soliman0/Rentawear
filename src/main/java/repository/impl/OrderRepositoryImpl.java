@@ -1,6 +1,6 @@
 package repository.impl;
 
-import model.Order;
+import entity.Order;
 import repository.OrderRepository;
 
 public class OrderRepositoryImpl extends BaseRepositoryImpl<Order> implements OrderRepository {

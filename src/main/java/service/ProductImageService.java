@@ -1,9 +1,9 @@
 package service;
 
 import dto.ProductImagesDTO;
-import model.Product;
-import model.ProductImage;
-import model.ProductVariant;
+import entity.Product;
+import entity.ProductVariant;
+import entity.ProductImage;
 import repository.ProductImageRepository;
 import repository.ProductRepository;
 import repository.ProductVariantRepository;

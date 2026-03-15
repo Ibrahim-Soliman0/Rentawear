@@ -1,4 +1,4 @@
-package model;
+package entity;
 
 import jakarta.persistence.*;
 import org.hibernate.annotations.ColumnDefault;
@@ -36,7 +36,6 @@ import java.util.*;
                         "AND   (:minPrice  IS NULL OR p.basePrice    >= :minPrice) " +
                         "AND   (:maxPrice  IS NULL OR p.basePrice    <= :maxPrice)"
         ),
-
         @NamedQuery(
                 name = "Product.searchPaged",
                 query = "SELECT DISTINCT p FROM Product p " +

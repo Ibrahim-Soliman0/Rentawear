@@ -1,8 +1,9 @@
 package repository.impl;
 
 import jakarta.persistence.EntityManager;
-import model.Product;
-import model.enums.Gender;
+import entity.Product;
+import entity.enums.Gender;
+import entity.Product;
 import repository.ProductRepository;
 import util.JPAUtil;
 

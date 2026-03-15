@@ -1,7 +1,7 @@
 package dto;
 
-import model.Product;
-import model.ProductVariant;
+import entity.Product;
+import entity.ProductVariant;
 import util.ImagePathUtil;
 import java.util.List;
 import java.util.Objects;

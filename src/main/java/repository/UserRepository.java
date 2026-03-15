@@ -1,6 +1,6 @@
 package repository;
 
-import model.User;
+import entity.User;
 
 public interface UserRepository extends Repository<User> {
 

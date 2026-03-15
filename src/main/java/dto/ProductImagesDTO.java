@@ -1,7 +1,6 @@
 package dto;
 
-import model.Product;
-import model.ProductImage;
+import entity.ProductImage;
 import util.ColorUtil;
 import java.util.*;
 import java.util.stream.Collectors;

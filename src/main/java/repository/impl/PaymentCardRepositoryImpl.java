@@ -1,6 +1,6 @@
 package repository.impl;
 
-import model.PaymentCard;
+import entity.PaymentCard;
 import repository.PaymentCardRepository;
 
 public class PaymentCardRepositoryImpl extends BaseRepositoryImpl<PaymentCard> implements PaymentCardRepository {

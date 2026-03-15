@@ -1,7 +1,7 @@
-package model;
+package entity;
 
 import jakarta.persistence.*;
-import model.enums.OrderStatus;
+import entity.enums.OrderStatus;
 import org.hibernate.annotations.ColumnDefault;
 
 import java.math.BigDecimal;

@@ -1,7 +1,7 @@
-package model;
+package entity;
 
 import jakarta.persistence.*;
-import model.enums.Gender;
+import entity.enums.Gender;
 
 import java.util.ArrayList;
 import java.util.List;
