@@ -1,7 +1,6 @@
 package repository.impl;
 
 import jakarta.persistence.EntityManager;
-import jakarta.persistence.EntityTransaction;
 import entity.ProductImage;
 import repository.ProductImageRepository;
 import util.JPAUtil;
@@ -73,19 +72,13 @@ public class ProductImageRepositoryImpl extends BaseRepositoryImpl<ProductImage>
     // Bulk delete by color, called by productImageService.deleteColorImages()
     @Override
     public void deleteByProductIdAndColor(int productId, String color) {
-        try (EntityManager em = JPAUtil.getEntityManager()) {
-            EntityTransaction tx = em.getTransaction();
-            try {
-                tx.begin();
-                em.createNamedQuery("ProductImage.deleteByProductIdAndColor")
-                        .setParameter("pid",   productId)
-                        .setParameter("color", color)
-                        .executeUpdate();
-                tx.commit();
-            } catch (Exception e) {
-                if (tx.isActive()) tx.rollback();
-                throw new RuntimeException("Failed to delete images for color: " + color, e);
-            }
+        try {
+            em().createNamedQuery("ProductImage.deleteByProductIdAndColor")
+                    .setParameter("pid",   productId)
+                    .setParameter("color", color)
+                    .executeUpdate();
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to delete images for color: " + color, e);
         }
     }
 }
