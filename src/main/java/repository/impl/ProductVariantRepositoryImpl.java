@@ -1,7 +1,6 @@
 package repository.impl;
 
 import jakarta.persistence.EntityManager;
-import jakarta.persistence.EntityTransaction;
 import entity.ProductVariant;
 import repository.ProductVariantRepository;
 import util.JPAUtil;
@@ -53,19 +52,13 @@ public class ProductVariantRepositoryImpl extends BaseRepositoryImpl<ProductVari
     // Deletes all size rows for a color  called by deleteColorImages in service
     @Override
     public void deleteByProductIdAndColor(int productId, String color) {
-        try (EntityManager em = JPAUtil.getEntityManager()) {
-            EntityTransaction tx = em.getTransaction();
-            try {
-                tx.begin();
-                em.createNamedQuery("ProductVariant.deleteByProductIdAndColor")
-                        .setParameter("pid",   productId)
-                        .setParameter("color", color)
-                        .executeUpdate();
-                tx.commit();
-            } catch (Exception e) {
-                if (tx.isActive()) tx.rollback();
-                throw new RuntimeException("Failed to delete variants for color: " + color, e);
-            }
+        try {
+            em().createNamedQuery("ProductVariant.deleteByProductIdAndColor")
+                    .setParameter("pid",   productId)
+                    .setParameter("color", color)
+                    .executeUpdate();
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to delete variants for color: " + color, e);
         }
     }
 }
