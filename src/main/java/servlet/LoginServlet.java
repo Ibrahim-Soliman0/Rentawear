@@ -1,5 +1,6 @@
 package servlet;
 
+import dto.UserSessionDTO;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -28,16 +29,22 @@ public class LoginServlet extends HttpServlet {
     }
 
     @Override
-    protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        String email = req.getParameter("email");
-        String password = req.getParameter("password");
+    protected void doPost(HttpServletRequest req, HttpServletResponse resp)
+            throws ServletException, IOException {
+
+        String email     = req.getParameter("email");
+        String password  = req.getParameter("password");
         boolean remember = "on".equals(req.getParameter("rememberMe"));
 
         if (isEmpty(email) || isEmpty(password)) {
             forwardWithError(req, resp, "Please enter your email and password.");
+            return;
         }
 
-        Optional<User> result = userService.login(email.trim().toLowerCase(), password);
+        Optional<UserSessionDTO> result = userService.login(
+                email.trim().toLowerCase(),
+                password
+        );
 
         if (result.isEmpty()) {
             req.setAttribute("prefillEmail", email);
@@ -45,14 +52,13 @@ public class LoginServlet extends HttpServlet {
             return;
         }
 
-        User user = result.get();
+        UserSessionDTO user = result.get();
         HttpSession session = req.getSession(true);
-        session.setAttribute("user",user);
+        session.setAttribute("user", user);
 
-        if(remember){
-            session.setMaxInactiveInterval(60*60*24*30);
-        }
-        else{
+        if (remember) {
+            session.setMaxInactiveInterval(60 * 60 * 24 * 30);
+        } else {
             session.setMaxInactiveInterval(60 * 60 * 24);
         }
 

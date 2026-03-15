@@ -1,8 +1,11 @@
 package mapper;
 
+import dto.UserInterestDTO;
 import dto.UserRegisterDTO;
 import dto.UserProfileDTO;
+import dto.UserSessionDTO;
 import entity.User;
+import entity.UserCategory;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
@@ -20,4 +23,11 @@ public interface UserMapper {
     @Mapping(target = "role",         ignore = true)
     @Mapping(target = "createdAt",    ignore = true)
     User toEntity(UserRegisterDTO dto);
+
+    @Mapping(target = "categoryId",   source = "category.id")
+    @Mapping(target = "categoryName", source = "category.name")
+    UserInterestDTO toInterestDTO(UserCategory userCategory);
+
+    UserSessionDTO toSessionDTO(User user);
+
 }

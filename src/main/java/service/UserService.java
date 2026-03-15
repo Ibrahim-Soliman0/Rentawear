@@ -1,6 +1,7 @@
 package service;
 
 import dto.UserRegisterDTO;
+import dto.UserSessionDTO;
 import exception.EmailAlreadyExistsException;
 import entity.User;
 import dto.UserProfileDTO;
@@ -51,17 +52,20 @@ public class UserService extends BaseService<User> {
         userRepository.save(user);
     }
 
-    public Optional<User> login(String email, String password) {
+    public Optional<UserSessionDTO> login(String email, String password) {
         Optional<User> userOpt = getUserByEmail(email);
 
-        // Check user exists and password matches
         if (userOpt.isEmpty()) return Optional.empty();
 
         User user = userOpt.get();
-        if (!HashUtil.verifyPassword(password,user.getPasswordHash())) {
+        if (!HashUtil.verifyPassword(password, user.getPasswordHash())) {
             return Optional.empty();
         }
-        return Optional.of(user);
+
+        // Force load lazy collections while EntityManager is still open
+        user.getInterests().forEach(uc -> uc.getCategory().getName());
+
+        return Optional.of(mapper.toSessionDTO(user));
     }
 
     public Optional<UserProfileDTO> getProfileDetails(Integer id) {
