@@ -1,6 +1,6 @@
 package mapper;
 
-import dto.RegisterUserDTO;
+import dto.UserRegisterDTO;
 import dto.UserProfileDTO;
 import entity.User;
 import org.mapstruct.Mapper;
@@ -19,5 +19,5 @@ public interface UserMapper {
     @Mapping(target = "cart",         ignore = true)
     @Mapping(target = "role",         ignore = true)
     @Mapping(target = "createdAt",    ignore = true)
-    User toEntity(RegisterUserDTO dto);
+    User toEntity(UserRegisterDTO dto);
 }

@@ -1,6 +1,6 @@
 package service;
 
-import dto.RegisterUserDTO;
+import dto.UserRegisterDTO;
 import exception.EmailAlreadyExistsException;
 import entity.User;
 import dto.UserProfileDTO;
@@ -33,7 +33,7 @@ public class UserService extends BaseService<User> {
         return Optional.ofNullable(userRepository.findByEmail(email));
     }
 
-    public void register(RegisterUserDTO dto) throws EmailAlreadyExistsException {
+    public void register(UserRegisterDTO dto) throws EmailAlreadyExistsException {
         if (getUserByEmail(dto.email()).isPresent()) {
             throw new EmailAlreadyExistsException(dto.email());
         }
