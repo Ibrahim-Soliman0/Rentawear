@@ -1,6 +1,8 @@
 <%-- header.jsp — Page <head> only --%>
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
 <%@ page isELIgnored="false" %>
+<%@ taglib prefix="c" uri="jakarta.tags.core" %>
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -27,6 +29,8 @@
   <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/styles.css"/>
 
   <!-- Extra page-specific CSS hook -->
-  ${param.extraCSS}
+  <c:if test="${not empty param.extraCSS}">
+    <link rel="stylesheet" href="${param.extraCSS}"/>
+  </c:if>
 </head>
 <body>
