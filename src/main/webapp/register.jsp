@@ -28,14 +28,14 @@
       </div>
 
       <!-- Server-side error -->
-      <c:if test="${not empty errorMsg}">
+      <c:if test="${not empty requestScope.errorMsg}">
         <div class="rw-auth-alert rw-auth-alert--error">
-          <i class="bi bi-exclamation-circle-fill"></i> ${errorMsg}
+          <i class="bi bi-exclamation-circle-fill"></i> ${requestScope.errorMsg}
         </div>
       </c:if>
 
       <!-- Form -->
-      <form id="registerForm" action="${pageContext.request.contextPath}/RegisterServlet" method="post" novalidate>
+      <form id="registerForm" action="${pageContext.request.contextPath}/register" method="post" novalidate>
 
         <!-- Full Name -->
         <div class="rw-form-group">
@@ -53,6 +53,26 @@
             />
           </div>
           <div class="rw-field-error" id="fullNameError"></div>
+        </div>
+
+        <!-- Gender -->
+        <div class="rw-form-group">
+          <label class="rw-form-label">Gender</label>
+          <div class="rw-gender-row">
+            <label class="rw-gender-option">
+              <input type="radio" name="gender" value="MALE" class="rw-gender-radio" required/>
+              <span class="rw-gender-btn">
+        <i class="bi bi-gender-male"></i> Male
+      </span>
+            </label>
+            <label class="rw-gender-option">
+              <input type="radio" name="gender" value="FEMALE" class="rw-gender-radio" required/>
+              <span class="rw-gender-btn">
+        <i class="bi bi-gender-female"></i> Female
+      </span>
+            </label>
+          </div>
+          <div class="rw-field-error" id="genderError"></div>
         </div>
 
         <!-- Email + Password row -->
@@ -159,47 +179,46 @@
             ></textarea>
           </div>
         </div>
-
-        <!-- Style Interests + Credit Limit row -->
-        <div class="rw-form-row-2">
-
-          <div class="rw-form-group">
-            <label for="styleInterests" class="rw-form-label">Style Interests</label>
-            <div class="rw-input-wrap rw-input-wrap--select">
-              <select id="styleInterests" name="styleInterests" class="rw-form-input rw-form-select">
-                <option value="" disabled selected>Select categories</option>
-                <option value="casual">Casual</option>
-                <option value="formal">Formal</option>
-                <option value="evening">Evening Wear</option>
-                <option value="business">Business</option>
-                <option value="wedding">Wedding</option>
-                <option value="streetwear">Streetwear</option>
-                <option value="resort">Resort / Vacation</option>
-              </select>
-              <i class="bi bi-chevron-down rw-select-chevron"></i>
-            </div>
+        <!-- Credit Limit — single field -->
+        <div class="rw-form-group">
+          <label for="creditLimit" class="rw-form-label">Requested Credit Limit</label>
+          <div class="rw-input-wrap">
+            <span class="rw-input-prefix">$</span>
+            <input
+                    type="number"
+                    id="creditLimit"
+                    name="creditLimit"
+                    class="rw-form-input"
+                    placeholder="5,000"
+                    min="0"
+                    step="500"
+                    value="5000"
+                    max="999999"
+            />
           </div>
-
-          <div class="rw-form-group">
-            <label for="creditLimit" class="rw-form-label">Requested Credit Limit</label>
-            <div class="rw-input-wrap">
-              <span class="rw-input-prefix">$</span>
-              <input
-                      type="number"
-                      id="creditLimit"
-                      name="creditLimit"
-                      class="rw-form-input"
-                      placeholder="5,000"
-                      min="0"
-                      step="500"
-                      value="5000"
-                      max="999999"
-              />
-            </div>
-          </div>
-
         </div>
 
+        <!-- Style Interests -->
+        <div class="rw-form-group">
+          <label class="rw-form-label">Style Interests</label>
+
+          <!-- Dropdown to pick from -->
+          <div class="rw-input-wrap rw-input-wrap--select">
+            <select id="styleInterestsSelect" class="rw-form-input rw-form-select">
+              <option value="" disabled selected>Select categories</option>
+              <c:forEach var="category" items="${requestScope.categories}">
+                <option value="${category.id}">${category.name}</option>
+              </c:forEach>
+            </select>
+            <i class="bi bi-chevron-down rw-select-chevron"></i>
+          </div>
+
+          <!-- Selected tags appear here -->
+          <div class="rw-tags-wrap" id="styleTagsWrap"></div>
+
+          <!-- Hidden inputs submitted to backend -->
+          <div id="styleHiddenInputs"></div>
+        </div>
         <!-- Terms checkbox -->
         <div class="rw-form-group">
           <label class="rw-checkbox-label">

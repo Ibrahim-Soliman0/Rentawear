@@ -16,7 +16,6 @@ document.querySelectorAll('.rw-eye-btn').forEach(btn => {
   });
 });
 
-
 /* ── Field error helpers ────────────────────────────────────── */
 function showError(fieldId, errorId, message) {
   const wrap  = document.getElementById(fieldId)?.closest('.rw-input-wrap');
@@ -45,8 +44,8 @@ const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   const emailEl    = document.getElementById('loginEmail');
   const passwordEl = document.getElementById('loginPassword');
 
-  emailEl?.addEventListener('blur',    () => validateLoginEmail());
-  passwordEl?.addEventListener('blur', () => validateLoginPassword());
+  emailEl?.addEventListener('input',    () => validateLoginEmail());
+  passwordEl?.addEventListener('input', () => validateLoginPassword());
 
   function validateLoginEmail() {
     const val = emailEl.value.trim();
@@ -131,9 +130,19 @@ const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     }
   });
 
-  /* ── Live blur validators ── */
+  /* ── Live input validators ── */
   fullNameEl?.addEventListener('input', validateFullName);
-  emailEl?.addEventListener('input',    validateRegEmail);
+
+  let emailTaken = false;
+  let emailDebounce = null;
+  emailEl?.addEventListener('input', () => {
+    emailTaken=false;
+    const formatOk = validateRegEmail();
+    if (!formatOk) return;
+
+    clearTimeout(emailDebounce);
+    emailDebounce = setTimeout(checkEmailAvailability, 500);
+  });
   passwordEl?.addEventListener('input', validateRegPassword);
   dobEl?.addEventListener('change',validateDob);
 
@@ -172,7 +181,6 @@ const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
       showError('dob', 'dobError', 'Date of birth cannot be in the future.');
       return false;
     }
-
     const minAge = new Date(today);
     minAge.setFullYear(minAge.getFullYear() - 18);
     if (selected > minAge) {
@@ -186,12 +194,58 @@ const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
   function validateRegEmail() {
     const val = emailEl.value.trim();
+    const errorEl = document.getElementById('regEmailError');
+
+    // Always reset color to red before any error check
+    if (errorEl) errorEl.style.color = '';
+
     if (!val)                { showError('regEmail', 'regEmailError', 'Email is required.'); return false; }
     if (!EMAIL_RE.test(val)) { showError('regEmail', 'regEmailError', 'Enter a valid email address.'); return false; }
+    if (emailTaken)          { showError('regEmail', 'regEmailError', 'This email is already registered.'); return false; }
     showOk('regEmail', 'regEmailError');
     return true;
   }
 
+  function checkEmailAvailability() {
+    const errorEl = document.getElementById('regEmailError');
+
+    // Show checking state
+    if (errorEl) {
+      errorEl.style.color = 'var(--rw-gray-500)';
+      errorEl.textContent = 'Checking availability...';
+      errorEl.classList.add('visible');
+    }
+
+    let req;
+    if (window.XMLHttpRequest)
+      req = new XMLHttpRequest();
+    else
+      req = new ActiveXObject("Microsoft.XMLHTTP");
+
+    req.onreadystatechange = function () {
+      if (req.readyState === 4 && req.status === 200) {
+        const data = JSON.parse(req.responseText);
+
+        if (data.taken) {
+          emailTaken = true;
+          errorEl.style.color = '';
+          showError('regEmail', 'regEmailError', 'This email is already registered.');
+        } else {
+          emailTaken = false;
+          const wrap = emailEl.closest('.rw-input-wrap');
+          if (wrap) { wrap.classList.remove('rw-input--error'); wrap.classList.add('rw-input--ok'); }
+          if (errorEl) {
+            errorEl.style.color = '#27ae60';
+            errorEl.textContent = 'Email is available!';
+            errorEl.classList.add('visible');
+          }
+        }
+      }
+    };
+
+    req.open("GET", CTX + "/checkRegisteredEmail?email=" + encodeURIComponent(emailEl.value.trim()), true);
+    req.send();
+  }
   function validateRegPassword() {
     const val = passwordEl.value;
     if (!val)           { showError('regPassword', 'regPasswordError', 'Password is required.'); return false; }
@@ -210,10 +264,21 @@ const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return true;
   }
 
+  function validateGender() {
+    const selected = document.querySelector('input[name="gender"]:checked');
+    const err = document.getElementById('genderError');
+    if (!selected) {
+      if (err) { err.textContent = 'Please select a gender.'; err.classList.add('visible'); }
+      return false;
+    }
+    if (err) { err.textContent = ''; err.classList.remove('visible'); }
+    return true;
+  }
   /* ── Submit ── */
   form.addEventListener('submit', e => {
     const ok = [
       validateFullName(),
+      validateGender(),
       validateRegEmail(),
       validateRegPassword(),
       validateDob(),
@@ -241,3 +306,46 @@ flatpickr('#dob', {
     disableMobile: true,
     allowInput: false,
 });
+// Style Interests tag selector
+(function () {
+  const select      = document.getElementById('styleInterestsSelect');
+  const tagsWrap    = document.getElementById('styleTagsWrap');
+  const hiddenWrap  = document.getElementById('styleHiddenInputs');
+  if (!select) return;
+
+  const selected = new Set(); // track selected values
+
+  select.addEventListener('change', () => {
+    const val   = select.value;
+    const label = select.options[select.selectedIndex].text;
+
+    // reset dropdown
+    select.value = '';
+
+    // skip if already selected
+    if (selected.has(val)) return;
+    selected.add(val);
+
+    // create tag
+    const tag = document.createElement('span');
+    tag.className   = 'rw-tag';
+    tag.dataset.val = val;
+    tag.innerHTML   = `${label} <i class="bi bi-x"></i>`;
+    tag.addEventListener('click', () => removeTag(val));
+    tagsWrap.appendChild(tag);
+
+    // create hidden input for form submission
+    const input = document.createElement('input');
+    input.type  = 'hidden';
+    input.name  = 'styleInterests';
+    input.value = val;
+    input.id    = `si_${val}`;
+    hiddenWrap.appendChild(input);
+  });
+
+  function removeTag(val) {
+    selected.delete(val);
+    tagsWrap.querySelector(`[data-val="${val}"]`)?.remove();
+    document.getElementById(`si_${val}`)?.remove();
+  }
+})();

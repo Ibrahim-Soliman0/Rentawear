@@ -21,19 +21,19 @@
       <p class="rw-auth-subtitle">Welcome back — sign in to continue</p>
 
       <!-- Server-side alerts -->
-      <c:if test="${not empty errorMsg}">
+      <c:if test="${not empty requestScope.errorMsg}">
         <div class="rw-auth-alert rw-auth-alert--error">
-          <i class="bi bi-exclamation-circle-fill"></i> ${errorMsg}
+          <i class="bi bi-exclamation-circle-fill"></i> ${requestScope.errorMsg}
         </div>
       </c:if>
-      <c:if test="${not empty successMsg}">
+      <c:if test="${not empty param.successMsg}">
         <div class="rw-auth-alert rw-auth-alert--success">
-          <i class="bi bi-check-circle-fill"></i> ${successMsg}
+          <i class="bi bi-check-circle-fill"></i> ${param.successMsg}
         </div>
       </c:if>
 
       <!-- Form -->
-      <form id="loginForm" action="${pageContext.request.contextPath}/LoginServlet" method="post" novalidate>
+      <form id="loginForm" action="${pageContext.request.contextPath}/login" method="post" novalidate>
 
         <!-- Email -->
         <div class="rw-form-group">
@@ -46,7 +46,7 @@
                     name="email"
                     class="rw-form-input"
                     placeholder="you@example.com"
-                    value="${param.email}"
+                    value="${not empty requestScope.prefillEmail ? requestScope.prefillEmail : param.email}"
                     autocomplete="email"
                     required
                     maxlength="100"
@@ -102,7 +102,7 @@
       <!-- Footer link -->
       <p class="rw-auth-switch" style="margin-top: 1.25rem">
         Don't have an account?
-        <a href="${pageContext.request.contextPath}/register.jsp">Create one free</a>
+        <a href="${pageContext.request.contextPath}/register">Create one free</a>
       </p>
 
     </div><!-- /.rw-auth-card -->

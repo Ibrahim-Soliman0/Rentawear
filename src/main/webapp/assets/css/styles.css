@@ -1639,3 +1639,76 @@ input::-ms-reveal,
 input::-ms-clear {
   display: none;
 }
+
+/* ── Gender selector ───────────────────────────────────────── */
+.rw-gender-row {
+  display: flex;
+  gap: 0.75rem;
+}
+.rw-gender-option {
+  flex: 1;
+  cursor: pointer;
+}
+.rw-gender-radio {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+.rw-gender-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  width: 100%;
+  padding: 0.65rem 0.5rem;
+  border: 1.5px solid var(--rw-gray-300);
+  border-radius: var(--rw-radius-sm);
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--rw-gray-700);
+  background: var(--rw-white);
+  box-shadow: 0 1px 4px rgba(0,0,0,0.08);  /* ← adds depth */
+  transition: var(--rw-transition);
+  cursor: pointer;
+}
+.rw-gender-btn:hover {
+  border-color: var(--rw-teal);
+  color: var(--rw-teal);
+  background: var(--rw-teal-light);
+}
+.rw-gender-radio:checked + .rw-gender-btn {
+  border-color: var(--rw-teal);
+  color: var(--rw-teal);
+  background: var(--rw-teal-light);
+}
+
+/* ── Interest tags ─────────────────────────────────────────── */
+.rw-tags-wrap {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.6rem;
+  min-height: 0;
+}
+.rw-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.35rem 0.75rem;
+  background: var(--rw-teal-light);
+  border: 1.5px solid var(--rw-teal);
+  border-radius: 50px;
+  font-size: 0.8rem;
+  color: var(--rw-teal);
+  cursor: pointer;
+  transition: var(--rw-transition);
+}
+.rw-tag:hover {
+  background: #fde8e8;
+  border-color: #e74c3c;
+  color: #e74c3c;
+}
+.rw-tag i {
+  font-size: 0.75rem;
+}
