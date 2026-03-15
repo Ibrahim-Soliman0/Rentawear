@@ -32,7 +32,7 @@ public class ProductDTO {
 
         dto.isNew = p.getCreatedAt() != null
                 && p.getCreatedAt().isAfter(
-                java.time.Instant.now().minus(30, java.time.temporal.ChronoUnit.DAYS));
+                java.time.Instant.now().minus(NEW_THRESHOLD_DAYS, java.time.temporal.ChronoUnit.DAYS));
 
         dto.description = p.getDescription() != null
                 ? p.getDescription().substring(0, Math.min(200, p.getDescription().length()))
