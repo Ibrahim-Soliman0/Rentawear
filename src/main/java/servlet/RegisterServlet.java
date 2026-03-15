@@ -109,7 +109,7 @@ public class RegisterServlet extends HttpServlet {
         try {
             userService.register(dto);
             resp.sendRedirect(req.getContextPath() +
-                    "/login.jsp?success=Account+created+successfully.+Please+sign+in.");
+                    "/login?successMsg=Account+created+successfully.+Please+sign+in.");
 
         } catch (EmailAlreadyExistsException e) {
             forwardWithError(req, resp, "An account with this email already exists.");
