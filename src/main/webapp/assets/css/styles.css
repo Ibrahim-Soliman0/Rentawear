@@ -1612,3 +1612,542 @@ input::-ms-reveal,
 input::-ms-clear {
   display: none;
 }
+
+/* ═══════════════════════════════════════════════════════════════
+   profile.css  —  Rentawear  |  Account pages
+   Designed to match the exact UI shown in the design screenshots.
+   Uses Bootstrap 5 as base; this file adds custom overrides only.
+   ═══════════════════════════════════════════════════════════════ */
+
+
+/* ── Page background ─────────────────────────────────────────── */
+.account-bg {
+    background: #ebebeb;
+    min-height: 100vh;
+    padding: 28px 24px;
+}
+
+
+/* ── Outer white rounded card ────────────────────────────────── */
+.account-wrapper {
+    background: #ffffff;
+    border-radius: 14px;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.07);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    min-height: calc(100vh - 56px);
+}
+
+
+/* ═══════════════════════════════════════════════════════════════
+   TOP NAV BAR  (inside the white card)
+   ═══════════════════════════════════════════════════════════════ */
+.account-topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 24px;
+    background: #fff;
+}
+
+.account-topbar-divider {
+    height: 1px;
+    background: #e8e8e8;
+}
+
+/* Brand */
+.brand-icon {
+    width: 34px;
+    height: 34px;
+    background: #2bbf87;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-size: 16px;
+}
+
+.brand-name {
+    font-weight: 600;
+    font-size: 15px;
+    color: #111;
+}
+
+/* Breadcrumb in topbar */
+.topbar-breadcrumb {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    color: #888;
+}
+
+.topbar-breadcrumb .bi-chevron-right {
+    font-size: 10px;
+    color: #bbb;
+}
+
+/* User avatar in topbar */
+.topbar-avatar {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    object-fit: cover;
+    cursor: pointer;
+}
+
+
+/* ═══════════════════════════════════════════════════════════════
+   BODY LAYOUT  (sidebar + content)
+   ═══════════════════════════════════════════════════════════════ */
+.account-body {
+    display: flex;
+    flex: 1;
+}
+
+
+/* ═══════════════════════════════════════════════════════════════
+   SIDEBAR
+   ═══════════════════════════════════════════════════════════════ */
+.account-sidebar {
+    width: 240px;
+    flex-shrink: 0;
+    background: #fff;
+    border-right: 1px solid #efefef;
+    padding: 20px 16px;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+}
+
+.sidebar-label {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.07em;
+    color: #aaa;
+    margin: 18px 0 4px 8px;
+    text-transform: uppercase;
+}
+
+.account-sidebar .sidebar-label:first-child {
+    margin-top: 4px;
+}
+
+.sidebar-link {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    border-radius: 8px;
+    font-size: 14px;
+    color: #333;
+    text-decoration: none;
+    transition: background 0.15s;
+}
+
+.sidebar-link:hover {
+    background: #f5f5f5;
+    color: #111;
+}
+
+.sidebar-link.active {
+    background: #ececec;
+    font-weight: 500;
+    color: #111;
+}
+
+.sidebar-link .bi {
+    font-size: 15px;
+    color: #555;
+    flex-shrink: 0;
+}
+
+.sidebar-link.active .bi {
+    color: #111;
+}
+
+/* Log out pinned to bottom */
+.sidebar-logout {
+    margin-top: auto;
+    color: #555;
+}
+
+
+/* ═══════════════════════════════════════════════════════════════
+   MAIN CONTENT AREA
+   ═══════════════════════════════════════════════════════════════ */
+.account-content {
+    flex: 1;
+    padding: 32px 40px 48px;
+    overflow-y: auto;
+    background: #fff;
+}
+
+/* Tab visibility */
+.tab-pane {
+    display: none;
+}
+
+.tab-pane.active {
+    display: block;
+}
+
+
+/* ═══════════════════════════════════════════════════════════════
+   PAGE TYPOGRAPHY
+   ═══════════════════════════════════════════════════════════════ */
+.page-title {
+    font-size: 22px;
+    font-weight: 700;
+    color: #111;
+    margin: 0;
+}
+
+.back-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 13px;
+    color: #555;
+    text-decoration: none;
+    padding: 5px 10px;
+    border-radius: 6px;
+    transition: background 0.15s;
+}
+
+.back-link:hover {
+    background: #f3f3f3;
+    color: #111;
+}
+
+.section-title {
+    font-size: 17px;
+    font-weight: 700;
+    color: #111;
+    margin: 0 0 2px;
+}
+
+.section-sub {
+    font-size: 13px;
+    color: #888;
+    margin: 0;
+}
+
+
+/* ═══════════════════════════════════════════════════════════════
+   RW CARD  (shared card style used across both tabs)
+   ═══════════════════════════════════════════════════════════════ */
+.rw-card {
+    border: 1px solid #e8e8e8;
+    border-radius: 10px;
+    padding: 20px 22px;
+}
+
+
+/* ═══════════════════════════════════════════════════════════════
+   PROFILE TAB  —  Avatar
+   ═══════════════════════════════════════════════════════════════ */
+.avatar-wrap {
+    position: relative;
+    flex-shrink: 0;
+}
+
+.profile-avatar {
+    width: 68px;
+    height: 68px;
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+.avatar-cam {
+    position: absolute;
+    bottom: 1px;
+    right: 1px;
+    width: 22px;
+    height: 22px;
+    background: #555;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    border: 2px solid #fff;
+}
+
+
+/* ═══════════════════════════════════════════════════════════════
+   FORM FIELDS  (Bootstrap overrides)
+   ═══════════════════════════════════════════════════════════════ */
+.rw-label {
+    font-size: 13px;
+    font-weight: 500;
+    color: #222;
+    margin-bottom: 5px;
+}
+
+.rw-input {
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    font-size: 14px;
+    color: #222;
+    height: 40px;
+    padding: 0 12px;
+    background: #fff;
+    box-shadow: none !important;
+    transition: border-color 0.15s;
+}
+
+.rw-input:focus {
+    border-color: #2bbf87;
+    outline: none;
+}
+
+/* Date-of-birth input with calendar icon appended */
+.rw-input-append {
+    display: flex;
+    align-items: center;
+    padding: 0 12px;
+    background: #fff;
+    border: 1px solid #e0e0e0;
+    border-left: none;
+    border-radius: 0 8px 8px 0;
+    height: 40px;
+}
+
+/* Remove double border on left side of appended icon */
+.rw-input-icon-right {
+    border-right: none;
+    border-radius: 8px 0 0 8px !important;
+}
+
+.input-group .rw-input-icon-right:focus {
+    border-color: #2bbf87;
+    z-index: 3;
+}
+
+.input-group .rw-input-icon-right:focus + .rw-input-append {
+    border-color: #2bbf87;
+}
+
+.rw-hint {
+    font-size: 12px;
+    color: #aaa;
+    margin-top: 4px;
+}
+
+/* Select */
+select.rw-input {
+    cursor: pointer;
+    appearance: auto;
+}
+
+
+/* ═══════════════════════════════════════════════════════════════
+   BUTTONS
+   ═══════════════════════════════════════════════════════════════ */
+.btn-rw-primary {
+    background: #23a36a;
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 500;
+    transition: background 0.15s;
+}
+
+.btn-rw-primary:hover,
+.btn-rw-primary:focus {
+    background: #1c8c5a;
+    color: #fff;
+}
+
+.btn-rw-primary.btn-sm {
+    font-size: 13px;
+    padding: 6px 16px;
+    border-radius: 7px;
+}
+
+.btn-outline-secondary {
+    border-color: #d8d8d8;
+    color: #333;
+    border-radius: 8px;
+    font-size: 14px;
+}
+
+.btn-outline-secondary:hover {
+    background: #f5f5f5;
+    border-color: #bbb;
+    color: #111;
+}
+
+.btn-outline-secondary.btn-sm {
+    font-size: 13px;
+    padding: 6px 14px;
+    border-radius: 7px;
+}
+
+
+/* ═══════════════════════════════════════════════════════════════
+   RENT HISTORY TAB
+   ═══════════════════════════════════════════════════════════════ */
+.rental-group-heading {
+    font-size: 16px;
+    font-weight: 600;
+    color: #111;
+    margin: 0 0 14px;
+}
+
+.rental-divider {
+    border: none;
+    border-top: 1px solid #e8e8e8;
+    margin: 0 0 16px;
+}
+
+/* Individual rental card layout */
+.rental-card {
+    display: flex;
+    align-items: flex-start;
+    gap: 18px;
+}
+
+.rental-thumb {
+    width: 70px;
+    height: 100px;
+    object-fit: cover;
+    border-radius: 8px;
+    background: #f5f5f5;
+    flex-shrink: 0;
+}
+
+.rental-body {
+    flex: 1;
+}
+
+.rental-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 12px;
+}
+
+.rental-name {
+    font-size: 15px;
+    font-weight: 600;
+    color: #111;
+    margin: 0 0 3px;
+}
+
+.rental-sub {
+    font-size: 13px;
+    color: #888;
+    margin: 0 0 8px;
+}
+
+.rental-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 14px;
+    font-size: 13px;
+    color: #666;
+}
+
+.rental-meta span {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.rental-meta .bi {
+    font-size: 12px;
+    color: #999;
+}
+
+.rental-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 14px;
+}
+
+
+/* ═══════════════════════════════════════════════════════════════
+   STATUS BADGES
+   ═══════════════════════════════════════════════════════════════ */
+.rw-badge {
+    display: inline-block;
+    padding: 5px 14px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 500;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.badge-active {
+    background: #23a36a;
+    color: #fff;
+}
+
+.badge-delivery {
+    background: #f5c518;
+    color: #333;
+}
+
+.badge-returned {
+    background: #ececec;
+    color: #555;
+}
+
+
+/* ═══════════════════════════════════════════════════════════════
+   RESPONSIVE
+   ═══════════════════════════════════════════════════════════════ */
+@media (max-width: 768px) {
+    .account-bg {
+        padding: 0;
+    }
+
+    .account-wrapper {
+        border-radius: 0;
+        min-height: 100vh;
+    }
+
+    .account-body {
+        flex-direction: column;
+    }
+
+    .account-sidebar {
+        width: 100%;
+        border-right: none;
+        border-bottom: 1px solid #efefef;
+        flex-direction: row;
+        flex-wrap: wrap;
+        padding: 12px;
+        gap: 4px;
+    }
+
+    .sidebar-label {
+        display: none;
+    }
+
+    .sidebar-logout {
+        margin-top: 0;
+    }
+
+    .account-content {
+        padding: 20px 16px 40px;
+    }
+
+    .topbar-breadcrumb {
+        display: none;
+    }
+
+    .rental-card {
+        flex-wrap: wrap;
+    }
+
+    .rental-top {
+        flex-direction: column-reverse;
+    }
+}
