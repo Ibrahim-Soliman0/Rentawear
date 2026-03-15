@@ -1,5 +1,6 @@
 package service;
 
+import dto.RegisterUserDTO;
 import exception.EmailAlreadyExistsException;
 import entity.User;
 import dto.UserProfileDTO;
@@ -17,6 +18,8 @@ public class UserService extends BaseService<User> {
 
     private final UserMapper mapper = Mappers.getMapper(UserMapper.class);
 
+    private final CategoryService categoryService = new CategoryService();
+
     public UserService() {
         this(new UserRepositoryImpl());
     }
@@ -30,11 +33,21 @@ public class UserService extends BaseService<User> {
         return Optional.ofNullable(userRepository.findByEmail(email));
     }
 
-    public void register(User user) throws EmailAlreadyExistsException {
-        if (getUserByEmail(user.getEmail()).isPresent()) {
-            throw new EmailAlreadyExistsException(user.getEmail());
+    public void register(RegisterUserDTO dto) throws EmailAlreadyExistsException {
+        if (getUserByEmail(dto.email()).isPresent()) {
+            throw new EmailAlreadyExistsException(dto.email());
         }
-        user.setPasswordHash(HashUtil.hashPassword(user.getPasswordHash()));
+
+        User user = mapper.toEntity(dto);
+        user.setPasswordHash(HashUtil.hashPassword(dto.passwordHash()));
+
+        // Map category IDs → UserCategory manually
+        if (dto.interests() != null) {
+            for (Integer categoryId : dto.interests()) {
+                categoryService.getById(categoryId)
+                        .ifPresent(user::addInterest);
+            }
+        }
         userRepository.save(user);
     }
 
