@@ -175,75 +175,78 @@ public class ProductServlet extends HttpServlet {
         String term = q.trim();
 
         List<ProductDTO> dtos = paged
-                ? productService.searchPaged(term, gender, minPrice, maxPrice, categoryIds, limit, offset)
-                : productService.search(term, gender, minPrice, maxPrice, categoryIds, limit);
+                ? productService.searchPaged(term, gender, limit, offset)
+                : productService.search(term, gender, limit);
 
-        long total = productService.countSearch(term, gender, minPrice, maxPrice, categoryIds);
+        long total = productService.countSearch(term, gender);
 
         JsonUtil.writeJson(resp, Map.of("results", dtos, "total", total));
     }
 
-    /**
-     * Parses a string into a Double, returning null for null/blank/invalid values.
-     */
-    private Double parseDoubleOrNull(String value) {
-        if (value == null) {
-            return null;
-        }
-        String trimmed = value.trim();
-        if (trimmed.isEmpty()) {
-            return null;
-        }
-        try {
-            return Double.valueOf(trimmed);
-        } catch (NumberFormatException ex) {
-            // Invalid input - treat as "no filter" rather than failing the entire request
-            return null;
-        }
-    }
+//    /**
+//     * Parses a string into a Double, returning null for null/blank/invalid values.
+//     */
+//    private Double parseDoubleOrNull(String value) {
+//        if (value == null) {
+//            return null;
+//        }
+//        String trimmed = value.trim();
+//        if (trimmed.isEmpty()) {
+//            return null;
+//        }
+//        try {
+//            return Double.valueOf(trimmed);
+//        } catch (NumberFormatException ex) {
+//            // Invalid input - treat as "no filter" rather than failing the entire request
+//            return null;
+//        }
+//    }
+//
+//    /**
+//     * Parses a comma-separated list of category IDs into a List<Integer>.
+//     * Returns null when the input is null/blank or contains no valid IDs.
+//     */
+//    private List<Integer> parseCategoryIds(String raw) {
+//        if (raw == null) {
+//            return null;
+//        }
+//        String trimmed = raw.trim();
+//        if (trimmed.isEmpty()) {
+//            return null;
+//        }
+//
+//        List<Integer> ids = Arrays.stream(trimmed.split(","))
+//                .map(String::trim)
+//                .filter(s -> !s.isEmpty())
+//                .map(s -> {
+//                    try {
+//                        return Integer.valueOf(s);
+//                    } catch (NumberFormatException ex) {
+//                        // Skip invalid IDs instead of failing the entire parse
+//                        return null;
+//                    }
+//                })
+//                .filter(id -> id != null)
+//                .collect(Collectors.toList());
+//
+//        return ids.isEmpty() ? null : ids;
+//    }
+//
+//    /**
+//     * Returns personalised recommendations for the logged-in user.
+//     * Filtered by the user's saved interest categories and their gender
+//     * so women only see women's products and vice versa.
+//     *
+//     *   ?action=interests&limit=8
+//     *
+//     * Returns an empty list silently for guests or users with no interests.
+//     * The home page section hides itself when it receives an empty list.
+//     *
+//     * Returns: ProductDTO[]
+//     */
 
-    /**
-     * Parses a comma-separated list of category IDs into a List<Integer>.
-     * Returns null when the input is null/blank or contains no valid IDs.
-     */
-    private List<Integer> parseCategoryIds(String raw) {
-        if (raw == null) {
-            return null;
-        }
-        String trimmed = raw.trim();
-        if (trimmed.isEmpty()) {
-            return null;
-        }
 
-        List<Integer> ids = Arrays.stream(trimmed.split(","))
-                .map(String::trim)
-                .filter(s -> !s.isEmpty())
-                .map(s -> {
-                    try {
-                        return Integer.valueOf(s);
-                    } catch (NumberFormatException ex) {
-                        // Skip invalid IDs instead of failing the entire parse
-                        return null;
-                    }
-                })
-                .filter(id -> id != null)
-                .collect(Collectors.toList());
 
-        return ids.isEmpty() ? null : ids;
-    }
-
-    /**
-     * Returns personalised recommendations for the logged-in user.
-     * Filtered by the user's saved interest categories and their gender
-     * so women only see women's products and vice versa.
-     *
-     *   ?action=interests&limit=8
-     *
-     * Returns an empty list silently for guests or users with no interests.
-     * The home page section hides itself when it receives an empty list.
-     *
-     * Returns: ProductDTO[]
-     */
 //    private void handleInterests(HttpServletRequest req, HttpServletResponse resp,
 //                                 int limit) throws IOException {
 //
