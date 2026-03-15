@@ -142,6 +142,11 @@ public class ProductServlet extends HttpServlet {
      *   Search results page (paginated):
      *     ?action=search&q=dress&category=women&limit=12&offset=0&paged=true
      *
+     * Optional filters (when supported by the backend):
+     *   - minPrice: minimum price (inclusive)
+     *   - maxPrice: maximum price (inclusive)
+     *   - categoryIds: comma-separated list of category IDs (e.g. "1,2,5")
+     *
      * Minimum query length is 2 characters - returns empty result below that.
      *
      * Returns: { "results": ProductDTO[], "total": long }
@@ -155,6 +160,13 @@ public class ProductServlet extends HttpServlet {
         int     offset = parseIntOrDefault(req.getParameter("offset"), 0);
         boolean paged  = "true".equals(req.getParameter("paged"));
 
+        // Optional price range filters
+        Double minPrice = parseDoubleOrNull(req.getParameter("minPrice"));
+        Double maxPrice = parseDoubleOrNull(req.getParameter("maxPrice"));
+
+        // Optional category ID filters, comma-separated (e.g. "1,2,3")
+        List<Integer> categoryIds = parseCategoryIds(req.getParameter("categoryIds"));
+
         if (q == null || q.trim().length() < 2) {
             JsonUtil.writeJson(resp, Map.of("results", List.of(), "total", 0));
             return;
@@ -163,12 +175,61 @@ public class ProductServlet extends HttpServlet {
         String term = q.trim();
 
         List<ProductDTO> dtos = paged
-                ? productService.searchPaged(term, gender, limit, offset)
-                : productService.search(term, gender, limit);
+                ? productService.searchPaged(term, gender, minPrice, maxPrice, categoryIds, limit, offset)
+                : productService.search(term, gender, minPrice, maxPrice, categoryIds, limit);
 
-        long total = productService.countSearch(term, gender);
+        long total = productService.countSearch(term, gender, minPrice, maxPrice, categoryIds);
 
         JsonUtil.writeJson(resp, Map.of("results", dtos, "total", total));
+    }
+
+    /**
+     * Parses a string into a Double, returning null for null/blank/invalid values.
+     */
+    private Double parseDoubleOrNull(String value) {
+        if (value == null) {
+            return null;
+        }
+        String trimmed = value.trim();
+        if (trimmed.isEmpty()) {
+            return null;
+        }
+        try {
+            return Double.valueOf(trimmed);
+        } catch (NumberFormatException ex) {
+            // Invalid input - treat as "no filter" rather than failing the entire request
+            return null;
+        }
+    }
+
+    /**
+     * Parses a comma-separated list of category IDs into a List<Integer>.
+     * Returns null when the input is null/blank or contains no valid IDs.
+     */
+    private List<Integer> parseCategoryIds(String raw) {
+        if (raw == null) {
+            return null;
+        }
+        String trimmed = raw.trim();
+        if (trimmed.isEmpty()) {
+            return null;
+        }
+
+        List<Integer> ids = Arrays.stream(trimmed.split(","))
+                .map(String::trim)
+                .filter(s -> !s.isEmpty())
+                .map(s -> {
+                    try {
+                        return Integer.valueOf(s);
+                    } catch (NumberFormatException ex) {
+                        // Skip invalid IDs instead of failing the entire parse
+                        return null;
+                    }
+                })
+                .filter(id -> id != null)
+                .collect(Collectors.toList());
+
+        return ids.isEmpty() ? null : ids;
     }
 
     /**
