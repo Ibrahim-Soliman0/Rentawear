@@ -6,7 +6,6 @@ import repository.impl.ProductVariantRepositoryImpl;
 
 import java.util.List;
 
-// ProductVariantService.java
 public class ProductVariantService extends BaseService<ProductVariant> {
 
     private final ProductVariantRepository productVariantRepository;
