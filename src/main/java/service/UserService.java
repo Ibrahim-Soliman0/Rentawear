@@ -1,5 +1,6 @@
 package service;
 
+import dto.CustomerDTO;
 import dto.UserRegisterDTO;
 import dto.UserSessionDTO;
 import exception.EmailAlreadyExistsException;
@@ -11,7 +12,9 @@ import repository.UserRepository;
 import repository.impl.UserRepositoryImpl;
 import util.HashUtil;
 
+import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 public class UserService extends BaseService<User> {
 
@@ -73,5 +76,15 @@ public class UserService extends BaseService<User> {
         User user = userRepository.findById(id);
 
         return Optional.ofNullable(mapper.toProfileDto(user));
+    }
+
+    public List<CustomerDTO> getAllCustomer(){
+        return userRepository.findAll()
+                .stream()
+                .map(user -> {
+                    user.getInterests().forEach(uc -> uc.getCategory().getName());
+                    return mapper.toCustomerDto(user);
+                })
+                .collect(Collectors.toList());
     }
 }

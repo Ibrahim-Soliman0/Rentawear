@@ -1,13 +1,11 @@
 package mapper;
 
-import dto.UserInterestDTO;
-import dto.UserRegisterDTO;
-import dto.UserProfileDTO;
-import dto.UserSessionDTO;
+import dto.*;
 import entity.User;
 import entity.UserCategory;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
+import org.mapstruct.control.MappingControl;
 
 @Mapper(uses = PaymentCardMapper.class)
 public interface UserMapper {
@@ -29,5 +27,7 @@ public interface UserMapper {
     UserInterestDTO toInterestDTO(UserCategory userCategory);
 
     UserSessionDTO toSessionDTO(User user);
+
+    CustomerDTO toCustomerDto(User user);
 
 }
