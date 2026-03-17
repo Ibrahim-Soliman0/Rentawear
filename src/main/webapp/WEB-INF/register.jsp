@@ -3,7 +3,7 @@
 <%@ page isELIgnored="false" %>
 <%@ taglib prefix="c" uri="jakarta.tags.core" %>
 
-<jsp:include page="WEB-INF/layout.jsp">
+<jsp:include page="layout.jsp">
   <jsp:param name="activePage"  value="account"/>
   <jsp:param name="title"       value="Create Account – Rentawear"/>
   <jsp:param name="description" value="Join Rentawear and start renting premium fashion today."/>
@@ -253,8 +253,8 @@
 </main>
 
 
-<jsp:include page="WEB-INF/components/footer.jsp"/>
-<jsp:include page="WEB-INF/components/scripts.jsp">
+<jsp:include page="components/footer.jsp"/>
+<jsp:include page="components/scripts.jsp">
   <jsp:param name="extraJS" value="${pageContext.request.contextPath}/assets/js/auth.js"/>
 </jsp:include>
 
