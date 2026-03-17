@@ -6,12 +6,12 @@ import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.List;
 
-public record OrderDTO(
+public record AdminOrderDTO(
         Integer id,
         String customerName,
         String customerEmail,
         BigDecimal totalAmount,
         OrderStatus status,
         Instant createdAt,
-        List<OrderItemDTO> orderItems
+        List<AdminOrderItemDTO> orderItems
 ) {}

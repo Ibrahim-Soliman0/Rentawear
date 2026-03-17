@@ -1,7 +1,7 @@
 package servlet;
 
-import dto.OrderDTO;
-import dto.OrderItemDTO;
+import dto.AdminOrderDTO;
+import dto.AdminOrderItemDTO;
 import jakarta.json.Json;
 import jakarta.json.JsonArrayBuilder;
 import jakarta.json.JsonObjectBuilder;
@@ -32,15 +32,15 @@ public class GetOrdersServlet extends HttpServlet {
         resp.setContentType("application/json");
         resp.setCharacterEncoding("UTF-8");
 
-        List<OrderDTO> orders = orderService.getAllOrders();
+        List<AdminOrderDTO> orders = orderService.getAllOrders();
 
         JsonArrayBuilder arrayBuilder = Json.createArrayBuilder();
-        for (OrderDTO o : orders) {
+        for (AdminOrderDTO o : orders) {
 
             // Build order items array
             JsonArrayBuilder itemsArray = Json.createArrayBuilder();
             if (o.orderItems() != null) {
-                for (OrderItemDTO item : o.orderItems()) {
+                for (AdminOrderItemDTO item : o.orderItems()) {
                     itemsArray.add(Json.createObjectBuilder()
                             .add("id",               item.id())
                             .add("productName",      item.productName())

@@ -1,6 +1,6 @@
 package service;
 
-import dto.OrderDTO;
+import dto.AdminOrderDTO;
 import entity.Order;
 import mapper.OrderMapper;
 import org.mapstruct.factory.Mappers;
@@ -24,7 +24,7 @@ public class OrderService extends BaseService<Order> {
         this.orderRepository = orderRepository;
     }
 
-    public List<OrderDTO> getAllOrders() {
+    public List<AdminOrderDTO> getAllOrders() {
         return orderRepository.findAll()
                 .stream()
                 .map(order -> {

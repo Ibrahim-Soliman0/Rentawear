@@ -3,7 +3,7 @@ package dto;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 
-public record OrderItemDTO(
+public record AdminOrderItemDTO(
         Integer id,
         String productName,
         String color,
