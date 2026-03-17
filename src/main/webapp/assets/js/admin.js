@@ -318,7 +318,6 @@ function renderCustomersTable(customers) {
     <tr>
       <td>
         <div class="adm-customer-cell">
-          <div class="adm-customer-avatar">${getInitials(c.name)}</div>
           <div>
             <div class="adm-customer-name">${escHtml(c.name)}</div>
             <div class="adm-customer-email">${escHtml(c.email)}</div>
@@ -455,13 +454,6 @@ function escHtml(str) {
     .replace(/"/g, '&quot;');
 }
 
-function getInitials(name) {
-  if (!name) return '?';
-  const parts = name.trim().split(' ');
-  return parts.length >= 2
-    ? (parts[0][0] + parts[parts.length - 1][0]).toUpperCase()
-    : parts[0][0].toUpperCase();
-}
 
 /* ── Init: load products on page load ───────────────────────── */
 loadProducts();
