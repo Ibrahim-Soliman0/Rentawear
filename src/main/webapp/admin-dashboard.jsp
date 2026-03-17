@@ -73,7 +73,7 @@
         <span class="adm-admin-name">${sessionScope.userName}</span>
         <span class="adm-admin-role">Superuser</span>
       </div>
-      <a href="${pageContext.request.contextPath}/LogoutServlet" class="adm-logout-btn" title="Sign out">
+      <a href="${pageContext.request.contextPath}/logout" class="adm-logout-btn" title="Sign out">
         <i class="bi bi-box-arrow-right"></i>
       </a>
     </div>
