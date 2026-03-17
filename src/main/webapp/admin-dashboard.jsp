@@ -180,7 +180,7 @@
                 <th>Order ID</th>
                 <th>Customer</th>
                 <th>Product</th>
-                <th>Rental Period</th>
+                <th>Creted At</th>
                 <th>Total</th>
                 <th>Status</th>
               </tr>

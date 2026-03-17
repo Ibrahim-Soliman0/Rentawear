@@ -687,10 +687,28 @@
   padding: 0 !important;
 }
 .adm-order-items-wrap {
-  padding: 0.75rem 1.25rem;
+  display: grid;
+  grid-template-rows: 0fr;
+  opacity: 0;
+  transition: grid-template-rows 0.35s cubic-bezier(0.16, 1, 0.3, 1),
+  opacity             0.3s  cubic-bezier(0.16, 1, 0.3, 1);
+}
+.adm-order-items-wrap.open {
+  grid-template-rows: 1fr;
+  opacity: 1;
+}
+.adm-order-items-inner {
+  overflow: hidden;
+  /* Remove padding from here */
   display: flex;
   flex-direction: column;
   gap: 0.6rem;
+  /* Add padding only top/bottom so it collapses cleanly */
+  padding: 0 1.25rem;
+  transition: padding 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.adm-order-items-wrap.open .adm-order-items-inner {
+  padding: 0.75rem 1.25rem;
 }
 .adm-order-item-row {
   display: flex;

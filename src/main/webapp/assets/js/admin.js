@@ -377,9 +377,7 @@ function renderOrdersTable(orders) {
   tbody.innerHTML = orders.map(o => {
     const firstItem   = o.orderItems && o.orderItems.length > 0 ? o.orderItems[0] : null;
     const productName = firstItem ? escHtml(firstItem.productName) : '—';
-    const period      = firstItem
-        ? `${escHtml(firstItem.startDate)} → ${escHtml(firstItem.endDate)}`
-        : '—';
+    const createdAt   = o.createdAt ? escHtml(o.createdAt) : '—';
     const hasMore     = o.orderItems && o.orderItems.length > 0;
 
     // Build items detail rows
@@ -408,14 +406,16 @@ function renderOrdersTable(orders) {
             <i class="bi bi-chevron-down"></i> ${o.orderItems.length} item${o.orderItems.length !== 1 ? 's' : ''}
           </button>` : ''}
         </td>
-        <td style="font-size:0.82rem;">${period}</td>
+        <td style="font-size:0.82rem;">${createdAt}</td>
         <td>$${Number(o.totalAmount).toFixed(2)}</td>
         <td>${getOrderBadge(o.status)}</td>
       </tr>
       <tr class="adm-order-detail-row" id="order-detail-${o.id}" style="display:none;">
         <td colspan="6">
           <div class="adm-order-items-wrap">
-            ${itemsDetail}
+            <div class="adm-order-items-inner">
+              ${itemsDetail}
+            </div>
           </div>
         </td>
       </tr>`;
@@ -425,11 +425,27 @@ function renderOrdersTable(orders) {
 function toggleOrderItems(btn) {
   const orderId   = btn.dataset.order;
   const detailRow = document.getElementById(`order-detail-${orderId}`);
+  const wrap      = detailRow.querySelector('.adm-order-items-wrap');
   const icon      = btn.querySelector('i');
-  const isOpen    = detailRow.style.display !== 'none';
+  const isOpen    = detailRow.classList.contains('open');
 
-  detailRow.style.display = isOpen ? 'none' : 'table-row';
-  icon.className = isOpen ? 'bi bi-chevron-down' : 'bi bi-chevron-up';
+  if (isOpen) {
+    wrap.classList.remove('open');
+    icon.className = 'bi bi-chevron-down';
+    wrap.addEventListener('transitionend', () => {
+      detailRow.style.display = 'none';
+      detailRow.classList.remove('open');
+    }, { once: true });
+  } else {
+    detailRow.style.display = 'table-row';
+    detailRow.classList.add('open');
+    icon.className = 'bi bi-chevron-up';
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        wrap.classList.add('open');
+      });
+    });
+  }
 }
 function getOrderBadge(status) {
   const map = {
