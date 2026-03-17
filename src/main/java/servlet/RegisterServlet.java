@@ -125,6 +125,6 @@ public class RegisterServlet extends HttpServlet {
             throws ServletException, IOException {
         req.setAttribute("errorMsg", message);
         req.setAttribute("categories", categoryService.getAll());
-        req.getRequestDispatcher("/register.jsp").forward(req, resp);
+        req.getRequestDispatcher("/WEB-INF/register.jsp").forward(req, resp);
     }
 }

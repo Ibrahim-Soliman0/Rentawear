@@ -72,6 +72,6 @@ public class LoginServlet extends HttpServlet {
     private void forwardWithError(HttpServletRequest req, HttpServletResponse resp, String message)
             throws ServletException, IOException {
         req.setAttribute("errorMsg", message);
-        req.getRequestDispatcher("/login.jsp").forward(req, resp);
+        req.getRequestDispatcher("/WEB-INF/login.jsp").forward(req, resp);
     }
 }
