@@ -6,23 +6,22 @@ import java.util.List;
 
 public interface ProductImageRepository extends Repository<ProductImage> {
 
-    // All images for a product ordered by color then id,
-    // service layer groups these into a LinkedHashMap by color
+    //Single-product reads
+    // All images ordered by id ASC, service groups into imagesByColor map
     List<ProductImage> findByProductId(int productId);
 
-    // All images for one specific color — used when checking whether
-    // an uploaded image is the first for its color
     List<ProductImage> findByProductIdAndColor(int productId, String color);
 
-    // Lowest-id image per color, used to build swatch previews in product listing pages
-    // without loading the full image list
-    @SuppressWarnings("unchecked")
+    // Lowest-id image per colour — used to build swatch previews
     List<ProductImage> findPrimaryPerColor(int productId);
 
-    // Count images for a product+color — upload servlet calls this
-    // before inserting to decide whether to update Product.imageUrl
+    //Batch reads
+    // Lowest-id image per colour for multiple products in one query
+    List<ProductImage> findPrimaryPerColorForProducts(List<Integer> productIds);
+
+    // Counts
     long countByProductIdAndColor(int productId, String color);
 
-    // Bulk delete by color — called by productImageService.deleteColorImages()
+    //Writes
     void deleteByProductIdAndColor(int productId, String color);
 }

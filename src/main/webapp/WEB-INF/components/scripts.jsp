@@ -1,5 +1,5 @@
 <%-- scripts.jsp — All JS loaded at the bottom of every page --%>
-<%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
+<%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" session="false"%>
 <%@ page isELIgnored="false" %>
 
   <!-- Bootstrap is kept for legacy/admin/auth pages. The redesign shell uses custom JS. -->

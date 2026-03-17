@@ -6,40 +6,80 @@ import java.util.Objects;
 
 @NamedQueries({
 
-        // Full image list for a product — used by getGroupedByColor in service
-        @NamedQuery(
-                name = "ProductImage.findByProductId",
-                query = "SELECT pi FROM ProductImage pi " +
-                        "WHERE pi.product.id = :pid " +
-                        "ORDER BY pi.color ASC, pi.id ASC"
-        ),
+        // Single-product reads
 
-        // Primary image per color — lowest id per color group
-        // Note: uses native query in impl (see below) — this is here for documentation
-        // Named native queries are defined separately via @NamedNativeQuery
+        // Full image list for one product ordered by id ASC.
+        // Service groups the flat list into imagesByColor map (LinkedHashMap
+        // preserves insertion order so the first group = default colour).
         @NamedQuery(
-                name = "ProductImage.findByProductIdAndColor",
+                name  = "ProductImage.findByProductId",
                 query = "SELECT pi FROM ProductImage pi " +
                         "WHERE pi.product.id = :pid " +
-                        "AND pi.color = :color " +
                         "ORDER BY pi.id ASC"
         ),
 
-        // Count images for a product+color — used to determine if uploaded
-        // image is the first (and therefore becomes primary)
+        // All images for one specific colour, ordered by id ASC.
         @NamedQuery(
-                name = "ProductImage.countByProductIdAndColor",
-                query = "SELECT COUNT(pi) FROM ProductImage pi " +
+                name  = "ProductImage.findByProductIdAndColor",
+                query = "SELECT pi FROM ProductImage pi " +
                         "WHERE pi.product.id = :pid " +
-                        "AND pi.color = :color"
+                        "AND   pi.color      = :color " +
+                        "ORDER BY pi.id ASC"
         ),
 
-        // Bulk delete by color — called when admin removes a color variant
         @NamedQuery(
-                name = "ProductImage.deleteByProductIdAndColor",
+                name  = "ProductImage.findPrimaryPerColor",
+                query = "SELECT pi FROM ProductImage pi " +
+                        "WHERE pi.product.id = :pid " +
+                        "AND   pi.id = (" +
+                        "  SELECT MIN(pi2.id) FROM ProductImage pi2 " +
+                        "  WHERE pi2.product.id = pi.product.id " +
+                        "  AND   pi2.color      = pi.color" +
+                        ") " +
+                        "ORDER BY pi.id ASC"
+        ),
+
+        // Batch reads
+
+        // Lowest-id image per colour for MULTIPLE products in one query.
+        // Eliminates N+1 on catalog listing pages where findPrimaryPerColor
+        // would otherwise be called once per product.
+        //
+        // Same correlated-MIN pattern as above but scoped to a list of product
+        // ids. Results are ordered by product.id ASC, image.id ASC so that
+        // ProductImageService.getPrimaryPerColorForProducts() can group them
+        // sequentially without sorting.
+        @NamedQuery(
+                name  = "ProductImage.findPrimaryPerColorForProducts",
+                query = "SELECT pi FROM ProductImage pi " +
+                        "WHERE pi.product.id IN :pids " +
+                        "AND   pi.id = (" +
+                        "  SELECT MIN(pi2.id) FROM ProductImage pi2 " +
+                        "  WHERE pi2.product.id = pi.product.id " +
+                        "  AND   pi2.color      = pi.color" +
+                        ") " +
+                        "ORDER BY pi.product.id ASC, pi.id ASC"
+        ),
+
+        // **** Not sure if I would need to verify that in server uploads
+        // decide whether the uploaded image is the
+        // first for a given colour
+        @NamedQuery(
+                name  = "ProductImage.countByProductIdAndColor",
+                query = "SELECT COUNT(pi) FROM ProductImage pi " +
+                        "WHERE pi.product.id = :pid " +
+                        "AND   pi.color      = :color"
+        ),
+
+        // Writes
+
+        // Bulk delete by colour — called when an admin removes a colour variant.
+        // Transaction must be active (enforced by EntityManagerFilter).
+        @NamedQuery(
+                name  = "ProductImage.deleteByProductIdAndColor",
                 query = "DELETE FROM ProductImage pi " +
                         "WHERE pi.product.id = :pid " +
-                        "AND pi.color = :color"
+                        "AND   pi.color      = :color"
         )
 })
 @Entity
