@@ -1,10 +1,9 @@
-package servlet;
+package servlet.admin;
 
 import dto.CustomerDTO;
 import dto.UserInterestDTO;
 import jakarta.json.Json;
 import jakarta.json.JsonArrayBuilder;
-import jakarta.json.JsonObject;
 import jakarta.json.JsonObjectBuilder;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
