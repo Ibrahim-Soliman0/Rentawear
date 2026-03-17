@@ -33,7 +33,7 @@ public class RegisterServlet extends HttpServlet {
             return;
         }
         req.setAttribute("categories", categoryService.getAll());
-        req.getRequestDispatcher("/register.jsp").forward(req,resp);
+        req.getRequestDispatcher("/WEB-INF/register.jsp").forward(req,resp);
     }
 
     @Override

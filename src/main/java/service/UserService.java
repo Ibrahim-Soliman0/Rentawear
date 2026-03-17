@@ -184,4 +184,12 @@ public class UserService extends BaseService<User> {
                 })
                 .collect(Collectors.toList());
     }
+
+    public Optional<UserSessionDTO> getSessionDTOById(Integer id) {
+        return Optional.ofNullable(repository.findById(id))
+                .map(user -> {
+                    user.getInterests().forEach(uc -> uc.getCategory().getName());
+                    return mapper.toSessionDTO(user);
+                });
+    }
 }
