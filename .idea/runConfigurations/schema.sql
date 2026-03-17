@@ -29,7 +29,7 @@ CREATE TABLE payment_cards
     card_number     VARCHAR(19)  NOT NULL,
     user_id         INT          NOT NULL,
     cardholder_name VARCHAR(100) NOT NULL,
-    card_type       ENUM('VISA', 'MASTERCARD', 'AMERICAN_EXPRESS') NOT NULL,
+    card_type       ENUM('VISA', 'MASTERCARD', 'AMERICAN_EXPRESS', 'OTHER') NOT NULL,
     cvv             VARCHAR(4)   NOT NULL,
     expiry_month    CHAR(2)      NOT NULL,
     expiry_year     CHAR(4)      NOT NULL,
@@ -136,7 +136,7 @@ CREATE TABLE orders
     user_id      INT,
     total_amount DECIMAL(10, 2),
     created_at   TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    status       ENUM('ORDERED', 'CONFIRMED', 'CANCELLED', 'SHIPPED', 'DELIVERED') DEFAULT 'ORDERED',
+    status       ENUM('ORDERED', 'CONFIRMED', 'CANCELLED', 'SHIPPED', 'DELIVERED', 'RETURNED') DEFAULT 'ORDERED',
     FOREIGN KEY (user_id) REFERENCES users (id)
 );
 

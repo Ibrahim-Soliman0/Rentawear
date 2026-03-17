@@ -1,7 +1,7 @@
 <%-- search-modal.jsp - Redesign search modal (matches attached HTML)
      Search results injected by assets/js/search.js using CardFactory
 --%>
-<%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
+<%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" session="false"%>
 <%@ page isELIgnored="false" %>
 
 <div class="search-modal" id="searchModal" role="dialog" aria-label="Search" aria-hidden="true">

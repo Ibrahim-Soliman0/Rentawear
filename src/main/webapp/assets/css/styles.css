@@ -2614,3 +2614,582 @@ input::-ms-clear {
 .rw-tag i {
   font-size: 0.75rem;
 }
+
+/* ═══════════════════════════════════════════════════════════════
+   styles-additions.css  —  Billing & Limits tab additions
+   Append these rules to your existing styles-additions.css
+   ═══════════════════════════════════════════════════════════════ */
+
+
+/* ── Credit Limit Banner ─────────────────────────────────────── */
+.account-credit-banner {
+  background: #f9f9f9;
+  border: 1px solid #e8e8e8;
+  border-radius: 12px;
+  padding: 20px 22px;
+}
+
+.account-credit-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+
+.account-credit-label-block {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #555;
+  font-size: 14px;
+}
+
+.account-credit-label {
+  font-weight: 500;
+}
+
+.account-credit-amount {
+  font-size: 22px;
+  font-weight: 700;
+  color: #111;
+}
+
+.account-credit-total {
+  font-size: 13px;
+  font-weight: 400;
+  color: #888;
+  margin-left: 3px;
+}
+
+.account-credit-bar-track {
+  width: 100%;
+  height: 8px;
+  background: #e4e4e4;
+  border-radius: 99px;
+  overflow: hidden;
+}
+
+.account-credit-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #23a36a, #2bbf87);
+  border-radius: 99px;
+  min-width: 4px;
+  transition: width 0.6s ease;
+}
+
+.account-credit-hint {
+  font-size: 12px;
+  color: #aaa;
+  margin: 10px 0 0;
+}
+
+
+/* ── Payment Card Rows ───────────────────────────────────────── */
+.account-card-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 16px 20px;
+  margin-top: 10px;
+  border-radius: 10px;
+  border: 1px solid #e8e8e8;
+  background: #fff;
+  transition: border-color 0.15s;
+}
+
+.account-card-row:hover {
+  border-color: #d0d0d0;
+}
+
+.account-card-icon {
+  flex-shrink: 0;
+  width: 52px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* VISA badge */
+.account-card-badge--visa {
+  display: inline-block;
+  background: #1a1f71;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 800;
+  font-style: italic;
+  letter-spacing: 1px;
+  padding: 4px 8px;
+  border-radius: 4px;
+}
+
+/* Mastercard badge */
+.account-card-badge--mc {
+  display: inline-flex;
+  align-items: center;
+}
+
+.mc-circle {
+  display: inline-block;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+}
+
+.mc-circle--left  { background: #EB001B; }
+.mc-circle--right { background: #F79E1B; margin-left: -8px; mix-blend-mode: multiply; }
+
+/* Generic card badge */
+.account-card-badge--other {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 24px;
+  background: #f0f0f0;
+  border-radius: 4px;
+  color: #888;
+}
+
+.account-card-details {
+  flex: 1;
+}
+
+.account-card-number {
+  font-size: 15px;
+  font-weight: 500;
+  color: #111;
+  letter-spacing: 0.04em;
+  margin: 0 0 3px;
+  font-family: 'Courier New', monospace;
+}
+
+.account-card-expiry {
+  font-size: 12px;
+  color: #888;
+  margin: 0;
+}
+
+.account-card-remove {
+  background: none;
+  border: none;
+  color: #bbb;
+  cursor: pointer;
+  padding: 6px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.15s, background 0.15s;
+  flex-shrink: 0;
+}
+
+.account-card-remove:hover {
+  color: #e03030;
+  background: #fff0f0;
+}
+
+
+/* ── Modal backdrop ──────────────────────────────────────────── */
+.account-modal-backdrop {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.35);
+  z-index: 1040;
+  backdrop-filter: blur(2px);
+}
+
+.account-modal-backdrop.active {
+  display: block;
+}
+
+
+/* ── Modal panel ─────────────────────────────────────────────── */
+.account-modal {
+  display: none;
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) scale(0.97);
+  width: 100%;
+  max-width: 440px;
+  background: #fff;
+  border-radius: 14px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.18);
+  z-index: 1050;
+  overflow: hidden;
+  transition: transform 0.18s ease, opacity 0.18s ease;
+  opacity: 0;
+}
+
+.account-modal.active {
+  display: block;
+  transform: translate(-50%, -50%) scale(1);
+  opacity: 1;
+}
+
+.account-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px 22px 16px;
+  border-bottom: 1px solid #efefef;
+}
+
+.account-modal-title {
+  font-size: 16px;
+  font-weight: 600;
+  margin: 0;
+  color: #111;
+}
+
+.account-modal-close {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #888;
+  padding: 4px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  transition: color 0.15s, background 0.15s;
+}
+
+.account-modal-close:hover {
+  color: #111;
+  background: #f3f3f3;
+}
+
+.account-modal-body {
+  padding: 20px 22px;
+}
+
+.account-modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  padding: 16px 22px 20px;
+  border-top: 1px solid #efefef;
+}
+
+.account-modal-error {
+  margin-top: 12px;
+  font-size: 13px;
+  color: #d93025;
+  background: #fff5f5;
+  border: 1px solid #fdd;
+  border-radius: 7px;
+  padding: 8px 12px;
+}
+
+
+/* ── Live card preview (inside modal) ────────────────────────── */
+.account-card-preview {
+  width: 100%;
+  height: 150px;
+  border-radius: 12px;
+  padding: 18px 20px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  background: linear-gradient(135deg, #2c2c3e 0%, #3d3d56 100%);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+  color: #fff;
+  transition: background 0.4s ease;
+}
+
+.account-card-preview--visa {
+  background: linear-gradient(135deg, #1a1f71 0%, #2d3494 100%);
+}
+
+.account-card-preview--mastercard {
+  background: linear-gradient(135deg, #1c1c1c 0%, #3a3a3a 100%);
+}
+
+.account-card-preview--amex {
+  background: linear-gradient(135deg, #007b5e 0%, #00a87a 100%);
+}
+
+.account-card-preview--other {
+  background: linear-gradient(135deg, #2c2c3e 0%, #3d3d56 100%);
+}
+
+.account-card-preview-chip {
+  align-self: flex-start;
+}
+
+.account-card-preview-number {
+  font-family: 'Courier New', monospace;
+  font-size: 17px;
+  letter-spacing: 0.15em;
+  margin: 0;
+  text-align: center;
+}
+
+.account-card-preview-bottom {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+}
+
+.account-card-preview-label {
+  font-size: 9px;
+  letter-spacing: 0.1em;
+  color: rgba(255,255,255,0.6);
+  margin: 0 0 2px;
+  text-transform: uppercase;
+}
+
+.account-card-preview-value {
+  font-size: 13px;
+  font-weight: 500;
+  margin: 0;
+  letter-spacing: 0.05em;
+}
+
+.account-card-preview-type {
+  display: flex;
+  align-items: center;
+  min-width: 40px;
+  justify-content: flex-end;
+}
+
+
+/* ── Responsive tweaks ───────────────────────────────────────── */
+@media (max-width: 480px) {
+  .account-modal {
+    max-width: calc(100vw - 24px);
+    top: auto;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    transform: translateY(0);
+    border-radius: 14px 14px 0 0;
+  }
+
+  .account-modal.active {
+    transform: translateY(0);
+  }
+
+  .account-credit-top {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+  }
+}
+
+.account-form-error {
+  font-size: 13px;
+  color: #d93025;
+  background: #fff5f5;
+  border: 1px solid #fdd;
+  border-radius: 8px;
+  padding: 10px 14px;
+  margin-bottom: 12px;
+}
+
+.account-form-success {
+  font-size: 13px;
+  color: #1a7f4b;
+  background: #f0faf4;
+  border: 1px solid #b7e5cc;
+  border-radius: 8px;
+  padding: 10px 14px;
+  margin-bottom: 12px;
+}
+
+.account-orders-loading {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 13px;
+  color: #888;
+  padding: 24px 0;
+}
+
+.account-orders-spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid #e0e0e0;
+  border-top-color: #23a36a;
+  border-radius: 50%;
+  animation: rw-spin 0.7s linear infinite;
+  flex-shrink: 0;
+}
+
+@keyframes rw-spin {
+  to { transform: rotate(360deg); }
+}
+
+.account-orders-error {
+  font-size: 13px;
+  color: #d93025;
+  padding: 16px 0;
+}
+
+/* ── Order card wrapper ──────────────────────────────────────── */
+.account-order-card {
+  padding: 20px 22px;
+  margin-bottom: 16px;
+}
+
+.account-order-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.account-order-meta {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  font-size: 13px;
+  color: #666;
+  flex-wrap: wrap;
+}
+
+.account-order-id {
+  font-weight: 600;
+  color: #111;
+  font-size: 14px;
+}
+
+.account-order-total {
+  font-weight: 600;
+  color: #111;
+}
+
+/* ── Status badges (extra variants) ─────────────────────────── */
+.account-status--ordered   { background: #e8f0fe; color: #1a56c4; }
+.account-status--confirmed { background: #e6f4ea; color: #1e7e34; }
+.account-status--shipped   { background: #fff3cd; color: #856404; }
+.account-status--delivered { background: #23a36a; color: #fff;    }
+.account-status--returned  { background: #e6f4ea; color: #1a7f4b; }
+.account-status--cancelled { background: #fde8e8; color: #c0392b; }
+
+/* ── Status progress bar ─────────────────────────────────────── */
+.account-status-bar {
+  position: relative;
+  margin: 0 0 20px;
+}
+
+.account-status-track {
+  position: absolute;
+  top: 10px;                   /* vertically centred on the dots */
+  left: calc(100% / 10);       /* start at first dot centre */
+  right: calc(100% / 10);      /* end at last dot centre */
+  height: 3px;
+  background: #e8e8e8;
+  border-radius: 99px;
+  z-index: 0;
+}
+
+.account-status-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #23a36a, #2bbf87);
+  border-radius: 99px;
+  transition: width 0.5s ease;
+}
+
+.account-status-steps {
+  display: flex;
+  justify-content: space-between;
+  position: relative;
+  z-index: 1;
+}
+
+.account-status-step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  flex: 1;
+}
+
+.account-status-dot {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #e8e8e8;
+  border: 2px solid #e8e8e8;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.3s, border-color 0.3s;
+  color: #fff;
+}
+
+.account-status-step.completed .account-status-dot {
+  background: #23a36a;
+  border-color: #23a36a;
+}
+
+.account-status-step.active .account-status-dot {
+  background: #fff;
+  border-color: #23a36a;
+  box-shadow: 0 0 0 3px rgba(35,163,106,0.2);
+}
+
+.account-status-step.active .account-status-dot::after {
+  content: '';
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #23a36a;
+}
+
+.account-status-step-label {
+  font-size: 11px;
+  color: #aaa;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.account-status-step.completed .account-status-step-label,
+.account-status-step.active    .account-status-step-label {
+  color: #333;
+  font-weight: 500;
+}
+
+/* ── Order items list ────────────────────────────────────────── */
+.account-order-items {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-top: 4px;
+}
+
+/* ── Responsive ──────────────────────────────────────────────── */
+@media (max-width: 600px) {
+  .account-status-step-label {
+    display: none;
+  }
+
+  .account-order-meta {
+    gap: 10px;
+  }
+}
+
+.account-credit-action {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-top: 14px;
+  flex-wrap: wrap;
+}
+
+.account-credit-feedback {
+  font-size: 13px;
+  margin: 0;
+}
+
+.account-credit-feedback--success {
+  color: #1a7f4b;
+}
+
+.account-credit-feedback--error {
+  color: #d93025;
+}

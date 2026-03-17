@@ -2,19 +2,14 @@ package mapper;
 
 import dto.UserInterestDTO;
 import dto.UserRegisterDTO;
-import dto.UserProfileDTO;
 import dto.UserSessionDTO;
 import entity.User;
 import entity.UserCategory;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
-@Mapper(uses = PaymentCardMapper.class)
+@Mapper
 public interface UserMapper {
-
-    UserProfileDTO toProfileDto(User user);
-
-    User toEntity(UserProfileDTO dto);
 
     @Mapping(target = "gender",       expression = "java(entity.enums.Gender.valueOf(dto.gender().toUpperCase()))")
     @Mapping(target = "interests",    ignore = true)
@@ -28,6 +23,6 @@ public interface UserMapper {
     @Mapping(target = "categoryName", source = "category.name")
     UserInterestDTO toInterestDTO(UserCategory userCategory);
 
+    @Mapping(target = "birthday", source = "birthday", dateFormat = "yyyy-MM-dd")
     UserSessionDTO toSessionDTO(User user);
-
 }
