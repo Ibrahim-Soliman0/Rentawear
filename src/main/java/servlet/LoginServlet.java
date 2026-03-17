@@ -1,6 +1,7 @@
 package servlet;
 
 import dto.UserSessionDTO;
+import entity.enums.UserRole;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -62,7 +63,12 @@ public class LoginServlet extends HttpServlet {
             session.setMaxInactiveInterval(60 * 60 * 24);
         }
 
-        resp.sendRedirect(req.getContextPath() + "/home");
+        if(user.role()== UserRole.ADMIN){
+            resp.sendRedirect(req.getContextPath() + "/admin/dashboard");
+        }
+        else if(user.role()==UserRole.USER){
+            resp.sendRedirect(req.getContextPath() + "/home");
+        }
     }
 
     private boolean isEmpty(String val) {
