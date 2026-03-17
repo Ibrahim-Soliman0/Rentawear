@@ -22,12 +22,12 @@ public class AdminFilter implements Filter {
         UserSessionDTO user = (UserSessionDTO) req.getSession().getAttribute("user");
 
         if (user == null) {
-            resp.sendRedirect(req.getContextPath() + "/login.jsp");
+            resp.sendRedirect(req.getContextPath() + "/login");
             return;
         }
 
         if (user.role() != UserRole.ADMIN) {
-            resp.sendRedirect(req.getContextPath() + "/index.jsp");
+            resp.sendRedirect(req.getContextPath() + "/home");
             return;
         }
 
