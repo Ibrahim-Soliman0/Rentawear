@@ -663,3 +663,66 @@
   .adm-table th,
   .adm-table td { padding: 0.75rem; }
 }
+/* ── Order expandable rows ──────────────────────────────────── */
+.adm-expand-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.72rem;
+  font-weight: 500;
+  color: var(--adm-teal);
+  background: var(--adm-teal-light);
+  border: none;
+  border-radius: 99px;
+  padding: 0.2rem 0.6rem;
+  cursor: pointer;
+  margin-left: 0.5rem;
+  transition: var(--adm-transition);
+}
+.adm-expand-btn:hover { background: var(--adm-teal); color: #fff; }
+
+.adm-order-detail-row td {
+  background: var(--adm-cream);
+  border-bottom: 1px solid var(--adm-stone);
+  padding: 0 !important;
+}
+.adm-order-items-wrap {
+  padding: 0.75rem 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+.adm-order-item-row {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+  padding: 0.6rem 0.85rem;
+  background: var(--adm-warm-white);
+  border: 1px solid var(--adm-stone);
+  border-radius: var(--adm-radius);
+  font-size: 0.85rem;
+}
+.adm-order-item-name {
+  font-weight: 500;
+  color: var(--adm-ink);
+  min-width: 150px;
+}
+.adm-order-item-meta {
+  display: flex;
+  gap: 0.35rem;
+  flex-wrap: wrap;
+}
+.adm-order-meta-pill {
+  font-size: 0.72rem;
+  padding: 0.15rem 0.5rem;
+  background: var(--adm-stone);
+  color: var(--adm-charcoal);
+  border-radius: 99px;
+  white-space: nowrap;
+}
+.adm-order-item-dates {
+  font-size: 0.75rem;
+  color: var(--adm-muted);
+  margin-left: auto;
+}

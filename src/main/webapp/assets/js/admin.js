@@ -358,7 +358,7 @@ function loadOrders() {
       renderOrdersTable(data.orders);
     }
   };
-  req.open('GET', CTX + '/admin/GetOrdersServlet', true);
+  req.open('GET', CTX + '/admin/getOrders', true);
   req.send();
 }
 
@@ -375,25 +375,74 @@ function renderOrdersTable(orders) {
     return;
   }
 
-  tbody.innerHTML = orders.map(o => `
-    <tr>
-      <td><span style="font-family:monospace;font-size:0.8rem;">#${o.id}</span></td>
-      <td>${escHtml(o.customerName)}</td>
-      <td>${escHtml(o.productName)}</td>
-      <td>${escHtml(o.startDate)} → ${escHtml(o.endDate)}</td>
-      <td>$${Number(o.total).toFixed(2)}</td>
-      <td>${getOrderBadge(o.status)}</td>
-    </tr>`).join('');
+  tbody.innerHTML = orders.map(o => {
+    const firstItem   = o.orderItems && o.orderItems.length > 0 ? o.orderItems[0] : null;
+    const productName = firstItem ? escHtml(firstItem.productName) : '—';
+    const period      = firstItem
+        ? `${escHtml(firstItem.startDate)} → ${escHtml(firstItem.endDate)}`
+        : '—';
+    const hasMore     = o.orderItems && o.orderItems.length > 0;
+
+    // Build items detail rows
+    const itemsDetail = (o.orderItems || []).map(item => `
+      <div class="adm-order-item-row">
+        <span class="adm-order-item-name">${escHtml(item.productName)}</span>
+        <span class="adm-order-item-meta">
+          ${item.color ? `<span class="adm-order-meta-pill">${escHtml(item.color)}</span>` : ''}
+          ${item.size  ? `<span class="adm-order-meta-pill">${escHtml(item.size)}</span>`  : ''}
+          ${item.quantity ? `<span class="adm-order-meta-pill">Qty: ${item.quantity}</span>` : ''}
+          <span class="adm-order-meta-pill">$${Number(item.priceAtPurchase).toFixed(2)}</span>
+        </span>
+        <span class="adm-order-item-dates">${escHtml(item.startDate)} → ${escHtml(item.endDate)}</span>
+      </div>`).join('');
+
+    return `
+      <tr class="adm-order-main-row">
+        <td><span style="font-family:monospace;font-size:0.8rem;">#${o.id}</span></td>
+        <td>
+          <div style="font-weight:500;font-size:0.875rem;">${escHtml(o.customerName)}</div>
+          <div style="font-size:0.75rem;color:var(--adm-muted);">${escHtml(o.customerEmail)}</div>
+        </td>
+        <td>
+          ${productName}
+          ${hasMore ? `<button class="adm-expand-btn" onclick="toggleOrderItems(this)" data-order="${o.id}">
+            <i class="bi bi-chevron-down"></i> ${o.orderItems.length} item${o.orderItems.length !== 1 ? 's' : ''}
+          </button>` : ''}
+        </td>
+        <td style="font-size:0.82rem;">${period}</td>
+        <td>$${Number(o.totalAmount).toFixed(2)}</td>
+        <td>${getOrderBadge(o.status)}</td>
+      </tr>
+      <tr class="adm-order-detail-row" id="order-detail-${o.id}" style="display:none;">
+        <td colspan="6">
+          <div class="adm-order-items-wrap">
+            ${itemsDetail}
+          </div>
+        </td>
+      </tr>`;
+  }).join('');
 }
 
+function toggleOrderItems(btn) {
+  const orderId   = btn.dataset.order;
+  const detailRow = document.getElementById(`order-detail-${orderId}`);
+  const icon      = btn.querySelector('i');
+  const isOpen    = detailRow.style.display !== 'none';
+
+  detailRow.style.display = isOpen ? 'none' : 'table-row';
+  icon.className = isOpen ? 'bi bi-chevron-down' : 'bi bi-chevron-up';
+}
 function getOrderBadge(status) {
   const map = {
-    'ACTIVE':    'adm-badge--success',
-    'COMPLETED': 'adm-badge--neutral',
+    'ORDERED':   'adm-badge--warning',
+    'DELIVERED': 'adm-badge--success',
+    'SHIPPED':   'adm-badge--warning',
+    'CONFIRMED': 'adm-badge--neutral',
     'CANCELLED': 'adm-badge--danger',
-    'PENDING':   'adm-badge--warning',
   };
+
   const cls = map[status] || 'adm-badge--neutral';
+
   return `<span class="adm-badge ${cls}">${status}</span>`;
 }
 
