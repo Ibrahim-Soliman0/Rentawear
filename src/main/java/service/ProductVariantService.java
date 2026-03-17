@@ -2,38 +2,53 @@ package service;
 
 import entity.ProductVariant;
 import repository.ProductVariantRepository;
-import repository.impl.ProductVariantRepositoryImpl;
 
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
-public class ProductVariantService extends BaseService<ProductVariant> {
+// Owns variant-level operations only.
+// Grouping helpers live here because they operate purely on variant data
+// no product or image context needed.
+public class ProductVariantService {
 
-    private final ProductVariantRepository productVariantRepository;
+    private final ProductVariantRepository variantRepo;
 
-    public ProductVariantService(ProductVariantRepository productVariantRepository) {
-        super(productVariantRepository);
-        this.productVariantRepository = productVariantRepository;
+    public ProductVariantService(ProductVariantRepository variantRepo) {
+        this.variantRepo = variantRepo;
     }
 
-    // All variants for a product — used by PDP and servlet default color logic
+
     public List<ProductVariant> getByProductId(int productId) {
-        return productVariantRepository.findByProductId(productId);
+        return variantRepo.findByProductId(productId);
     }
 
-    // Distinct color strings — used by upload validation
     public List<String> getDistinctColors(int productId) {
-        return productVariantRepository.findDistinctColorsByProductId(productId);
+        return variantRepo.findDistinctColorsByProductId(productId);
     }
 
-    // Sizes available for a specific color — drives size selector
-    // when user switches color in QV or PDP
-    public List<String> getSizesForColor(int productId, String color) {
-        return productVariantRepository.findSizesByProductIdAndColor(productId, color);
+    public List<String> getSizesByColor(int productId, String color) {
+        return variantRepo.findSizesByProductIdAndColor(productId, color);
     }
 
-    // Removes all size rows for a color — called alongside deleteColorImages
-    // when admin removes a color variant entirely
-    public void deleteByColor(int productId, String color) {
-        productVariantRepository.deleteByProductIdAndColor(productId, color);
+    public List<String> getAvailableSizesByColor(int productId, String color) {
+        return variantRepo.findAvailableSizesByProductIdAndColor(productId, color);
+    }
+
+
+    // Returns variants for multiple products grouped by product id.
+    public Map<Integer, List<ProductVariant>> getByProductIds(List<Integer> productIds) {
+        List<ProductVariant> all = variantRepo.findByProductIds(productIds);
+        Map<Integer, List<ProductVariant>> grouped = new LinkedHashMap<>();
+        for (ProductVariant v : all) {
+            grouped.computeIfAbsent(v.getProduct().getId(), k -> new ArrayList<>())
+                    .add(v);
+        }
+        return grouped;
+    }
+
+    public void deleteColor(int productId, String color) {
+        variantRepo.deleteByProductIdAndColor(productId, color);
     }
 }

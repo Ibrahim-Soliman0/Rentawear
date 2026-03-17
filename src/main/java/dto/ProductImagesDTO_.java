@@ -5,7 +5,8 @@ import util.ColorUtil;
 import java.util.*;
 import java.util.stream.Collectors;
 
-public class ProductImagesDTO {
+@Deprecated
+public class ProductImagesDTO_ {
     public int    productId;
     public String productName;
     public String defaultColor;           // encoded color of lowest-id variant
@@ -54,11 +55,11 @@ public class ProductImagesDTO {
 //        return dto;
 //    }
 
-    public static ProductImagesDTO from(int productId,
-                                        String productName,
-                                        String defaultColor,
-                                        LinkedHashMap<String, List<ProductImage>> grouped) {
-        ProductImagesDTO dto = new ProductImagesDTO();
+    public static ProductImagesDTO_ from(int productId,
+                                         String productName,
+                                         String defaultColor,
+                                         LinkedHashMap<String, List<ProductImage>> grouped) {
+        ProductImagesDTO_ dto = new ProductImagesDTO_();
         dto.productId    = productId;
         dto.productName  = productName;
         dto.defaultColor = defaultColor;

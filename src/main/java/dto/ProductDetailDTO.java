@@ -1,17 +1,13 @@
 package dto;
 
-import java.math.BigDecimal;
 import java.util.List;
+import java.util.Map;
 
 public record ProductDetailDTO(
-        int id,
-        String name,
-        String brand,
-        BigDecimal pricePerDay,
-        String imageBase,
-        boolean isNew,
-        String description,
-        List<String> sizes,
-        List<SwatchDTO> swatches,
-        List<String> images
+        ProductCoreDTO               core,
+        String                       description,
+        List<ColorSwatchDTO>         swatches,
+        Map<String, List<String>>    sizesByColor,
+        Map<String, List<String>>    availableSizesByColor,
+        Map<String, List<String>>    imagesByColor
 ) {}

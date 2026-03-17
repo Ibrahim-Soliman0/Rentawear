@@ -1,76 +1,75 @@
 package service;
 
 import dto.PriceRangeDTO;
-import dto.ProductDTO;
+import dto.ProductFilterDTO;
 import entity.Product;
 import repository.ProductRepository;
-import repository.impl.ProductRepositoryImpl;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
-public class ProductService extends BaseService<Product> {
+// Owns product-level queries only.
+// Does not know about variants, images, or DTOs, those belong to the facade.
+public class ProductService {
 
-    private final ProductRepository productRepository;
+    private static final int NEW_DAYS = 30;
 
-    public ProductService() {
-        this(new ProductRepositoryImpl());
+    private final ProductRepository productRepo;
+
+    public ProductService(ProductRepository productRepo) {
+        this.productRepo = productRepo;
     }
 
-    public ProductService(ProductRepository productRepository) {
-        super(productRepository);
-        this.productRepository = productRepository;
+    public Product getById(int productId) {
+        return productRepo.findById(productId);
     }
 
-    public List<ProductDTO> getNew(int limit, int days) {
-        return toProductDTOs(productRepository.findNew(limit, days));
+    public List<Product> findNew(int pageSize) {
+        return productRepo.findNew(pageSize, NEW_DAYS);
     }
 
-    public List<ProductDTO> getFiltered(String gender,
-                                        List<Integer> categoryIds,
-                                        Double minPrice,
-                                        Double maxPrice,
-                                        int limit,
-                                        int offset) {
-        return toProductDTOs(
-                productRepository.findFiltered(
-                        gender, categoryIds, minPrice, maxPrice, limit, offset));
+    public List<Product> findFiltered(ProductFilterDTO f) {
+        return productRepo.findFiltered(
+                f.gender(), f.categoryIds(),
+                f.minPrice(), f.maxPrice(),
+                f.pageSize(), f.offset());
     }
 
-    public long countFiltered(String gender,
-                              List<Integer> categoryIds,
-                              Double minPrice,
-                              Double maxPrice) {
-        return productRepository.countFiltered(gender, categoryIds, minPrice, maxPrice);
+    public List<Product> searchFiltered(ProductFilterDTO f) {
+        return productRepo.searchFiltered(
+                f.searchQuery(), f.gender(),
+                f.categoryIds(),
+                f.minPrice(), f.maxPrice(),
+                f.pageSize(), f.offset());
     }
 
-    public List<ProductDTO> search(String q, String gender, int limit) {
-        return toProductDTOs(productRepository.search(q, gender, limit));
+    public List<Product> findByInterests(ProductFilterDTO f) {
+        return productRepo.findByInterests(
+                f.interestIds(), f.gender(),
+                f.pageSize(), f.offset());
     }
 
-    public List<ProductDTO> searchPaged(String q, String gender, int limit, int offset) {
-        return toProductDTOs(productRepository.searchPaged(q, gender, limit, offset));
+    public long countNew() {
+        return productRepo.countNew(NEW_DAYS);
     }
 
-    public long countSearch(String q, String gender) {
-        return productRepository.countSearch(q, gender);
+    public long countFiltered(ProductFilterDTO f) {
+        return productRepo.countFiltered(
+                f.gender(), f.categoryIds(),
+                f.minPrice(), f.maxPrice());
     }
 
-    public List<ProductDTO> getByInterests(List<Integer> categoryIds,String gender, int limit) {
-        return toProductDTOs(productRepository.findByInterests(categoryIds,gender, limit));
+    public long countSearchFiltered(ProductFilterDTO f) {
+        return productRepo.countSearchFiltered(
+                f.searchQuery(), f.gender(),
+                f.categoryIds(),
+                f.minPrice(), f.maxPrice());
     }
 
-    public PriceRangeDTO getPriceRange(String gender, List<Integer> categoryIds) {
-        Object[] row = productRepository.getMinMaxPrice(gender, categoryIds);
-        if (row == null) return new PriceRangeDTO(null, null);
-        Double min = row[0] == null ? null : ((java.math.BigDecimal) row[0]).doubleValue();
-        Double max = row[1] == null ? null : ((java.math.BigDecimal) row[1]).doubleValue();
-        return new PriceRangeDTO(min, max);
+    public long countByInterests(ProductFilterDTO f) {
+        return productRepo.countByInterests(f.interestIds(), f.gender());
     }
 
-    private List<ProductDTO> toProductDTOs(List<Product> products) {
-        return products.stream()
-                .map(ProductDTO::from)
-                .collect(Collectors.toList());
+    public PriceRangeDTO getMinMaxPrice(ProductFilterDTO f) {
+        return productRepo.getMinMaxPrice(f.gender(), f.categoryIds());
     }
 }
