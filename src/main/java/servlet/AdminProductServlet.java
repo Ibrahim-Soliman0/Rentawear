@@ -1,8 +1,8 @@
 package servlet;
 
 import dto.AdminProductDetailDTO;
+import dto.AdminProductListResult;
 import dto.ProductFilterDTO;
-import dto.ProductListResult;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
@@ -48,7 +48,7 @@ public class AdminProductServlet extends HttpServlet {
     private void handleList(HttpServletRequest req, HttpServletResponse resp)
             throws IOException {
         ProductFilterDTO  filter = FilterBuilder.fromRequest(req);
-        ProductListResult result = facade.getAdminProducts(filter);
+        AdminProductListResult result = facade.getAdminProducts(filter);
         JsonUtil.writeJson(resp, result);
     }
 

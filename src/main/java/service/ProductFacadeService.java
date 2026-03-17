@@ -91,32 +91,25 @@ public class ProductFacadeService {
     }
 
 
-    public ProductListResult getAdminProducts(ProductFilterDTO filter) {
+    public AdminProductListResult getAdminProducts(ProductFilterDTO filter) {
         List<Product> products = fetchProducts(filter);
-        long          total    = countProducts(filter);
-        PriceRangeDTO range    = productService.getMinMaxPrice(filter);
+        long total= countProducts(filter);
 
         List<Integer> ids = products.stream()
                 .map(Product::getId)
                 .collect(Collectors.toList());
 
-        Map<Integer, List<ProductImage>>   imagesByProductId   =
-                imageService.getPrimaryPerColorForProducts(ids);
         Map<Integer, List<ProductVariant>> variantsByProductId =
                 variantService.getByProductIds(ids);
 
-        List<ProductCardDTO> cards = products.stream()
-                .map(p -> mapper.toCardDTO(
-                        p,
-                        imagesByProductId.getOrDefault(p.getId(), List.of())
+        List<AdminProductRowDTO> rows = products.stream()
+                .map(p -> mapper.toAdminRowDTO(p, variantsByProductId.getOrDefault(p.getId(), List.of())
                 ))
                 .collect(Collectors.toList());
 
-        return new ProductListResult(cards, total, range, filter.page(), filter.pageSize());
+        return new AdminProductListResult(rows, total, filter.page(), filter.pageSize());
     }
-
     // Admin product detail
-
     public AdminProductDetailDTO getAdminDetail(int productId) {
         Product              product  = productService.getById(productId);
         List<ProductVariant> variants = variantService.getByProductId(productId);
