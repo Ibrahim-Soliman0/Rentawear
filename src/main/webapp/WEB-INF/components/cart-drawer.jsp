@@ -47,7 +47,6 @@
         </div>
       </div>
 
-      <%--TODO: Hide Button If cart is Empty--%>
       <a class="cart-cta" href="${pageContext.request.contextPath}/checkout">
         Proceed to Checkout →
       </a>

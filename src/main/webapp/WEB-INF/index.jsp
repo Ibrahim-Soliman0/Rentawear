@@ -4,7 +4,7 @@
 <%@ taglib prefix="c" uri="jakarta.tags.core" %>
 
 <%-- layout.jsp handles head + navbar + search modal + cart drawer + mobile menu --%>
-<jsp:include page="WEB-INF/layout.jsp">
+<jsp:include page="layout.jsp">
   <jsp:param name="title"       value="Rentawear – Rent Premium Fashion"/>
   <jsp:param name="description" value="Rent designer dresses, suits, and more for any occasion."/>
   <jsp:param name="activePage"  value="home"/>
@@ -35,7 +35,7 @@
 
     <div class="hero-image">
       <div class="hero-image-placeholder">
-  <img src="assets/img/hero.jpg"
+  <img src="${pageContext.request.contextPath}/assets/img/hero.jpg"
        alt="assets/img/hero.jpg"
        loading="lazy"/>
         <p class="hero-img-label">Spring / Summer 2026 Edit</p>
@@ -171,10 +171,10 @@
 </main>
 
 <%-- Footer --%>
-<jsp:include page="WEB-INF/components/footer.jsp"/>
+<jsp:include page="components/footer.jsp"/>
 
 <%-- home.js loaded last — depends on card-factory.js (already in scripts.jsp) --%>
-<jsp:include page="WEB-INF/components/scripts.jsp">
+<jsp:include page="components/scripts.jsp">
   <jsp:param name="extraJS"
              value="${pageContext.request.contextPath}/assets/js/home.js"/>
 </jsp:include>

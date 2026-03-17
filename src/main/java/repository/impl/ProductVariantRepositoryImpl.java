@@ -1,9 +1,7 @@
 package repository.impl;
 
-import jakarta.persistence.EntityManager;
 import entity.ProductVariant;
 import repository.ProductVariantRepository;
-import util.JPAUtil;
 
 import java.util.List;
 
@@ -14,52 +12,52 @@ public class ProductVariantRepositoryImpl extends BaseRepositoryImpl<ProductVari
         super(ProductVariant.class);
     }
 
-    // All variants for a product , used by PDP and QV size selectors
     @Override
     public List<ProductVariant> findByProductId(int productId) {
-        try (EntityManager em = JPAUtil.getEntityManager()) {
-            return em.createNamedQuery("ProductVariant.findByProductId", ProductVariant.class)
-                    .setParameter("pid", productId)
-                    .getResultList();
-        }
+        return em().createNamedQuery("ProductVariant.findByProductId", ProductVariant.class)
+                .setParameter("pid", productId)
+                .getResultList();
     }
 
-    // Distinct color strings used by upload validation to confirm
-    // a color exists before accepting image uploads for it
     @Override
     public List<String> findDistinctColorsByProductId(int productId) {
-        try (EntityManager em = JPAUtil.getEntityManager()) {
-            return em.createNamedQuery(
-                            "ProductVariant.findDistinctColorsByProductId", String.class)
-                    .setParameter("pid", productId)
-                    .getResultList();
-        }
+        return em().createNamedQuery(
+                        "ProductVariant.findDistinctColorsByProductId", String.class)
+                .setParameter("pid", productId)
+                .getResultList();
     }
 
-    // Sizes for one specific color
     @Override
     public List<String> findSizesByProductIdAndColor(int productId, String color) {
-        try (EntityManager em = JPAUtil.getEntityManager()) {
-            return em.createNamedQuery(
-                            "ProductVariant.findSizesByProductIdAndColor", String.class)
-                    .setParameter("pid",   productId)
-                    .setParameter("color", color)
-                    .getResultList();
-        }
+        return em().createNamedQuery(
+                        "ProductVariant.findSizesByProductIdAndColor", String.class)
+                .setParameter("pid",   productId)
+                .setParameter("color", color)
+                .getResultList();
     }
 
+    @Override
+    public List<String> findAvailableSizesByProductIdAndColor(int productId, String color) {
+        return em().createNamedQuery(
+                        "ProductVariant.findAvailableSizesByProductIdAndColor", String.class)
+                .setParameter("pid",   productId)
+                .setParameter("color", color)
+                .getResultList();
+    }
 
-    // Deletes all size rows for a color  called by deleteColorImages in service
+    @Override
+    public List<ProductVariant> findByProductIds(List<Integer> productIds) {
+        if (productIds == null || productIds.isEmpty()) return List.of();
+        return em().createNamedQuery("ProductVariant.findByProductIds", ProductVariant.class)
+                .setParameter("pids", productIds)
+                .getResultList();
+    }
+
     @Override
     public void deleteByProductIdAndColor(int productId, String color) {
-        try {
-            em().createNamedQuery("ProductVariant.deleteByProductIdAndColor")
-                    .setParameter("pid",   productId)
-                    .setParameter("color", color)
-                    .executeUpdate();
-        } catch (Exception e) {
-            throw new RuntimeException("Failed to delete variants for color: " + color, e);
-        }
+        em().createNamedQuery("ProductVariant.deleteByProductIdAndColor")
+                .setParameter("pid",   productId)
+                .setParameter("color", color)
+                .executeUpdate();
     }
 }
-
