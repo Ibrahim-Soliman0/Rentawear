@@ -47,7 +47,6 @@ public class User {
     @Column(name = "credit_limit", precision = 10, scale = 2)
     private BigDecimal creditLimit;
 
-    @ColumnDefault("'USER'")
     @Column(name = "role")
     @Enumerated(EnumType.STRING)
     private UserRole role;
@@ -60,7 +59,7 @@ public class User {
     private Gender gender;
 
     @OneToMany(mappedBy = "user", fetch = FetchType.LAZY,
-            cascade =  CascadeType.ALL, orphanRemoval = true)
+            cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<UserCategory> interests = new HashSet<>();
 
     @OneToMany(mappedBy = "user", fetch = FetchType.LAZY,
@@ -175,6 +174,10 @@ public class User {
     public void prePersist() {
         if (createdAt == null) {
             createdAt = Instant.now();
+        }
+
+        if (role == null) {
+            role = UserRole.USER;
         }
     }
 

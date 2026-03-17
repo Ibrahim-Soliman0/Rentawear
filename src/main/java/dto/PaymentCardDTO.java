@@ -1,8 +1,12 @@
 package dto;
 
+import entity.enums.CardType;
+
 public record PaymentCardDTO(
         Integer id,
         String cardNumber,
-        String cardType
+        CardType cardType,
+        String expiryMonth,
+        String expiryYear
 ) {
 }

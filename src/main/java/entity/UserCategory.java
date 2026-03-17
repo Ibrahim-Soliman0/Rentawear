@@ -18,6 +18,14 @@ public class UserCategory {
     @JoinColumn(name = "user_id")
     private User user;
 
+    public UserCategory() {
+    }
+
+    public UserCategory(User user, Category category) {
+        this.user = user;
+        this.category = category;
+    }
+
     public Integer getId() {
         return id;
     }

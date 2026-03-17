@@ -4,5 +4,6 @@ public enum CardType {
 
     VISA,
     MASTERCARD,
-    AMERICAN_EXPRESS
+    AMERICAN_EXPRESS,
+    OTHER
 }

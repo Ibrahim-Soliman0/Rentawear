@@ -1,7 +1,7 @@
 <%-- cart-drawer.jsp - Redesign cart drawer (matches attached HTML)
      Items injected by assets/js/cart.js using CardFactory.cartItem
 --%>
-<%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
+<%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" session="false"%>
 <%@ page isELIgnored="false" %>
 
 <div class="cart-drawer" id="cartDrawer" aria-hidden="true">
