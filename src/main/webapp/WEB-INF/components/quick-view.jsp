@@ -2,7 +2,7 @@
      Class names aligned to §20 of styles.css (qv-overlay, qv-modal …).
      ALL element IDs are unchanged — quick-view.js targets IDs only.
 --%>
-<%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
+<%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" session="false"%>
 <%@ page isELIgnored="false" %>
 
 <div class="qv-overlay" id="qvOverlay" role="dialog" aria-modal="true" aria-label="Quick View">

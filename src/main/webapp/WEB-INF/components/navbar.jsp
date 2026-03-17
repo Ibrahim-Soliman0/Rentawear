@@ -1,7 +1,7 @@
 <%-- navbar.jsp - Redesign nav (matches attached HTML)
      Receives: activePage (e.g. "home", "women", "men", "new", "account")
 --%>
-<%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
+<%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" session="false"%>
 <%@ page isELIgnored="false" %>
 
 <nav class="rw-nav" aria-label="Main navigation">

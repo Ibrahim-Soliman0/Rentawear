@@ -1,5 +1,5 @@
 <%-- footer.jsp — Footer visible on ALL screen sizes --%>
-<%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
+<%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" session="false"%>
 <%@ page isELIgnored="false" %>
 
 <footer class="rw-footer">

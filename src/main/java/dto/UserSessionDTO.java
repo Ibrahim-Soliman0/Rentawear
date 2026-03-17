@@ -12,10 +12,12 @@ public record UserSessionDTO(
         String name,
         String email,
         Gender gender,
-        LocalDate birthday,
+        String birthday,
         String job,
         String address,
         BigDecimal creditLimit,
         UserRole role,
-        Set<UserInterestDTO> interests
-) {}
+        Set<UserInterestDTO> interests,
+        Set<PaymentCardDTO> paymentCards
+) {
+}

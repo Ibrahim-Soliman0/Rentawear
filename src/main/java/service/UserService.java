@@ -1,17 +1,24 @@
 package service;
 
+import dto.UpdateProfileDTO;
 import dto.UserRegisterDTO;
 import dto.UserSessionDTO;
+import entity.UserCategory;
 import exception.EmailAlreadyExistsException;
 import entity.User;
-import dto.UserProfileDTO;
 import mapper.UserMapper;
 import org.mapstruct.factory.Mappers;
 import repository.UserRepository;
 import repository.impl.UserRepositoryImpl;
 import util.HashUtil;
 
+import java.time.LocalDate;
+import java.time.format.DateTimeParseException;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 public class UserService extends BaseService<User> {
 
@@ -65,13 +72,103 @@ public class UserService extends BaseService<User> {
         // Force load lazy collections while EntityManager is still open
         user.getInterests().forEach(uc -> uc.getCategory().getName());
 
+        user.getPaymentCards().size();
+
         return Optional.of(mapper.toSessionDTO(user));
     }
 
-    public Optional<UserProfileDTO> getProfileDetails(Integer id) {
+    public UserSessionDTO updateProfile(Integer userId, UpdateProfileDTO dto)
+            throws IllegalArgumentException {
 
-        User user = userRepository.findById(id);
+        User user = getById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("User not found."));
 
-        return Optional.ofNullable(mapper.toProfileDto(user));
+        /* ── Name ── */
+        if (isBlank(dto.name())) {
+            throw new IllegalArgumentException("Full name is required.");
+        }
+        user.setName(dto.name().trim());
+
+        /* ── Email ── */
+        if (isBlank(dto.email())) {
+            throw new IllegalArgumentException("Email address is required.");
+        }
+        String newEmail = dto.email().trim().toLowerCase();
+        if (!newEmail.equals(user.getEmail())) {
+            if (getUserByEmail(newEmail).isPresent()) {
+                throw new IllegalArgumentException("That email address is already in use.");
+            }
+            user.setEmail(newEmail);
+        }
+
+        /* ── Birthday ── */
+        if (!isBlank(dto.birthday())) {
+            try {
+                user.setBirthday(LocalDate.parse(dto.birthday()));
+            } catch (DateTimeParseException e) {
+                throw new IllegalArgumentException("Invalid date of birth format.");
+            }
+        } else {
+            user.setBirthday(null);
+        }
+
+        /* ── Job ── */
+        user.setJob(isBlank(dto.job()) ? null : dto.job().trim());
+
+        /* ── Address ── */
+        user.setAddress(isBlank(dto.address()) ? null : dto.address().trim());
+
+        /* ── Interests ── */
+        if (dto.interests() != null) {
+
+            /* Get the category IDs the user currently has */
+            Set<Integer> currentIds = user.getInterests()
+                    .stream()
+                    .map(uc -> uc.getCategory().getId())
+                    .collect(Collectors.toSet());
+
+            Set<Integer> newIds = new HashSet<>(dto.interests());
+
+            /* Remove interests that are no longer selected */
+            user.getInterests().removeIf(uc -> !newIds.contains(uc.getCategory().getId()));
+
+            /* Add interests that are newly selected */
+            for (Integer categoryId : newIds) {
+                if (!currentIds.contains(categoryId)) {
+                    categoryService.getById(categoryId)
+                            .ifPresent(user::addInterest);
+                }
+            }
+        }
+
+        /* ── Password change (optional) ── */
+        if (!isBlank(dto.newPassword())) {
+            if (isBlank(dto.currentPassword())) {
+                throw new IllegalArgumentException("Current password is required to set a new one.");
+            }
+            if (!HashUtil.verifyPassword(dto.currentPassword(), user.getPasswordHash())) {
+                throw new IllegalArgumentException("Current password is incorrect.");
+            }
+            if (!dto.newPassword().equals(dto.confirmPassword())) {
+                throw new IllegalArgumentException("New passwords do not match.");
+            }
+            if (dto.newPassword().length() < 8) {
+                throw new IllegalArgumentException("New password must be at least 8 characters.");
+            }
+            user.setPasswordHash(HashUtil.hashPassword(dto.newPassword()));
+        }
+
+        /* ── Persist ── */
+        User saved = userRepository.save(user);
+
+        /* ── Force-load lazy collections for session DTO ── */
+        saved.getInterests().forEach(uc -> uc.getCategory().getName());
+        saved.getPaymentCards().size();
+
+        return mapper.toSessionDTO(saved);
+    }
+
+    private boolean isBlank(String s) {
+        return s == null || s.isBlank();
     }
 }

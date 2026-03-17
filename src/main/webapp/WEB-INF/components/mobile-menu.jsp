@@ -1,7 +1,7 @@
 <%-- mobile-menu.jsp - Redesign mobile drawer (matches attached HTML)
      Receives: activePage (e.g. "home", "women", "men", "new")
 --%>
-<%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
+<%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" session="false"%>
 <%@ page isELIgnored="false" %>
 
 <div class="mobile-drawer" id="mobileDrawer" aria-hidden="true">

@@ -16,7 +16,6 @@ import java.io.IOException;
 // GET /admin/products           paginated product list (AdminProductRowDTO)
 // GET /admin/products/{id}      full product detail (AdminProductDetailDTO)
 
-
 @WebServlet("/admin/products/*")
 public class AdminProductServlet extends HttpServlet {
 
