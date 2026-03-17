@@ -1,19 +1,16 @@
-package servlet.profile;
+package servlet.admin;
 
 import dto.OrderDTO;
-import dto.UserSessionDTO;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import jakarta.servlet.http.HttpSession;
 import service.OrderService;
 import util.JsonUtil;
 
 import java.io.IOException;
 import java.util.List;
-import java.util.logging.Level;
 
 @WebServlet("/admin/profile/orders")
 public class AdminViewCustomerRentHistory extends HttpServlet {
@@ -23,10 +20,18 @@ public class AdminViewCustomerRentHistory extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
 
+        String userIdParam = req.getParameter("userId");
+
+        if (userIdParam == null || userIdParam.isBlank()) {
+            resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+            JsonUtil.writeJson(resp,
+                    new ErrorResponse(false, "Missing userId parameter."));
+            return;
+        }
 
         try {
             /* getOrdersForUser returns [ activeList, pastList ] */
-            List<List<OrderDTO>> split = orderService.getOrdersForUser(Integer.parseInt(req.getParameter("userId")));
+            List<List<OrderDTO>> split = orderService.getOrdersForUser(Integer.parseInt(userIdParam));
 
             JsonUtil.writeJson(resp, new OrdersResponse(split.get(0), split.get(1)));
 

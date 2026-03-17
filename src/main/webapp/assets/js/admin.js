@@ -333,8 +333,8 @@ function renderCustomersTable(customers) {
       <td>$${Number(c.creditLimit || 0).toLocaleString('en-US', {minimumFractionDigits: 2})}</td>
       <td>
         <div class="adm-action-btns">
-        <button class="adm-icon-btn adm-icon-btn--view" title="View Profile"
-                onclick="window.open('${CTX}/admin/profile?id=${c.id}', '_blank')">
+        <button class="adm-icon-btn adm-icon-btn--view"
+                title="View Profile" onclick="window.location.href='${CTX}/admin/profile?id=${c.id}'">
             <i class="bi bi-person-lines-fill"></i>
           </button>
         </div>

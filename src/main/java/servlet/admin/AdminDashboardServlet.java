@@ -1,7 +1,5 @@
-package servlet;
+package servlet.admin;
 
-import dto.UserSessionDTO;
-import entity.enums.UserRole;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;

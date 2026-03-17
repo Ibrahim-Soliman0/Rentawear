@@ -1,4 +1,4 @@
-package servlet;
+package servlet.admin;
 
 import dto.UserSessionDTO;
 import jakarta.servlet.ServletException;
