@@ -340,3 +340,46 @@ ORDER BY p.base_price;
 SELECT DISTINCT color,
                 CASE WHEN color REGEXP '^#[0-9A-Fa-f]{6}-.+' THEN 'OK' ELSE 'BAD FORMAT' END AS format_check
 FROM product_variants;
+
+-- =========================================
+-- ORDERS
+-- =========================================
+
+-- Emma (user_id = 2)
+INSERT INTO orders (id, user_id, total_amount, status, created_at) VALUES
+                                                                       (1, 2, 140.00, 'DELIVERED', DATE_SUB(NOW(), INTERVAL 10 DAY)),
+                                                                       (2, 2,  55.00, 'CANCELLED', DATE_SUB(NOW(), INTERVAL 3 DAY));
+
+-- James (user_id = 3)
+INSERT INTO orders (id, user_id, total_amount, status, created_at) VALUES
+    (3, 3, 95.00, 'SHIPPED', DATE_SUB(NOW(), INTERVAL 2 DAY));
+
+-- Luna Gown
+INSERT INTO order_items (order_id, variant_id, quantity, price_at_purchase, start_date, end_date)
+SELECT 1, id, 1, 85.00,
+       DATE_SUB(CURDATE(), INTERVAL 15 DAY),
+       DATE_SUB(CURDATE(), INTERVAL 12 DAY)
+FROM product_variants
+WHERE product_id = 1 AND color = '#1B2A4A-Midnight Navy' AND size = 'S';
+
+-- Celeste Dress
+INSERT INTO order_items (order_id, variant_id, quantity, price_at_purchase, start_date, end_date)
+SELECT 1, id, 1, 55.00,
+       DATE_SUB(CURDATE(), INTERVAL 15 DAY),
+       DATE_SUB(CURDATE(), INTERVAL 12 DAY)
+FROM product_variants
+WHERE product_id = 2 AND color = '#F4C2C2-Blush Pink' AND size = 'M';
+
+INSERT INTO order_items (order_id, variant_id, quantity, price_at_purchase, start_date, end_date)
+SELECT 2, id, 1, 55.00,
+       DATE_ADD(CURDATE(), INTERVAL 5 DAY),
+       DATE_ADD(CURDATE(), INTERVAL 8 DAY)
+FROM product_variants
+WHERE product_id = 2 AND color = '#8FAF8F-Sage Green' AND size = 'S';
+
+INSERT INTO order_items (order_id, variant_id, quantity, price_at_purchase, start_date, end_date)
+SELECT 3, id, 1, 95.00,
+       DATE_ADD(CURDATE(), INTERVAL 3 DAY),
+       DATE_ADD(CURDATE(), INTERVAL 6 DAY)
+FROM product_variants
+WHERE product_id = 6 AND color = '#1C1C1C-Onyx Black' AND size = 'L';
