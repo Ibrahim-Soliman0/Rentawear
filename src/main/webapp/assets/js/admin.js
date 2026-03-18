@@ -140,7 +140,12 @@ function renderProductsTable(products) {
       </td> 
       <td>${escHtml(core.categoryName || '—')}</td>
       <td>$${Number(core.pricePerDay).toFixed(2)} <span style="color:var(--adm-muted);font-size:0.75rem;">/ day</span></td>
-      <td>—</td>
+      <td>
+        <button class="adm-stock-btn" onclick="openStockPopover(event, ${core.id})">
+          ${p.totalStock} units
+          <i class="bi bi-chevron-down" style="font-size:0.65rem;"></i>
+        </button>
+      </td>     
       <td>${getStockBadge(inStock)}</td>
       <td>
         <div class="adm-action-btns">
@@ -473,6 +478,133 @@ function escHtml(str) {
     .replace(/"/g, '&quot;');
 }
 
+/* ── Stock Popover ──────────────────────────────────────────── */
+let activePopover = null;
+let activePopoverId = null;
+function openStockPopover(event, productId) {
+  event.stopPropagation();
+  if (activePopoverId === productId) {
+    closeStockPopover();
+    return;
+  }
+  closeStockPopover();
 
+  const popover = document.createElement('div');
+  popover.className = 'adm-stock-popover';
+  popover.id = 'stockPopover';
+  popover.innerHTML = `
+    <div class="adm-stock-popover-header">
+      <span>Stock Breakdown</span>
+      <button onclick="closeStockPopover()" class="adm-stock-popover-close">
+        <i class="bi bi-x"></i>
+      </button>
+    </div>
+    <div class="adm-stock-popover-body" id="stockPopoverBody">
+      <div class="text-center py-3">
+        <span class="spinner-border spinner-border-sm text-secondary"></span>
+      </div>
+    </div>`;
+
+  document.body.appendChild(popover);
+
+  // ── Smart positioning ──────────────────────────────────────
+  const btnRect     = event.currentTarget.getBoundingClientRect();
+  const popW        = 280;
+  const popH        = 340; // estimated max height
+  const scrollY     = window.scrollY;
+  const scrollX     = window.scrollX;
+  const vpW         = window.innerWidth;
+  const vpH         = window.innerHeight;
+
+  // Horizontal: prefer left-aligned to button, flip if off-screen
+  let left = btnRect.left + scrollX;
+  if (left + popW > vpW + scrollX - 12) {
+    left = btnRect.right + scrollX - popW;
+  }
+  left = Math.max(scrollX + 8, left); // never off left edge
+
+  // Vertical: prefer below button, flip above if not enough room
+  let top;
+  const spaceBelow = vpH - btnRect.bottom;
+  const spaceAbove = btnRect.top;
+  if (spaceBelow >= popH || spaceBelow >= spaceAbove) {
+    top = btnRect.bottom + scrollY + 6;
+  } else {
+    top = btnRect.top + scrollY - popH - 6;
+  }
+  top = Math.max(scrollY + 8, top); // never off top edge
+
+  popover.style.left = left + 'px';
+  popover.style.top  = top  + 'px';
+
+  activePopover = popover;
+  activePopoverId = productId;
+
+  // Fetch stock detail
+  let req = window.XMLHttpRequest ? new XMLHttpRequest() : new ActiveXObject('Microsoft.XMLHTTP');
+  req.onreadystatechange = function () {
+    if (req.readyState === 4 && req.status === 200) {
+      const data = JSON.parse(req.responseText);
+      renderStockPopover(data.stockByColor);
+
+      // Re-adjust vertical position after content loads (real height now known)
+      requestAnimationFrame(() => {
+        const realH       = popover.offsetHeight;
+        const spaceBelow2 = vpH - btnRect.bottom;
+        if (spaceBelow2 < realH && btnRect.top > realH) {
+          popover.style.top = (btnRect.top + scrollY - realH - 6) + 'px';
+        }
+      });
+    }
+  };
+  req.open('GET', CTX + '/admin/products/' + productId, true);
+  req.send();
+}
+
+function renderStockPopover(stockByColor) {
+  const body = document.getElementById('stockPopoverBody');
+  if (!body) return;
+
+  if (!stockByColor || Object.keys(stockByColor).length === 0) {
+    body.innerHTML = '<p class="adm-stock-empty">No variants found.</p>';
+    return;
+  }
+
+  body.innerHTML = Object.entries(stockByColor).map(([color, variants]) => `
+    <div class="adm-stock-color-group">
+      <div class="adm-stock-color-header">
+        <span class="adm-stock-color-swatch" style="background:${isHexColor(color) ? color : '#ccc'}"></span>
+        <span class="adm-stock-color-name">${escHtml(color)}</span>
+      </div>
+      <div class="adm-stock-sizes">
+        ${variants.map(v => `
+          <div class="adm-stock-size-row">
+            <span class="adm-stock-size-label">Size ${escHtml(v.size || '—')}</span>
+            <span class="adm-stock-size-qty ${v.quantity === 0 ? 'adm-stock-qty--zero' : v.quantity <= 3 ? 'adm-stock-qty--low' : 'adm-stock-qty--ok'}">
+              ${v.quantity}
+            </span>
+          </div>`).join('')}
+      </div>
+    </div>`).join('');
+}
+
+function isHexColor(str) {
+  return /^#([0-9A-Fa-f]{3}|[0-9A-Fa-f]{6})$/.test(str);
+}
+
+function closeStockPopover() {
+  if (activePopover) {
+    activePopover.remove();
+    activePopover   = null;
+    activePopoverId = null;
+  }
+}
+
+// Close popover when clicking outside
+document.addEventListener('click', (e) => {
+  if (activePopover && !activePopover.contains(e.target)) {
+    closeStockPopover();
+  }
+});
 /* ── Init: load products on page load ───────────────────────── */
 loadProducts();

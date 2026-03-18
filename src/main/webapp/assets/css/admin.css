@@ -744,3 +744,134 @@
   color: var(--adm-muted);
   margin-left: auto;
 }
+
+/* ── Stock button ───────────────────────────────────────────── */
+.adm-stock-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.82rem;
+  font-weight: 500;
+  color: var(--adm-charcoal);
+  background: var(--adm-stone);
+  border: 1px solid var(--adm-stone);
+  border-radius: var(--adm-radius);
+  padding: 0.25rem 0.65rem;
+  cursor: pointer;
+  transition: var(--adm-transition);
+}
+.adm-stock-btn:hover {
+  border-color: var(--adm-teal);
+  color: var(--adm-teal);
+  background: var(--adm-teal-light);
+}
+
+/* ── Stock popover ──────────────────────────────────────────── */
+.adm-stock-popover {
+  position: absolute;
+  z-index: 999;
+  width: 280px;
+  background: var(--adm-warm-white);
+  border: 1px solid var(--adm-stone);
+  border-radius: var(--adm-radius);
+  box-shadow: 0 8px 30px rgba(0,0,0,.12);
+  animation: admModalIn 0.15s ease;
+  overflow: hidden;
+}
+
+.adm-stock-popover-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.65rem 0.85rem;
+  background: var(--adm-cream);
+  border-bottom: 1px solid var(--adm-stone);
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--adm-ink);
+}
+.adm-stock-popover-close {
+  background: none;
+  border: none;
+  color: var(--adm-muted);
+  cursor: pointer;
+  font-size: 0.9rem;
+  display: flex;
+  align-items: center;
+  transition: var(--adm-transition);
+  padding: 0;
+}
+.adm-stock-popover-close:hover { color: var(--adm-danger); }
+
+.adm-stock-popover-body {
+  max-height: 320px;
+  overflow-y: auto;
+  padding: 0.75rem;
+  padding-bottom: 1rem; /* ← add extra bottom padding */
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.adm-stock-color-group {
+  border: 1px solid var(--adm-stone);
+  border-radius: var(--adm-radius);
+  overflow: hidden;
+  flex-shrink: 0; /* ← prevents groups from being compressed */
+}
+
+/* Remove bottom border from last size row in each group */
+.adm-stock-size-row:last-child {
+  border-bottom: none; /* ← already have this */
+}
+.adm-stock-color-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.45rem 0.75rem;
+  background: var(--adm-cream);
+  border-bottom: 1px solid var(--adm-stone);
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--adm-charcoal);
+}
+.adm-stock-color-swatch {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: 1.5px solid rgba(0,0,0,0.1);
+  flex-shrink: 0;
+}
+
+.adm-stock-sizes {
+  display: flex;
+  flex-direction: column;
+}
+.adm-stock-size-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.4rem 0.75rem;
+  border-bottom: 1px solid var(--adm-stone);
+  font-size: 0.82rem;
+}
+.adm-stock-size-row:last-child { border-bottom: none; }
+.adm-stock-size-label { color: var(--adm-charcoal); }
+
+.adm-stock-size-qty {
+  font-weight: 600;
+  font-size: 0.8rem;
+  padding: 0.1rem 0.5rem;
+  border-radius: 99px;
+}
+.adm-stock-qty--ok   { background: var(--adm-success-light); color: var(--adm-success); }
+.adm-stock-qty--low  { background: var(--adm-warning-light); color: var(--adm-warning); }
+.adm-stock-qty--zero { background: var(--adm-danger-light);  color: var(--adm-danger);  }
+
+.adm-stock-empty {
+  font-size: 0.82rem;
+  color: var(--adm-muted);
+  text-align: center;
+  padding: 0.5rem 0;
+  margin: 0;
+}

@@ -46,6 +46,7 @@ public interface ProductMapper {
 
     @Mapping(target = "core",    expression = "java(toCoreDTO(product))")
     @Mapping(target = "inStock", expression = "java(isInStock(variants))")
+    @Mapping(target = "totalStock", expression = "java(calcTotalStock(variants))")
     AdminProductRowDTO toAdminRowDTO(Product product, List<ProductVariant> variants);
 
 
@@ -139,5 +140,12 @@ public interface ProductMapper {
                     .add(toVariantStockDTO(v));
         }
         return map;
+    }
+
+    default int calcTotalStock(List<ProductVariant> variants) {
+        if (variants == null || variants.isEmpty()) return 0;
+        return variants.stream()
+                .mapToInt(ProductVariant::getQuantity)
+                .sum();
     }
 }
