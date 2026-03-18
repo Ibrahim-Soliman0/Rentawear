@@ -19,6 +19,7 @@ public interface ProductMapper {
 
     @Mapping(target = "pricePerDay", expression = "java(product.getBasePrice().doubleValue())")
     @Mapping(target = "categoryId",  expression = "java(product.getCategory() != null ? product.getCategory().getId() : null)")
+    @Mapping(target = "categoryName",  expression = "java(product.getCategory() != null ? product.getCategory().getName() : null)")
     @Mapping(target = "gender",      expression = "java(product.getCategory() != null && product.getCategory().getGender() != null ? product.getCategory().getGender().name() : null)")
     @Mapping(target = "brand",       constant = "rentawear")
     ProductCoreDTO toCoreDTO(Product product);

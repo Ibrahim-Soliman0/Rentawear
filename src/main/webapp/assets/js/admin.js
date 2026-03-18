@@ -137,8 +137,8 @@ function renderProductsTable(products) {
             ${core.brand ? `<div class="adm-product-brand">${escHtml(core.brand)}</div>` : ''}
           </div>
         </div>
-      </td>
-      <td>${getCategoryName(core.categoryId)}</td>
+      </td> 
+      <td>${escHtml(core.categoryName || '—')}</td>
       <td>$${Number(core.pricePerDay).toFixed(2)} <span style="color:var(--adm-muted);font-size:0.75rem;">/ day</span></td>
       <td>—</td>
       <td>${getStockBadge(inStock)}</td>
@@ -154,15 +154,6 @@ function renderProductsTable(products) {
       </td>
     </tr>`;
   }).join('');
-}
-
-function getCategoryName(categoryId) {
-  const categoryMap = {
-    1: 'Men',
-    2: 'Women',
-    3: 'Kids'
-  };
-  return categoryMap[categoryId] || '—';
 }
 
 function getStockBadge(inStock) {
