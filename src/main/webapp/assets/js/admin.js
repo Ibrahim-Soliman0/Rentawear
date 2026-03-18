@@ -254,6 +254,8 @@ document.getElementById('newColorHexText')?.addEventListener('input', function (
 /* ── Open Add modal ─────────────────────────────────────────── */
 document.getElementById('openAddProductModal')?.addEventListener('click', () => {
   currentEditProductId = null;
+  document.getElementById('saveProductBtn')
+      .querySelector('.adm-btn-text').textContent = 'Save Product';
   document.getElementById('productModalTitle').textContent = 'Add New Product';
   document.getElementById('productForm').reset();
   document.getElementById('variantColorGroups').innerHTML = '';
@@ -263,17 +265,30 @@ document.getElementById('openAddProductModal')?.addEventListener('click', () => 
   document.querySelectorAll('.adm-modal-tab').forEach((t, i) => t.classList.toggle('active', i === 0));
   document.querySelectorAll('.adm-tab-panel').forEach((p, i) => p.classList.toggle('active', i === 0));
   // Disable variants tab until product saved
-  document.getElementById('variantsTabBtn').disabled = true;
+  document.getElementById('variantsTabBtn').disabled = false;
   openModal('productModalOverlay');
 });
 
-document.getElementById('closeProductModal')?.addEventListener('click', () => closeModal('productModalOverlay'));
-document.getElementById('cancelProductModal')?.addEventListener('click', () => closeModal('productModalOverlay'));
+document.getElementById('closeProductModal')?.addEventListener('click', () => {
+  closeModal('productModalOverlay');
+  // Reset button text and banner
+  document.getElementById('saveProductBtn').querySelector('.adm-btn-text').textContent = 'Save Product';
+  const banner = document.getElementById('modalBanner');
+  if (banner) banner.style.display = 'none';
+});
+document.getElementById('cancelProductModal')?.addEventListener('click', () => {
+  closeModal('productModalOverlay');
+  document.getElementById('saveProductBtn').querySelector('.adm-btn-text').textContent = 'Save Product';
+  const banner = document.getElementById('modalBanner');
+  if (banner) banner.style.display = 'none';
+});
 
 /* ── Open Edit modal ────────────────────────────────────────── */
 function openEditProduct(id) {
   currentEditProductId = id;
   document.getElementById('productModalTitle').textContent = 'Edit Product';
+  document.getElementById('saveProductBtn')
+      .querySelector('.adm-btn-text').textContent = 'Save Changes';
   clearAllProductErrors();
   document.getElementById('variantColorGroups').innerHTML = '';
   document.getElementById('variantsEmptyHint').style.display = 'block';
@@ -423,7 +438,38 @@ function collectVariants() {
   });
   return variants;
 }
+document.querySelectorAll('.adm-modal-tab').forEach(tab => {
+  tab.addEventListener('click', (e) => {
 
+    // Block variants tab if adding new product
+    if (tab.dataset.tab === 'variants' && !currentEditProductId) {
+      e.preventDefault();
+      e.stopImmediatePropagation();
+      showVariantsTabWarning();
+      // Force stay on info tab
+      document.querySelectorAll('.adm-modal-tab').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.adm-tab-panel').forEach(p => p.classList.remove('active'));
+      document.querySelector('[data-tab="info"]').classList.add('active');
+      document.getElementById('tab-info').classList.add('active');
+      return;
+    }
+
+    document.querySelectorAll('.adm-modal-tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.adm-tab-panel').forEach(p => p.classList.remove('active'));
+    tab.classList.add('active');
+    document.getElementById('tab-' + tab.dataset.tab).classList.add('active');
+  });
+});
+
+function showVariantsTabWarning() {
+  // Shake the variants tab
+  const variantsTab = document.getElementById('variantsTabBtn');
+  variantsTab.classList.add('adm-tab-shake');
+  setTimeout(() => variantsTab.classList.remove('adm-tab-shake'), 500);
+
+  // Show inline warning inside the variants tab area
+  showModalBanner('Please fill in the basic product info and click "Save Product" first.', 'warning');
+}
 /* ── Save product ───────────────────────────────────────────── */
 document.getElementById('saveProductBtn')?.addEventListener('click', () => {
   if (!validateProductForm()) return;
@@ -433,10 +479,12 @@ document.getElementById('saveProductBtn')?.addEventListener('click', () => {
   btn.querySelector('.adm-btn-text').classList.add('d-none');
   btn.querySelector('.adm-btn-spinner').classList.remove('d-none');
 
+  const isNew = !currentEditProductId;
+
   const payload = JSON.stringify({
     id:          currentEditProductId,
     name:        document.getElementById('productName').value.trim(),
-    categoryId:  document.getElementById('productCategory').value,
+    categoryId:  parseInt(document.getElementById('productCategory').value),
     pricePerDay: parseFloat(document.getElementById('productPrice').value),
     imageUrl:    document.getElementById('productImage').value.trim(),
     description: document.getElementById('productDescription').value.trim(),
@@ -454,9 +502,38 @@ document.getElementById('saveProductBtn')?.addEventListener('click', () => {
       btn.disabled = false;
       btn.querySelector('.adm-btn-text').classList.remove('d-none');
       btn.querySelector('.adm-btn-spinner').classList.add('d-none');
+
       if (req.status === 200) {
-        closeModal('productModalOverlay');
-        loadProducts(currentPage);
+        const data = JSON.parse(req.responseText);
+
+        if (isNew) {
+          // ── Step 1 complete: product created ──
+          // Store the new ID so subsequent saves go to PUT
+          currentEditProductId = data.core.id;
+          document.getElementById('productId').value = data.core.id;
+
+          // Enable variants tab and switch to it
+          const variantsTabBtn = document.getElementById('variantsTabBtn');
+          variantsTabBtn.disabled = false;
+          variantsTabBtn.click();
+
+          // Update modal title and button label
+          document.getElementById('productModalTitle').textContent = 'Edit Product — Add Variants';
+          btn.querySelector('.adm-btn-text').textContent = 'Save Variants';
+
+          // Show a success hint
+          showModalBanner('Product created! Now add variants and stock below.', 'success');
+
+          // Reload table in background
+          loadProducts(currentPage);
+
+        } else {
+          // ── Edit complete: close modal ──
+          closeModal('productModalOverlay');
+          loadProducts(currentPage);
+        }
+      } else {
+        showModalBanner('Something went wrong. Please try again.', 'error');
       }
     }
   };
@@ -464,7 +541,6 @@ document.getElementById('saveProductBtn')?.addEventListener('click', () => {
   req.setRequestHeader('Content-Type', 'application/json');
   req.send(payload);
 });
-
 // ── Delete product ──
 let deleteProductId = null;
 
@@ -828,5 +904,23 @@ document.addEventListener('click', (e) => {
     closeStockPopover();
   }
 });
+
+function showModalBanner(message, type) {
+  let banner = document.getElementById('modalBanner');
+  if (!banner) {
+    banner = document.createElement('div');
+    banner.id = 'modalBanner';
+    document.querySelector('.adm-modal-body').prepend(banner);
+  }
+  const icons = {
+    success: 'check-circle',
+    error:   'exclamation-circle',
+    warning: 'exclamation-triangle'
+  };
+  banner.className = `adm-modal-banner adm-modal-banner--${type}`;
+  banner.innerHTML = `<i class="bi bi-${icons[type] || 'info-circle'}"></i> ${escHtml(message)}`;
+  banner.style.display = 'flex';
+  setTimeout(() => { banner.style.display = 'none'; }, 4000);
+}
 /* ── Init: load products on page load ───────────────────────── */
 loadProducts();

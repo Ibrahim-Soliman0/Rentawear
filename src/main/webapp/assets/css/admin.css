@@ -1112,3 +1112,43 @@
   font-family: var(--adm-font-body);
 }
 .adm-remove-color-btn:hover { opacity: 0.7; }
+/* ── Modal banner ───────────────────────────────────────────── */
+.adm-modal-banner {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.82rem;
+  font-weight: 500;
+  padding: 0.65rem 0.85rem;
+  border-radius: var(--adm-radius);
+  margin-bottom: 1rem;
+}
+.adm-modal-banner--success {
+  background: var(--adm-success-light);
+  color: var(--adm-success);
+  border: 1px solid rgba(39,174,96,.2);
+}
+.adm-modal-banner--error {
+  background: var(--adm-danger-light);
+  color: var(--adm-danger);
+  border: 1px solid rgba(192,57,43,.2);
+}
+/* ── Warning banner ─────────────────────────────────────────── */
+.adm-modal-banner--warning {
+  background: var(--adm-warning-light);
+  color: var(--adm-warning);
+  border: 1px solid rgba(243,156,18,.2);
+}
+
+/* ── Variants tab shake animation ───────────────────────────── */
+@keyframes admTabShake {
+  0%, 100% { transform: translateX(0); }
+  20%       { transform: translateX(-4px); }
+  40%       { transform: translateX(4px); }
+  60%       { transform: translateX(-3px); }
+  80%       { transform: translateX(3px); }
+}
+.adm-tab-shake {
+  animation: admTabShake 0.45s ease;
+  color: var(--adm-warning) !important;
+}
