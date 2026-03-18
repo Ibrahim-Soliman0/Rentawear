@@ -58,4 +58,11 @@ public class ProductImageRepositoryImpl extends BaseRepositoryImpl<ProductImage>
                 .setParameter("color", color)
                 .executeUpdate();
     }
+
+    @Override
+    public void deleteByProductId(int productId) {
+        em().createNamedQuery("ProductImage.deleteByProductId")
+                .setParameter("pid", productId)
+                .executeUpdate();
+    }
 }

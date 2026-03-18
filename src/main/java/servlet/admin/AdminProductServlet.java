@@ -13,8 +13,9 @@ import util.JsonUtil;
 
 import java.io.IOException;
 
-// GET /admin/products           paginated product list (AdminProductRowDTO)
-// GET /admin/products/{id}      full product detail (AdminProductDetailDTO)
+// GET    /admin/products           paginated product list (AdminProductRowDTO)
+// GET    /admin/products/{id}      full product detail (AdminProductDetailDTO)
+// DELETE /admin/products/{id}      delete product
 
 @WebServlet("/admin/products/*")
 public class AdminProductServlet extends HttpServlet {
@@ -41,6 +42,25 @@ public class AdminProductServlet extends HttpServlet {
             handleDetail(pathInfo, resp);
         }
     }
+
+    @Override
+    protected void doDelete(HttpServletRequest req, HttpServletResponse resp)
+            throws IOException {
+        String pathInfo = req.getPathInfo();
+        Integer id = parseId(pathInfo, resp);
+        if (id == null) return;
+
+        boolean deleted = facade.deleteProduct(id);
+        if (deleted) {
+            resp.setStatus(HttpServletResponse.SC_OK);
+            JsonUtil.writeJson(resp, new MessageResponse("Product deleted successfully"));
+        } else {
+            resp.sendError(HttpServletResponse.SC_NOT_FOUND, "Product not found");
+        }
+    }
+
+    // Simple response DTO
+    record MessageResponse(String message) {}
 
     //Handlers
 

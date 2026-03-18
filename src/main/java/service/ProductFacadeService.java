@@ -126,6 +126,22 @@ public class ProductFacadeService {
         imageService.deleteColorImages(productId, color);
     }
 
+    // Product deletion
+    // Deletes product along with all its variants and images.
+    // Returns true if deleted, false if product not found.
+
+    public boolean deleteProduct(int productId) {
+        Product product = productService.getById(productId);
+        if (product == null) {
+            return false;
+        }
+        // Delete variants and images first (due to foreign key constraints)
+        variantService.deleteByProductId(productId);
+        imageService.deleteByProductId(productId);
+        productService.delete(productId);
+        return true;
+    }
+
     // ── Private routing helpers ───────────────────────────────────────────────
     // These mirror the ProductFilterDTO routing flags so the logic lives
     // in one place and both getProducts() and getAdminProducts() stay clean.

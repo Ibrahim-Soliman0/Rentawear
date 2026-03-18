@@ -82,7 +82,7 @@ function clearFieldError(inputId, errorId) {
   if (error) { error.textContent = ''; error.classList.remove('visible'); }
 }
 function clearAllProductErrors() {
-  ['productName','productBrand','productCategory','productPrice','productStock']
+  ['productName','productCategory','productPrice']
     .forEach((_, i, arr) => clearFieldError(arr[i], arr[i] + 'Error'));
 }
 
@@ -104,7 +104,7 @@ function loadProducts() {
       renderProductsTable(data.products);
     }
   };
-  req.open('GET', CTX + '/admin/GetProductsServlet', true);
+  req.open('GET', CTX + '/admin/products', true);
   req.send();
 }
 
@@ -121,39 +121,56 @@ function renderProductsTable(products) {
     return;
   }
 
-  tbody.innerHTML = products.map(p => `
+  tbody.innerHTML = products.map(p => {
+    const core = p.core;
+    const inStock = p.inStock;
+
+    return `
     <tr>
       <td>
         <div class="adm-product-cell">
-          ${p.imageUrl
-            ? `<img src="${p.imageUrl}" alt="${escHtml(p.name)}" class="adm-product-img"/>`
+          ${core.imageUrl
+            ? `<img src="${core.imageUrl}" alt="${escHtml(core.name)}" class="adm-product-img"/>`
             : `<div class="adm-product-img-placeholder"><i class="bi bi-image"></i></div>`}
           <div>
-            <div class="adm-product-name">${escHtml(p.name)}</div>
+            <div class="adm-product-name">${escHtml(core.name)}</div>
+            ${core.brand ? `<div class="adm-product-brand">${escHtml(core.brand)}</div>` : ''}
           </div>
         </div>
       </td>
-      <td>${escHtml(p.categoryName || '—')}</td>
-      <td>$${Number(p.basePrice).toFixed(2)} <span style="color:var(--adm-muted);font-size:0.75rem;">/ day</span></td>
-      <td>${p.totalStock}</td>
-      <td>${getStockBadge(p.totalStock)}</td>
+      <td>${getCategoryName(core.categoryId)}</td>
+      <td>$${Number(core.pricePerDay).toFixed(2)} <span style="color:var(--adm-muted);font-size:0.75rem;">/ day</span></td>
+      <td>—</td>
+      <td>${getStockBadge(inStock)}</td>
       <td>
         <div class="adm-action-btns">
-          <button class="adm-icon-btn" title="Edit" onclick="openEditProduct(${p.id})">
+          <button class="adm-icon-btn" title="Edit" onclick="openEditProduct(${core.id})">
             <i class="bi bi-pencil"></i>
           </button>
-          <button class="adm-icon-btn adm-icon-btn--danger" title="Delete" onclick="openDeleteProduct(${p.id}, '${escHtml(p.name)}')">
+          <button class="adm-icon-btn adm-icon-btn--danger" title="Delete" onclick="openDeleteProduct(${core.id}, '${escHtml(core.name)}')">
             <i class="bi bi-trash3"></i>
           </button>
         </div>
       </td>
-    </tr>`).join('');
+    </tr>`;
+  }).join('');
 }
 
-function getStockBadge(qty) {
-  if (qty <= 0)  return '<span class="adm-badge adm-badge--danger">Out of Stock</span>';
-  if (qty <= 3)  return '<span class="adm-badge adm-badge--warning">Low Stock</span>';
-  return '<span class="adm-badge adm-badge--success">In Stock</span>';
+function getCategoryName(categoryId) {
+  const categoryMap = {
+    1: 'Men',
+    2: 'Women',
+    3: 'Kids'
+  };
+  return categoryMap[categoryId] || '—';
+}
+
+function getStockBadge(inStock) {
+  if (inStock) {
+    return '<span class="adm-badge adm-badge--success">In Stock</span>';
+  } else {
+    return '<span class="adm-badge adm-badge--danger">Out of Stock</span>';
+  }
 }
 
 // ── Add product modal ──
@@ -178,18 +195,17 @@ function openEditProduct(id) {
   req.onreadystatechange = function () {
     if (req.readyState === 4 && req.status === 200) {
       const p = JSON.parse(req.responseText);
-      document.getElementById('productId').value          = p.id;
-      document.getElementById('productName').value        = p.name;
-      document.getElementById('productBrand').value       = p.brand || '';
-      document.getElementById('productCategory').value    = p.categoryId || '';
-      document.getElementById('productPrice').value       = p.rentalPrice;
-      document.getElementById('productStock').value       = p.stockQty;
-      document.getElementById('productImage').value       = p.imageUrl || '';
+      const core = p.core;
+      document.getElementById('productId').value          = core.id;
+      document.getElementById('productName').value        = core.name;
+      document.getElementById('productCategory').value    = core.categoryId || '';
+      document.getElementById('productPrice').value       = core.pricePerDay;
+      document.getElementById('productImage').value       = core.imageUrl || '';
       document.getElementById('productDescription').value = p.description || '';
       openModal('productModalOverlay');
     }
   };
-  req.open('GET', CTX + '/admin/GetProductServlet?id=' + id, true);
+  req.open('GET', CTX + '/admin/products/' + id, true);
   req.send();
 }
 
@@ -258,7 +274,7 @@ document.getElementById('confirmDeleteBtn')?.addEventListener('click', () => {
       loadProducts();
     }
   };
-  req.open('DELETE', CTX + '/admin/DeleteProductServlet?id=' + deleteProductId, true);
+  req.open('DELETE', CTX + '/admin/products/' + deleteProductId, true);
   req.send();
 });
 
@@ -268,16 +284,12 @@ function validateProductForm() {
   clearAllProductErrors();
 
   const name  = document.getElementById('productName').value.trim();
-  const brand = document.getElementById('productBrand').value.trim();
   const cat   = document.getElementById('productCategory').value;
   const price = parseFloat(document.getElementById('productPrice').value);
-  const stock = parseInt(document.getElementById('productStock').value);
 
   if (!name)        { showFieldError('productName',     'productNameError',     'Product name is required.');  valid = false; }
-  if (!brand)       { showFieldError('productBrand',    'productBrandError',    'Brand is required.');          valid = false; }
   if (!cat)         { showFieldError('productCategory', 'productCategoryError', 'Please select a category.');  valid = false; }
   if (isNaN(price) || price < 0) { showFieldError('productPrice', 'productPriceError', 'Enter a valid price.'); valid = false; }
-  if (isNaN(stock) || stock < 0) { showFieldError('productStock', 'productStockError', 'Enter a valid quantity.'); valid = false; }
 
   return valid;
 }

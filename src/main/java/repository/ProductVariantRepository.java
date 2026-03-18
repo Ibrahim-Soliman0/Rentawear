@@ -22,4 +22,7 @@ public interface ProductVariantRepository extends Repository<ProductVariant> {
     // Writes
     // Deletes all size rows for a colour — called when removing a colour variant
     void deleteByProductIdAndColor(int productId, String color);
+
+    // Deletes all variants for a product
+    void deleteByProductId(int productId);
 }
