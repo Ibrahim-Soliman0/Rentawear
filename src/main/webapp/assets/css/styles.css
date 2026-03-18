@@ -3644,3 +3644,23 @@ input::-ms-clear {
   .account-rental-top { flex-direction: column; }
   .account-rental-top .account-status { align-self: flex-start; }
 }
+
+/* ── Admin read-only banner ────────────────────────────────── */
+.adm-readonly-banner {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    background: #fff8e6;
+    border: 1px solid #f0c040;
+    border-radius: 4px;
+    padding: 0.75rem 1rem;
+    font-size: 0.85rem;
+    color: #7a5c00;
+    margin-bottom: 1.5rem;
+}
+.adm-readonly-banner a {
+    margin-left: auto;
+    color: var(--rw-teal);
+    font-weight: 500;
+}
+.adm-readonly-banner a:hover { text-decoration: underline; }

@@ -29,11 +29,11 @@ public class RegisterServlet extends HttpServlet {
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         HttpSession session = req.getSession();
         if(session !=null && session.getAttribute("user")!=null ) {
-            resp.sendRedirect("index.jsp");
+            resp.sendRedirect("home");
             return;
         }
         req.setAttribute("categories", categoryService.getAll());
-        req.getRequestDispatcher("/register.jsp").forward(req,resp);
+        req.getRequestDispatcher("/WEB-INF/register.jsp").forward(req,resp);
     }
 
     @Override
@@ -125,6 +125,6 @@ public class RegisterServlet extends HttpServlet {
             throws ServletException, IOException {
         req.setAttribute("errorMsg", message);
         req.setAttribute("categories", categoryService.getAll());
-        req.getRequestDispatcher("/register.jsp").forward(req, resp);
+        req.getRequestDispatcher("/WEB-INF/register.jsp").forward(req, resp);
     }
 }

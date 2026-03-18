@@ -1,6 +1,7 @@
 package servlet;
 
 import dto.UserSessionDTO;
+import entity.enums.UserRole;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -22,10 +23,10 @@ public class LoginServlet extends HttpServlet {
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         HttpSession session = req.getSession(false);
         if(session !=null && session.getAttribute("user")!=null ) {
-            resp.sendRedirect("index.jsp");
+            resp.sendRedirect("home");
             return;
         }
-        req.getRequestDispatcher("/login.jsp").forward(req,resp);
+        req.getRequestDispatcher("/WEB-INF/login.jsp").forward(req,resp);
     }
 
     @Override
@@ -62,7 +63,12 @@ public class LoginServlet extends HttpServlet {
             session.setMaxInactiveInterval(60 * 60 * 24);
         }
 
-        resp.sendRedirect(req.getContextPath() + "/index.jsp");
+        if(user.role()== UserRole.ADMIN){
+            resp.sendRedirect(req.getContextPath() + "/admin/dashboard");
+        }
+        else if(user.role()==UserRole.USER){
+            resp.sendRedirect(req.getContextPath() + "/home");
+        }
     }
 
     private boolean isEmpty(String val) {
@@ -72,6 +78,6 @@ public class LoginServlet extends HttpServlet {
     private void forwardWithError(HttpServletRequest req, HttpServletResponse resp, String message)
             throws ServletException, IOException {
         req.setAttribute("errorMsg", message);
-        req.getRequestDispatcher("/login.jsp").forward(req, resp);
+        req.getRequestDispatcher("/WEB-INF/login.jsp").forward(req, resp);
     }
 }

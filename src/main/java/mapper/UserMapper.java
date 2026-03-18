@@ -1,5 +1,6 @@
 package mapper;
 
+import dto.*;
 import dto.UserInterestDTO;
 import dto.UserRegisterDTO;
 import dto.UserSessionDTO;
@@ -7,6 +8,7 @@ import entity.User;
 import entity.UserCategory;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
+import org.mapstruct.control.MappingControl;
 
 @Mapper
 public interface UserMapper {
@@ -25,4 +27,7 @@ public interface UserMapper {
 
     @Mapping(target = "birthday", source = "birthday", dateFormat = "yyyy-MM-dd")
     UserSessionDTO toSessionDTO(User user);
+
+    CustomerDTO toCustomerDto(User user);
+
 }

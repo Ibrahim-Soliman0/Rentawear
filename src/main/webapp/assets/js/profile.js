@@ -3,7 +3,64 @@
    Context path injected by profile.jsp before this script loads:
        <script>window.RW_CTX = '${pageContext.request.contextPath}';</script>
    ================================================================ */
+/* ══════════════════════════════════════════════════════════════
+   STYLE INTERESTS TAG WIDGET
+   ══════════════════════════════════════════════════════════════ */
+(function () {
+    const select     = document.getElementById('styleInterestsSelect');
+    const tagsWrap   = document.getElementById('styleTagsWrap');
+    const hiddenWrap = document.getElementById('styleHiddenInputs');
+    const selected   = new Set();
 
+    function removeTag(val) {
+        selected.delete(val);
+        tagsWrap?.querySelector(`[data-val="${val}"]`)?.remove();
+        document.getElementById(`si_${val}`)?.remove();
+    }
+
+    window.addInterestTag = function (val, label) {
+        if (!tagsWrap) return;
+        if (selected.has(val)) return;
+        selected.add(val);
+
+        const tag = document.createElement('span');
+        tag.className   = 'rw-tag';
+        tag.dataset.val = val;
+
+        if (select) {
+            // Editable mode — show X and allow removal
+            tag.innerHTML = `${label} <i class="bi bi-x"></i>`;
+            tag.addEventListener('click', () => removeTag(val));
+        } else {
+            // Read-only mode — plain tag, no interaction
+            tag.innerHTML  = label;
+            tag.style.cursor = 'default';
+            tag.style.pointerEvents = 'none';
+        }
+
+        tagsWrap.appendChild(tag);
+
+        // Only add hidden input in editable mode
+        if (hiddenWrap && select) {
+            const input = document.createElement('input');
+            input.type  = 'hidden';
+            input.name  = 'styleInterests';
+            input.value = val;
+            input.id    = `si_${val}`;
+            hiddenWrap.appendChild(input);
+        }
+    };
+
+    // Dropdown change handler — only in editable mode
+    if (select) {
+        select.addEventListener('change', () => {
+            const val   = select.value;
+            const label = select.options[select.selectedIndex].text;
+            select.value = '';
+            window.addInterestTag(val, label);
+        });
+    }
+})();
 /* ══════════════════════════════════════════════════════════════
    POPULATE PAGE FROM RW_USER
    ══════════════════════════════════════════════════════════════ */
@@ -29,7 +86,7 @@ document.addEventListener('DOMContentLoaded', function () {
     if (u.interests && u.interests.length) {
         u.interests.forEach(i => {
             if (i.categoryId != null && i.categoryName) {
-                addInterestTag(String(i.categoryId), i.categoryName);
+                window.addInterestTag(String(i.categoryId), i.categoryName);
             }
         });
     }
@@ -462,28 +519,25 @@ const STATUS_LABELS = {
 
 /* ── Fetch orders — shows real server error message if it fails ── */
 function loadOrders() {
-    fetch(CTX + '/profile/orders', {
-        method: 'GET',
-        headers: {'Accept': 'application/json'}
-    })
+    const userId = window.RW_VIEW_USER_ID;
+    const url    = userId
+        ? CTX + '/admin/profile/orders?userId=' + userId
+        : CTX + '/profile/orders';
+
+    fetch(url, { method: 'GET', headers: { 'Accept': 'application/json' } })
         .then(r => {
-            if (!r.ok) {
-                return r.json().then(err => {
-                    throw new Error(err.message || 'Server error ' + r.status);
-                });
-            }
+            if (!r.ok) return r.json().then(err => { throw new Error(err.message || 'Server error ' + r.status); });
             return r.json();
         })
         .then(data => {
             renderActiveOrders(data.active || []);
-            renderPastOrders(data.past || []);
+            renderPastOrders(data.past  || []);
         })
         .catch(err => {
             const active = document.getElementById('activeOrdersList');
-            const past = document.getElementById('pastOrdersList');
-            if (active) active.innerHTML =
-                '<p class="account-orders-error">' + escHtml(err.message) + '</p>';
-            if (past) past.innerHTML = '';
+            const past   = document.getElementById('pastOrdersList');
+            if (active) active.innerHTML = '<p class="account-orders-error">' + escHtml(err.message) + '</p>';
+            if (past)   past.innerHTML   = '';
         });
 }
 
@@ -659,49 +713,3 @@ function escHtml(str) {
         .replace(/"/g, '&quot;');
 }
 
-/* ══════════════════════════════════════════════════════════════
-   STYLE INTERESTS TAG WIDGET
-   ══════════════════════════════════════════════════════════════ */
-(function () {
-    const select = document.getElementById('styleInterestsSelect');
-    const tagsWrap = document.getElementById('styleTagsWrap');
-    const hiddenWrap = document.getElementById('styleHiddenInputs');
-    if (!select) return;
-
-    const selected = new Set();
-
-    /* Shared — called by DOMContentLoaded pre-fill AND dropdown change */
-    window.addInterestTag = function (val, label) {
-        if (!tagsWrap || !hiddenWrap) return;
-        if (selected.has(val)) return;
-        selected.add(val);
-
-        const tag = document.createElement('span');
-        tag.className = 'rw-tag';
-        tag.dataset.val = val;
-        tag.innerHTML = `${label} <i class="bi bi-x"></i>`;
-        tag.addEventListener('click', () => removeTag(val));
-        tagsWrap.appendChild(tag);
-
-        const input = document.createElement('input');
-        input.type = 'hidden';
-        input.name = 'styleInterests';
-        input.value = val;
-        input.id = `si_${val}`;
-        hiddenWrap.appendChild(input);
-    };
-
-    /* Dropdown change → add tag */
-    select.addEventListener('change', () => {
-        const val = select.value;
-        const label = select.options[select.selectedIndex].text;
-        select.value = '';
-        window.addInterestTag(val, label);
-    });
-
-    function removeTag(val) {
-        selected.delete(val);
-        tagsWrap.querySelector(`[data-val="${val}"]`)?.remove();
-        document.getElementById(`si_${val}`)?.remove();
-    }
-})();

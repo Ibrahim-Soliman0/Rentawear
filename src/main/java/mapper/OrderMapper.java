@@ -2,6 +2,8 @@ package mapper;
 
 import dto.OrderDTO;
 import dto.OrderItemDTO;
+import dto.AdminOrderDTO;
+import dto.AdminOrderItemDTO;
 import entity.Order;
 import entity.OrderItem;
 import entity.ProductImage;
@@ -21,6 +23,9 @@ public interface OrderMapper {
     @Mapping(target = "createdAt",  source = "createdAt",  qualifiedByName = "instantToString")
     @Mapping(target = "items",      source = "orderItems")
     OrderDTO toDTO(Order order);
+    @Mapping(target = "customerName",  source = "user.name")
+    @Mapping(target = "customerEmail", source = "user.email")
+    AdminOrderDTO toOrderDTO(Order order);
 
     List<OrderDTO> toDTOList(List<Order> orders);
 
@@ -64,4 +69,8 @@ public interface OrderMapper {
                 .map(ProductImage::getImageUrl)
                 .orElse(variant.getProduct().getImageUrl());
     }
+    @Mapping(target = "productName", source = "variant.product.name")
+    @Mapping(target = "color",       source = "variant.color")
+    @Mapping(target = "size",        source = "variant.size")
+    AdminOrderItemDTO toOrderItemDTO(OrderItem orderItem);
 }
