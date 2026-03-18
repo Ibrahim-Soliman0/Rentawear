@@ -212,8 +212,8 @@ INSERT INTO product_variants (product_id, size, color, quantity) VALUES
 
 INSERT INTO product_images (product_id, image_url, color) VALUES
 -- Product 1 — Luna Bias-Cut Gown
-(1, '/assets/img/products/1/midnight-navy/placeholder', '#1B2A4A-Midnight Navy'),
-(1, '/assets/img/products/1/champagne/placeholder',     '#F5E6C8-Champagne'),
+(1, '/assets/img/products/1/midnight-navy/img1', '#1B2A4A-Midnight Navy'),
+(1, '/assets/img/products/1/champagne/img2',     '#F5E6C8-Champagne'),
 
 -- Product 2 — Celeste Midi Dress
 (2, '/assets/img/products/2/blush-pink/placeholder',    '#F4C2C2-Blush Pink'),
@@ -244,7 +244,7 @@ INSERT INTO product_images (product_id, image_url, color) VALUES
 
 -- Update Product.imageUrl to the primary image base path
 -- (lowest id image for the default color = lowest id variant's color)
-UPDATE products SET image_url = '/assets/img/products/1/midnight-navy/placeholder' WHERE id = 1;
+UPDATE products SET image_url = '/assets/img/products/1/midnight-navy/img1' WHERE id = 1;
 UPDATE products SET image_url = '/assets/img/products/2/blush-pink/placeholder'    WHERE id = 2;
 UPDATE products SET image_url = '/assets/img/products/3/burgundy/placeholder'      WHERE id = 3;
 UPDATE products SET image_url = '/assets/img/products/4/camel/placeholder'         WHERE id = 4;

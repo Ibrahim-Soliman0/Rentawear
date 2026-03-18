@@ -6,6 +6,7 @@ import java.util.Map;
 public record ProductCardDTO(
         ProductCoreDTO core,
         boolean isNew,
+        boolean soldOut,
         List<ColorSwatchDTO> swatches,
         Map<String, String> primaryImageByColor
 ) {}

@@ -25,6 +25,7 @@ public interface ProductMapper {
 
     @Mapping(target = "core",                expression = "java(toCoreDTO(product))")
     @Mapping(target = "isNew",               expression = "java(isNew(product))")
+    @Mapping(target = "soldOut",             expression = "java(product.getProductVariants().stream().noneMatch(v -> v.getQuantity() > 0))")
     @Mapping(target = "swatches",            expression = "java(buildSwatches(images))")
     @Mapping(target = "primaryImageByColor", expression = "java(buildPrimaryImageByColor(images))")
     ProductCardDTO toCardDTO(Product product, List<ProductImage> images);
