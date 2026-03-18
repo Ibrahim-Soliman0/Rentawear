@@ -6,6 +6,7 @@ import jakarta.servlet.*;
 import jakarta.servlet.annotation.WebFilter;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
 
 import java.io.IOException;
 
@@ -19,7 +20,11 @@ public class AdminFilter implements Filter {
         HttpServletRequest  req  = (HttpServletRequest)  request;
         HttpServletResponse resp = (HttpServletResponse) response;
 
-        UserSessionDTO user = (UserSessionDTO) req.getSession().getAttribute("user");
+        HttpSession session = req.getSession(false);
+        UserSessionDTO user = null;
+        if (session != null) {
+            user = (UserSessionDTO) session.getAttribute("user");
+        }
 
         if (user == null) {
             resp.sendRedirect(req.getContextPath() + "/login");
