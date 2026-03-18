@@ -29,7 +29,7 @@ public class RegisterServlet extends HttpServlet {
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         HttpSession session = req.getSession();
         if(session !=null && session.getAttribute("user")!=null ) {
-            resp.sendRedirect("index.jsp");
+            resp.sendRedirect("home");
             return;
         }
         req.setAttribute("categories", categoryService.getAll());
