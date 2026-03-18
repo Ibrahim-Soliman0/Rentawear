@@ -231,43 +231,200 @@ function getStockBadge(inStock) {
   }
 }
 
-// ── Add product modal ──
+/* ── Tab switching inside modal ─────────────────────────────── */
+document.querySelectorAll('.adm-modal-tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.adm-modal-tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.adm-tab-panel').forEach(p => p.classList.remove('active'));
+    tab.classList.add('active');
+    document.getElementById('tab-' + tab.dataset.tab).classList.add('active');
+  });
+});
+
+/* ── Color/hex picker sync ──────────────────────────────────── */
+document.getElementById('newColorHex')?.addEventListener('input', function () {
+  document.getElementById('newColorHexText').value = this.value.toUpperCase();
+});
+document.getElementById('newColorHexText')?.addEventListener('input', function () {
+  if (/^#[0-9A-Fa-f]{6}$/.test(this.value)) {
+    document.getElementById('newColorHex').value = this.value;
+  }
+});
+
+/* ── Open Add modal ─────────────────────────────────────────── */
 document.getElementById('openAddProductModal')?.addEventListener('click', () => {
   currentEditProductId = null;
   document.getElementById('productModalTitle').textContent = 'Add New Product';
   document.getElementById('productForm').reset();
+  document.getElementById('variantColorGroups').innerHTML = '';
+  document.getElementById('variantsEmptyHint').style.display = 'block';
   clearAllProductErrors();
+  // Reset to first tab
+  document.querySelectorAll('.adm-modal-tab').forEach((t, i) => t.classList.toggle('active', i === 0));
+  document.querySelectorAll('.adm-tab-panel').forEach((p, i) => p.classList.toggle('active', i === 0));
+  // Disable variants tab until product saved
+  document.getElementById('variantsTabBtn').disabled = true;
   openModal('productModalOverlay');
 });
 
 document.getElementById('closeProductModal')?.addEventListener('click', () => closeModal('productModalOverlay'));
 document.getElementById('cancelProductModal')?.addEventListener('click', () => closeModal('productModalOverlay'));
 
-// ── Edit product ──
+/* ── Open Edit modal ────────────────────────────────────────── */
 function openEditProduct(id) {
   currentEditProductId = id;
   document.getElementById('productModalTitle').textContent = 'Edit Product';
   clearAllProductErrors();
+  document.getElementById('variantColorGroups').innerHTML = '';
+  document.getElementById('variantsEmptyHint').style.display = 'block';
+  // Reset to first tab
+  document.querySelectorAll('.adm-modal-tab').forEach((t, i) => t.classList.toggle('active', i === 0));
+  document.querySelectorAll('.adm-tab-panel').forEach((p, i) => p.classList.toggle('active', i === 0));
+  // Enable variants tab for edit
+  document.getElementById('variantsTabBtn').disabled = false;
 
   let req = window.XMLHttpRequest ? new XMLHttpRequest() : new ActiveXObject('Microsoft.XMLHTTP');
   req.onreadystatechange = function () {
     if (req.readyState === 4 && req.status === 200) {
-      const p = JSON.parse(req.responseText);
-      const core = p.core;
+      const data = JSON.parse(req.responseText);
+      const core = data.core;
+
       document.getElementById('productId').value          = core.id;
       document.getElementById('productName').value        = core.name;
       document.getElementById('productCategory').value    = core.categoryId || '';
       document.getElementById('productPrice').value       = core.pricePerDay;
       document.getElementById('productImage').value       = core.imageUrl || '';
-      document.getElementById('productDescription').value = p.description || '';
+      document.getElementById('productDescription').value = data.description || '';
+
+      // Populate variants
+      if (data.stockByColor && Object.keys(data.stockByColor).length > 0) {
+        document.getElementById('variantsEmptyHint').style.display = 'none';
+        Object.entries(data.stockByColor).forEach(([colorKey, variants]) => {
+          // colorKey format: "#HEX-Color Name" e.g. "#F4C2C2-Blush Pink"
+          const dashIdx  = colorKey.indexOf('-');
+          const hex      = dashIdx > -1 ? colorKey.substring(0, dashIdx) : '#cccccc';
+          const colorName = dashIdx > -1 ? colorKey.substring(dashIdx + 1) : colorKey;
+          addColorGroup(colorName, hex, variants);
+        });
+      }
+
       openModal('productModalOverlay');
     }
   };
   req.open('GET', CTX + '/admin/products/' + id, true);
   req.send();
 }
+/* ── Variant color group management ─────────────────────────── */
+let colorGroupCounter = 0;
 
-// ── Save product (add or edit) ──
+function addColorGroup(colorName, hex, existingVariants) {
+  colorName = colorName || document.getElementById('newColorName').value.trim();
+  hex       = hex       || document.getElementById('newColorHex').value;
+
+  if (!colorName) {
+    document.getElementById('newColorName').focus();
+    return;
+  }
+
+  const groupId = 'cg-' + (colorGroupCounter++);
+  document.getElementById('variantsEmptyHint').style.display = 'none';
+
+  const card = document.createElement('div');
+  card.className   = 'adm-color-group-card';
+  card.id          = groupId;
+  card.dataset.color = colorName;
+  card.dataset.hex   = hex;
+
+  card.innerHTML = `
+    <div class="adm-color-group-header">
+      <div class="adm-color-group-title">
+        <span class="adm-color-swatch-sm" style="background:${hex}"></span>
+        <span>${escHtml(colorName)}</span>
+        <span style="font-size:0.72rem;color:var(--adm-muted);font-weight:400;">${hex}</span>
+      </div>
+      <button type="button" class="adm-remove-color-btn" onclick="removeColorGroup('${groupId}')">
+        <i class="bi bi-trash3"></i> Remove color
+      </button>
+    </div>
+    <div class="adm-color-group-body">
+      <div class="adm-size-rows" id="${groupId}-sizes"></div>
+      <button type="button" class="adm-add-size-btn" onclick="addSizeRow('${groupId}')">
+        <i class="bi bi-plus"></i> Add size
+      </button>
+    </div>`;
+
+  document.getElementById('variantColorGroups').appendChild(card);
+
+  // Populate existing variants or add one empty row
+  if (existingVariants && existingVariants.length > 0) {
+    existingVariants.forEach(v => addSizeRow(groupId, v.size, v.quantity, v.variantId));
+  } else {
+    addSizeRow(groupId);
+  }
+
+  // Clear the add-color inputs
+  document.getElementById('newColorName').value    = '';
+  document.getElementById('newColorHex').value     = '#000000';
+  document.getElementById('newColorHexText').value = '';
+}
+
+function removeColorGroup(groupId) {
+  document.getElementById(groupId)?.remove();
+  if (document.getElementById('variantColorGroups').children.length === 0) {
+    document.getElementById('variantsEmptyHint').style.display = 'block';
+  }
+}
+
+let sizeRowCounter = 0;
+
+function addSizeRow(groupId, size, qty, variantId) {
+  const rowId = 'sr-' + (sizeRowCounter++);
+  const row   = document.createElement('div');
+  row.className = 'adm-size-row';
+  row.id        = rowId;
+  row.innerHTML = `
+    ${variantId ? `<input type="hidden" name="variantId" value="${variantId}"/>` : ''}
+    <input type="text"   class="adm-form-input adm-size-row-input"
+           placeholder="Size (e.g. XS, S, M, L, XL)"
+           value="${escHtml(size || '')}"
+           data-group="${groupId}" name="variantSize"/>
+    <input type="number" class="adm-form-input adm-size-qty-input"
+           placeholder="Qty" min="0" value="${qty !== undefined ? qty : ''}"
+           name="variantQty"/>
+    <button type="button" class="adm-size-row-remove"
+            onclick="document.getElementById('${rowId}').remove()"
+            title="Remove size">
+      <i class="bi bi-dash"></i>
+    </button>`;
+  document.getElementById(groupId + '-sizes').appendChild(row);
+}
+
+/* ── Collect variants from the form ─────────────────────────── */
+function collectVariants() {
+  const variants = [];
+  document.querySelectorAll('.adm-color-group-card').forEach(card => {
+    const color = card.dataset.color;
+    const hex   = card.dataset.hex;
+    card.querySelectorAll('.adm-size-row').forEach(row => {
+      const variantIdEl = row.querySelector('input[name="variantId"]');
+      const sizeEl      = row.querySelector('input[name="variantSize"]');
+      const qtyEl       = row.querySelector('input[name="variantQty"]');
+      const size        = sizeEl?.value.trim();
+      const qty         = parseInt(qtyEl?.value) || 0;
+      if (size) {
+        variants.push({
+          variantId: variantIdEl ? parseInt(variantIdEl.value) : null,
+          color:     hex + '-' + color,
+          size,
+          quantity:  qty
+        });
+      }
+    });
+  });
+  return variants;
+}
+
+/* ── Save product ───────────────────────────────────────────── */
 document.getElementById('saveProductBtn')?.addEventListener('click', () => {
   if (!validateProductForm()) return;
 
@@ -279,17 +436,16 @@ document.getElementById('saveProductBtn')?.addEventListener('click', () => {
   const payload = JSON.stringify({
     id:          currentEditProductId,
     name:        document.getElementById('productName').value.trim(),
-    brand:       document.getElementById('productBrand').value.trim(),
     categoryId:  document.getElementById('productCategory').value,
-    rentalPrice: document.getElementById('productPrice').value,
-    stockQty:    document.getElementById('productStock').value,
+    pricePerDay: parseFloat(document.getElementById('productPrice').value),
     imageUrl:    document.getElementById('productImage').value.trim(),
     description: document.getElementById('productDescription').value.trim(),
+    variants:    collectVariants()
   });
 
   const url    = currentEditProductId
-    ? CTX + '/admin/UpdateProductServlet'
-    : CTX + '/admin/AddProductServlet';
+      ? CTX + '/admin/products/' + currentEditProductId
+      : CTX + '/admin/products';
   const method = currentEditProductId ? 'PUT' : 'POST';
 
   let req = window.XMLHttpRequest ? new XMLHttpRequest() : new ActiveXObject('Microsoft.XMLHTTP');
@@ -298,10 +454,9 @@ document.getElementById('saveProductBtn')?.addEventListener('click', () => {
       btn.disabled = false;
       btn.querySelector('.adm-btn-text').classList.remove('d-none');
       btn.querySelector('.adm-btn-spinner').classList.add('d-none');
-
       if (req.status === 200) {
         closeModal('productModalOverlay');
-        loadProducts();
+        loadProducts(currentPage);
       }
     }
   };
@@ -607,7 +762,7 @@ function openStockPopover(event, productId) {
   req.onreadystatechange = function () {
     if (req.readyState === 4 && req.status === 200) {
       const data = JSON.parse(req.responseText);
-      renderStockPopover(data.stockByColor);
+      renderStockPopover(data.stockByColor,data.description);
 
       // Re-adjust vertical position after content loads (real height now known)
       requestAnimationFrame(() => {
@@ -623,16 +778,21 @@ function openStockPopover(event, productId) {
   req.send();
 }
 
-function renderStockPopover(stockByColor) {
+function renderStockPopover(stockByColor, description) {
   const body = document.getElementById('stockPopoverBody');
   if (!body) return;
 
+  // Description section
+  const descHtml = description
+      ? `<div class="adm-stock-description">${escHtml(description)}</div>`
+      : '';
+
   if (!stockByColor || Object.keys(stockByColor).length === 0) {
-    body.innerHTML = '<p class="adm-stock-empty">No variants found.</p>';
+    body.innerHTML = descHtml + '<p class="adm-stock-empty">No variants found.</p>';
     return;
   }
 
-  body.innerHTML = Object.entries(stockByColor).map(([color, variants]) => `
+  body.innerHTML = descHtml + Object.entries(stockByColor).map(([color, variants]) => `
     <div class="adm-stock-color-group">
       <div class="adm-stock-color-header">
         <span class="adm-stock-color-swatch" style="background:${isHexColor(color) ? color : '#ccc'}"></span>

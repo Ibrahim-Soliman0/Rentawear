@@ -932,3 +932,183 @@
   padding: 0 0.25rem;
   line-height: 32px;
 }
+
+/* ── Description in stock popover ──────────────────────────── */
+.adm-stock-description {
+  font-size: 0.8rem;
+  color: var(--adm-muted);
+  line-height: 1.5;
+  padding: 0.5rem 0.25rem 0.75rem;
+  border-bottom: 1px solid var(--adm-stone);
+  margin-bottom: 0.25rem;
+}
+
+/* ── Large modal ────────────────────────────────────────────── */
+.adm-modal--lg { max-width: 680px; }
+
+/* ── Modal tabs ─────────────────────────────────────────────── */
+.adm-modal-tabs {
+  display: flex;
+  border-bottom: 1px solid var(--adm-stone);
+  padding: 0 1.5rem;
+  gap: 0;
+  flex-shrink: 0;
+}
+.adm-modal-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.75rem 1rem;
+  font-family: var(--adm-font-body);
+  font-size: 0.82rem;
+  font-weight: 500;
+  color: var(--adm-muted);
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  cursor: pointer;
+  transition: var(--adm-transition);
+}
+.adm-modal-tab:hover { color: var(--adm-charcoal); }
+.adm-modal-tab.active {
+  color: var(--adm-teal);
+  border-bottom-color: var(--adm-teal);
+  font-weight: 600;
+}
+
+/* ── Tab panels ─────────────────────────────────────────────── */
+.adm-tab-panel { display: none; }
+.adm-tab-panel.active { display: block; }
+
+/* ── Variants tab ───────────────────────────────────────────── */
+.adm-variants-add-row {
+  display: flex;
+  align-items: flex-end;
+  gap: 0.75rem;
+  padding: 0 0 1rem;
+  border-bottom: 1px solid var(--adm-stone);
+  margin-bottom: 1rem;
+  flex-wrap: wrap;
+}
+.adm-variants-add-btn {
+  flex-shrink: 0;
+  margin-bottom: 0.05rem;
+  align-self: flex-end;
+}
+.adm-color-picker {
+  width: 38px;
+  height: 36px;
+  border: 1.5px solid var(--adm-stone);
+  border-radius: var(--adm-radius);
+  padding: 2px;
+  cursor: pointer;
+  background: var(--adm-cream);
+  flex-shrink: 0;
+}
+
+.adm-variants-hint {
+  font-size: 0.8rem;
+  color: var(--adm-muted);
+  text-align: center;
+  padding: 1.5rem 0 0.5rem;
+  margin: 0;
+}
+
+/* ── Color group card ───────────────────────────────────────── */
+.adm-color-group-card {
+  border: 1px solid var(--adm-stone);
+  border-radius: var(--adm-radius);
+  overflow: hidden;
+  margin-bottom: 0.85rem;
+}
+.adm-color-group-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.6rem 0.85rem;
+  background: var(--adm-cream);
+  border-bottom: 1px solid var(--adm-stone);
+}
+.adm-color-group-title {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--adm-charcoal);
+}
+.adm-color-swatch-sm {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: 1.5px solid rgba(0,0,0,.1);
+  flex-shrink: 0;
+}
+.adm-color-group-body { padding: 0.75rem; }
+
+/* ── Size rows inside color group ───────────────────────────── */
+.adm-size-rows { display: flex; flex-direction: column; gap: 0.5rem; }
+.adm-size-row {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+.adm-size-row-input {
+  flex: 1;
+}
+.adm-size-qty-input {
+  width: 80px;
+  flex-shrink: 0;
+}
+.adm-size-row-remove {
+  width: 28px;
+  height: 28px;
+  border-radius: var(--adm-radius);
+  border: 1px solid var(--adm-stone);
+  background: transparent;
+  color: var(--adm-muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: var(--adm-transition);
+  flex-shrink: 0;
+  padding: 0;
+}
+.adm-size-row-remove:hover {
+  border-color: var(--adm-danger);
+  color: var(--adm-danger);
+  background: var(--adm-danger-light);
+}
+.adm-add-size-btn {
+  font-size: 0.78rem;
+  color: var(--adm-teal);
+  background: none;
+  border: 1px dashed var(--adm-teal);
+  border-radius: var(--adm-radius);
+  padding: 0.3rem 0.75rem;
+  cursor: pointer;
+  margin-top: 0.4rem;
+  transition: var(--adm-transition);
+  font-family: var(--adm-font-body);
+  width: 100%;
+}
+.adm-add-size-btn:hover {
+  background: var(--adm-teal-light);
+}
+.adm-remove-color-btn {
+  font-size: 0.75rem;
+  color: var(--adm-danger);
+  background: none;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0;
+  transition: var(--adm-transition);
+  font-family: var(--adm-font-body);
+}
+.adm-remove-color-btn:hover { opacity: 0.7; }
