@@ -875,3 +875,60 @@
   padding: 0.5rem 0;
   margin: 0;
 }
+/* ── Pagination ─────────────────────────────────────────────── */
+.adm-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 0 0.5rem;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+.adm-pagination-info {
+  font-size: 0.8rem;
+  color: var(--adm-muted);
+}
+.adm-pagination-btns {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+.adm-page-btn {
+  min-width: 32px;
+  height: 32px;
+  padding: 0 0.5rem;
+  border: 1px solid var(--adm-stone);
+  border-radius: var(--adm-radius);
+  background: var(--adm-warm-white);
+  color: var(--adm-charcoal);
+  font-size: 0.8rem;
+  font-family: var(--adm-font-body);
+  cursor: pointer;
+  transition: var(--adm-transition);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.adm-page-btn:hover:not(:disabled):not(.active) {
+  border-color: var(--adm-teal);
+  color: var(--adm-teal);
+  background: var(--adm-teal-light);
+}
+.adm-page-btn.active {
+  background: var(--adm-ink);
+  border-color: var(--adm-ink);
+  color: #fff;
+  font-weight: 600;
+  cursor: default;
+}
+.adm-page-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+.adm-page-btn--nav { font-size: 0.75rem; }
+.adm-page-ellipsis {
+  font-size: 0.8rem;
+  color: var(--adm-muted);
+  padding: 0 0.25rem;
+  line-height: 32px;
+}

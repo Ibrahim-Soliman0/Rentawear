@@ -93,7 +93,12 @@ function clearAllProductErrors() {
 let currentEditProductId = null;
 
 // Load all products via AJAX
-function loadProducts() {
+let currentPage     = 0;
+const PAGE_SIZE     = 20;
+let totalProducts   = 0;
+
+function loadProducts(page = 0) {
+  currentPage = page;
   const tbody = document.getElementById('productsTableBody');
   tbody.innerHTML = '<tr><td colspan="6" class="text-center py-4"><span class="spinner-border spinner-border-sm text-secondary"></span></td></tr>';
 
@@ -101,11 +106,68 @@ function loadProducts() {
   req.onreadystatechange = function () {
     if (req.readyState === 4 && req.status === 200) {
       const data = JSON.parse(req.responseText);
+      totalProducts = data.total;
       renderProductsTable(data.products);
+      renderPagination(data.page, data.total, data.pageSize);
     }
   };
-  req.open('GET', CTX + '/admin/products', true);
+  req.open('GET', CTX + '/admin/products?page=' + page + '&pageSize=' + PAGE_SIZE, true);
   req.send();
+}
+
+function renderPagination(page, total, pageSize) {
+  const container = document.getElementById('productsPagination');
+  if (!container) return;
+
+  const totalPages = Math.ceil(total / pageSize);
+  if (totalPages <= 1) {
+    container.innerHTML = '';
+    return;
+  }
+
+  const from = page * pageSize + 1;
+  const to   = Math.min((page + 1) * pageSize, total);
+
+  // Build page number buttons — show max 5 pages around current
+  let pageButtons = '';
+  const start = Math.max(0, page - 2);
+  const end   = Math.min(totalPages - 1, page + 2);
+
+  if (start > 0) {
+    pageButtons += `<button class="adm-page-btn" onclick="loadProducts(0)">1</button>`;
+    if (start > 1) pageButtons += `<span class="adm-page-ellipsis">…</span>`;
+  }
+
+  for (let i = start; i <= end; i++) {
+    pageButtons += `
+      <button class="adm-page-btn ${i === page ? 'active' : ''}"
+              onclick="loadProducts(${i})">${i + 1}</button>`;
+  }
+
+  if (end < totalPages - 1) {
+    if (end < totalPages - 2) pageButtons += `<span class="adm-page-ellipsis">…</span>`;
+    pageButtons += `<button class="adm-page-btn" onclick="loadProducts(${totalPages - 1})">${totalPages}</button>`;
+  }
+
+  container.innerHTML = `
+    <div class="adm-pagination">
+      <span class="adm-pagination-info">
+        Showing ${from}–${to} of ${total} products
+      </span>
+      <div class="adm-pagination-btns">
+        <button class="adm-page-btn adm-page-btn--nav"
+                onclick="loadProducts(${page - 1})"
+                ${page === 0 ? 'disabled' : ''}>
+          <i class="bi bi-chevron-left"></i>
+        </button>
+        ${pageButtons}
+        <button class="adm-page-btn adm-page-btn--nav"
+                onclick="loadProducts(${page + 1})"
+                ${page >= totalPages - 1 ? 'disabled' : ''}>
+          <i class="bi bi-chevron-right"></i>
+        </button>
+      </div>
+    </div>`;
 }
 
 function renderProductsTable(products) {

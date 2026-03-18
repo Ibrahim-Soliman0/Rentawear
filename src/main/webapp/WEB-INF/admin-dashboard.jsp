@@ -129,6 +129,8 @@
         </div>
       </div>
 
+      <div id="productsPagination"></div>
+
     </section>
 
     <!-- ══ CUSTOMERS SECTION ═════════════════════════════════ -->
