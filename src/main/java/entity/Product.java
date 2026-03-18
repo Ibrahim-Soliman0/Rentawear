@@ -32,7 +32,7 @@ import java.util.*;
         @NamedQuery(
                 name  = "Product.findByIds",
                 query = "SELECT DISTINCT p FROM Product p " +
-                        "JOIN FETCH p.productVariants " +
+                        "LEFT JOIN FETCH p.productVariants " +
                         "LEFT JOIN FETCH p.category " +
                         "WHERE p.id IN :ids " +
                         "ORDER BY p.createdAt DESC"
