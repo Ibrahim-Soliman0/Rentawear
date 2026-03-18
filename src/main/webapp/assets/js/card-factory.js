@@ -32,23 +32,21 @@
         // Provides safe defaults for every field so rendering code
         // never has to guard against undefined.
         function _normalise(raw) {
+            const core = raw.core || raw;
             return {
-                id:          String(raw.id ?? ''),
-                name:        raw.name        ?? '',
-                brand:       raw.brand       ?? '',
-                pricePerDay: Number(raw.pricePerDay ?? 0),
-                // imageUrl is a base path — no size suffix, no extension
-                imageUrl:    raw.imageUrl    || `/assets/img/placeholder`,
-                isNew:       Boolean(raw.isNew),
-                description: raw.description ?? '',
-                category:    raw.category    ?? '',
-                // swatches: SwatchDTO[] — { color, hex, name, slug }
-                swatches:    Array.isArray(raw.swatches) ? raw.swatches : [],
-                // sizes: string[] — unique sizes from variants
-                sizes:       Array.isArray(raw.sizes)    ? raw.sizes    : [],
-                // cart-only fields
-                dates:       raw.dates  ?? null,
-                qty:         raw.qty    ?? 1,
+                id:                  String(core.id          ?? ''),
+                name:                core.name               ?? '',
+                brand:               core.brand              ?? '',
+                pricePerDay:         Number(core.pricePerDay ?? 0),
+                imageUrl:            core.imageUrl           || '/assets/img/placeholder',
+                isNew:               Boolean(raw.isNew),
+                description:         core.description        ?? '',
+                category:            core.categoryId         ?? raw.category ?? '',
+                swatches:            Array.isArray(raw.swatches) ? raw.swatches : [],
+                primaryImageByColor: raw.primaryImageByColor || {},
+                sizes:               Array.isArray(raw.sizes) ? raw.sizes : [],
+                dates:               raw.dates ?? null,
+                qty:                 raw.qty   ?? 1,
             };
         }
 
@@ -103,18 +101,6 @@
             return wrap;
         }
 
-        // ── Wishlist heart SVG ────────────────────────────────────────
-        function _wishlistSvgNode(active) {
-            const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-            svg.setAttribute('viewBox','0 0 15 15');
-            svg.setAttribute('aria-hidden','true');
-            const path = document.createElementNS('http://www.w3.org/2000/svg','path');
-            path.setAttribute('d','M7.5 13S1 9 1 4.5a3.5 3.5 0 0 1 6.5-1.8A3.5 3.5 0 0 1 14 4.5C14 9 7.5 13 7.5 13z');
-            path.setAttribute('stroke-width','1.8');
-            if (active) path.setAttribute('fill','currentColor'); else { path.setAttribute('fill','none'); path.setAttribute('stroke','currentColor'); }
-            svg.appendChild(path);
-            return svg;
-        }
 
         // ── Skeleton ──────────────────────────────────────────────────
         // Shown while the section fetch is in flight.
@@ -148,9 +134,6 @@
 
             const badge = _badgeNode(p); if (badge) imgWrap.appendChild(badge);
 
-            const wishBtn = document.createElement('button');
-            wishBtn.className = 'product-wishlist'; wishBtn.type = 'button'; wishBtn.setAttribute('aria-label','Add to wishlist');
-            wishBtn.appendChild(_wishlistSvgNode(false));
 
             const qvBtn = document.createElement('button');
             qvBtn.className = 'product-qv'; qvBtn.type = 'button'; qvBtn.setAttribute('aria-label', `Quick view ${p.name}`);
@@ -159,8 +142,6 @@
             const circ = document.createElementNS('http://www.w3.org/2000/svg','circle'); circ.setAttribute('cx','7'); circ.setAttribute('cy','7'); circ.setAttribute('r','4');
             const pth = document.createElementNS('http://www.w3.org/2000/svg','path'); pth.setAttribute('d','M1 7s2-5 6-5 6 5 6 5-2 5-6 5-6-5-6-5z');
             qvSvg.appendChild(circ); qvSvg.appendChild(pth); qvBtn.appendChild(qvSvg); qvBtn.appendChild(document.createTextNode(' Quick View'));
-
-            imgWrap.appendChild(wishBtn); imgWrap.appendChild(qvBtn);
 
             const swatchNode = _swatchRowNode(p);
 
@@ -174,29 +155,33 @@
 
             info.appendChild(brandP); info.appendChild(nameP); info.appendChild(priceP); footer.appendChild(info);
 
+            if (swatchNode && Object.keys(p.primaryImageByColor).length) {
+                swatchNode.addEventListener('click', e => {
+                    const sw = e.target.closest('.swatch[data-color]');
+                    if (!sw) return;
+                    const base = p.primaryImageByColor[sw.dataset.color];
+                    if (!base) return;
+                    const img = el.querySelector('.product-img-inner img');
+                    if (img) {
+                        img.src    = imgUrl(base, 'md');
+                        img.srcset = `${imgUrl(base,'sm')} 400w, ${imgUrl(base,'md')} 800w, ${imgUrl(base,'lg')} 1400w`;
+                    }
+                    if (qvBtn) qvBtn.dataset.image = base;
+                    swatchNode.querySelectorAll('.swatch')
+                        .forEach(s => s.classList.toggle('active', s === sw));
+                });
+            }
             el.appendChild(imgWrap); if (swatchNode) el.appendChild(swatchNode); el.appendChild(footer);
-
             // quick-view dataset
             if (qvBtn) {
-                qvBtn.dataset.qv = '';
-                qvBtn.dataset.id = String(p.id);
-                qvBtn.dataset.name = p.name;
+                qvBtn.dataset.qv    = '';
+                qvBtn.dataset.id    = String(p.id);
+                qvBtn.dataset.name  = p.name;
                 qvBtn.dataset.brand = p.brand;
                 qvBtn.dataset.price = String(p.pricePerDay);
                 qvBtn.dataset.image = p.imageUrl;
-                qvBtn.dataset.desc = p.description || '';
-                qvBtn.dataset.sizes = (p.sizes || []).join(',');
+                qvBtn.dataset.desc  = p.description || '';
             }
-
-            // wishlist toggle
-            wishBtn.addEventListener('click', (e) => {
-                e.preventDefault(); e.stopPropagation();
-                const active = wishBtn.classList.toggle('active');
-                while (wishBtn.firstChild) wishBtn.removeChild(wishBtn.firstChild);
-                wishBtn.appendChild(_wishlistSvgNode(active));
-                wishBtn.setAttribute('aria-label', `${active ? 'Remove' : 'Add'} ${p.name} ${active ? 'from' : 'to'} wishlist`);
-            });
-
             return el;
         }
 

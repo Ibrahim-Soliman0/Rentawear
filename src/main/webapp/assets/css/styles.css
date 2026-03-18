@@ -1254,6 +1254,32 @@ h1, h2, h3, h4, h5, h6 {
 .qv-nudge      { font-size: 0.72rem; color: #c0392b; margin-bottom: 10px; display: none; }
 .qv-nudge.show { display: block; }
 
+/* Thumbnail strip below main image */
+.qv-thumbs {
+  display: flex;
+  gap: 8px;
+  padding: 8px 12px;
+  overflow-x: auto;
+}
+
+.qv-thumb {
+  width: 56px;
+  height: 56px;
+  flex-shrink: 0;
+  border-radius: 4px;
+  border: 2px solid transparent;
+  background-size: cover;
+  background-position: center;
+  cursor: pointer;
+  padding: 0;
+  transition: border-color 0.15s;
+}
+
+.qv-thumb.active,
+.qv-thumb:hover {
+  border-color: var(--rw-gray-500);
+}
+
 @media (max-width: 700px) {
   .qv-overlay     { padding: 0; align-items: flex-end; }
   .qv-modal       { grid-template-columns: 1fr; max-height: 95vh; border-radius: 16px 16px 0 0; transform: translateY(40px); }

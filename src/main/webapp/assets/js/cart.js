@@ -55,7 +55,7 @@ const Cart = (function () {
     const cta = document.querySelector('.cart-cta');
 
     if (items.length === 0) {
-      if (empty) empty.style.display = 'blockdk';
+      if (empty) empty.style.display = 'flex';
       wrap.style.display = 'none';
       // clear children safely
       while (wrap.firstChild) wrap.removeChild(wrap.firstChild);
@@ -67,7 +67,7 @@ const Cart = (function () {
 
     if (empty) empty.style.display = 'none';
     wrap.style.display = 'block';
-    if (cta) cta.style.display = 'block';
+    if (cta) cta.style.display = 'flex';
 
     const existingIds = [...wrap.querySelectorAll('.cart-item')]
         .map(li => li.dataset.id);

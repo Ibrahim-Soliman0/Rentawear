@@ -13,6 +13,7 @@
     <%-- Image panel (left half on desktop, top on mobile) --%>
     <div class="qv-image-panel">
       <div class="qv-main-img" id="qvMainImg" aria-hidden="true"></div>
+      <div class="qv-thumbs" id="qvThumbs"></div>
       <button class="qv-close" id="qvClose" aria-label="Close quick view" type="button">
         <svg viewBox="0 0 24 24" aria-hidden="true">
           <line x1="18" y1="6" x2="6" y2="18"/>
@@ -34,10 +35,14 @@
 
       <p id="qvDesc" style="font-size:0.85rem;color:var(--rw-muted);margin-bottom:20px;line-height:1.7;"></p>
 
+      <%-- Colour swatches — populated by renderColors() in quick-view.js --%>
+      <div class="swatch-row" id="qvColors" style="margin-bottom:20px;"></div>
+
       <div class="qv-label">Select Size</div>
       <div class="qv-sizes" id="qvSizes"></div>
 
-      <div style="margin-bottom:24px;"></div>
+      <%-- Spacer pushes buttons to bottom — flex-grow defined in CSS --%>
+      <div class="qv-actions-spacer"></div>
 
       <button class="qv-atb" id="qvAdd" type="button">
         <svg viewBox="0 0 24 24" aria-hidden="true">

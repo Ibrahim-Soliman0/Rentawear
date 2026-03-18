@@ -40,7 +40,7 @@ async function loadSection({ id, url, limit = SECTION_LIMIT, logLabel = id } = {
     const data = await _fetchJson(url, { outerSignal: controller.signal, timeout: 8000 });
     _controllers.delete(id);
 
-    const products = Array.isArray(data) ? data : (data && Array.isArray(data.results) ? data.results : []);
+    const products = Array.isArray(data) ? data : (data && Array.isArray(data.products) ? data.products : []);
     if (!products.length) {
       const p = document.createElement('p');
       p.className = 'rw-no-results';
@@ -64,10 +64,10 @@ async function loadSection({ id, url, limit = SECTION_LIMIT, logLabel = id } = {
 }
 
 const SECTIONS = [
-  { id: 'trendingScroll', url: `${CTX}/ProductServlet?action=list&limit=${SECTION_LIMIT}`, logLabel: 'Trending' },
-  { id: 'newArrivalsScroll', url: `${CTX}/ProductServlet?action=list&sort=new&limit=${SECTION_LIMIT}`, logLabel: 'New Arrivals' },
-  { id: 'womenScroll', url: `${CTX}/ProductServlet?action=list&category=women&limit=${SECTION_LIMIT}`, logLabel: "Women's" },
-  { id: 'menScroll', url: `${CTX}/ProductServlet?action=list&category=men&limit=${SECTION_LIMIT}`, logLabel: "Men's" },
+  { id: 'trendingScroll',    url: `${CTX}/products?pageSize=${SECTION_LIMIT}`,                logLabel: 'Trending' },
+  { id: 'newArrivalsScroll', url: `${CTX}/products?newOnly=true&pageSize=${SECTION_LIMIT}`,   logLabel: 'New Arrivals' },
+  { id: 'womenScroll',       url: `${CTX}/products?gender=FEMALE&pageSize=${SECTION_LIMIT}`,  logLabel: "Women's" },
+  { id: 'menScroll',         url: `${CTX}/products?gender=MALE&pageSize=${SECTION_LIMIT}`,    logLabel: "Men's" },
 ];
 
 const OCCASIONS = [
@@ -108,10 +108,10 @@ function loadInterests() {
   const key = 'interests'; if (_controllers.has(key)) try { _controllers.get(key).abort(); } catch (e) { }
   const controller = new AbortController(); _controllers.set(key, controller);
 
-  fetchJson(`${CTX}/ProductServlet?action=interests&limit=${SECTION_LIMIT}`, { outerSignal: controller.signal, timeout: 8000 })
-    .then(data => {
-      _controllers.delete(key);
-      const products = Array.isArray(data) ? data : (data && Array.isArray(data.results) ? data.results : []);
+  fetchJson(`${CTX}/products/interests?pageSize=${SECTION_LIMIT}`, { outerSignal: controller.signal, timeout: 8000 })
+      .then(data => {
+        _controllers.delete(key);
+        const products = data && Array.isArray(data.products) ? data.products : [];
       if (!products.length) { section.hidden = true; return; }
       const frag = document.createDocumentFragment(); for (const p of products) frag.appendChild(CardFactory.grid(p));
       container.replaceChildren(frag);

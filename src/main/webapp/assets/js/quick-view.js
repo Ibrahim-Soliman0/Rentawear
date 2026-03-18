@@ -48,21 +48,36 @@
 
   async function loadImages(productId) {
     try {
-      const url = `${CTX}/ProductServlet?action=images&id=${productId}`;
-      const dto = await (window.fetchJson ? window.fetchJson(url, { timeout: 8000 }) : (await fetch(url)).json());
+      const dto = await fetchJson(`${CTX}/products/${productId}`, { timeout: 8000 });
 
-      activeColor = dto.defaultColor;
-      renderColors(dto.colorGroups);
+      // Transform ProductDetailDTO into the shape renderColors/renderThumbs expect
+      const colorGroups = (dto.swatches || []).map(swatch => ({
+        color:  swatch.color,
+        hex:    swatch.hex,
+        name:   swatch.name,
+        images: (dto.imagesByColor?.[swatch.color] || []).map((base, i) => ({
+          base,
+          alt: `${swatch.name} image ${i + 1}`
+        }))
+      }));
 
-      const defaultGroup = dto.colorGroups.find(g => g.color === dto.defaultColor)
-          || dto.colorGroups[0];
-      if (defaultGroup) setActiveGroup(defaultGroup);
+      activeColor = dto.swatches?.[0]?.color || null;
+      renderColors(colorGroups);
+
+      const defaultGroup = colorGroups[0];
+      if (defaultGroup) {
+        setActiveGroup(defaultGroup);
+        renderSizes(dto.availableSizesByColor?.[activeColor] || []);
+      }
+
+      overlay._detail = dto;
+      if (descEl && dto.description) descEl.textContent = dto.description;
+
 
     } catch (e) {
       console.error('[quick-view] image fetch failed:', e);
     }
   }
-
   function setMainImage(basePath) {
     activeImage = basePath;
     mainImg.style.backgroundImage = `url('${imgUrl(basePath, 'md')}')`;
@@ -74,15 +89,21 @@
     groups.forEach(g => {
       const btn = document.createElement('button');
       btn.type             = 'button';
-      btn.className        = 'qv-color-chip' + (g.color === activeColor ? ' active' : '');
+      btn.className        = 'swatch' + (g.color === activeColor ? ' active' : '');
       btn.style.background = g.hex;
+      btn.style.width      = '22px';
+      btn.style.height     = '22px';
       btn.title            = g.name;
       btn.dataset.color    = g.color;
       btn.addEventListener('click', () => {
         activeColor = g.color;
-        colorsEl.querySelectorAll('.qv-color-chip')
-            .forEach(b => b.classList.toggle('active', b.dataset.color === activeColor));
+        colorsEl.querySelectorAll('.swatch')
+            .forEach(b => b.classList.toggle('active', b.dataset.color === activeColor))
         setActiveGroup(g);
+        const detail = overlay._detail;
+        if (detail?.availableSizesByColor) {
+          renderSizes(detail.availableSizesByColor[activeColor] || []);
+        }
       });
       colorsEl.appendChild(btn);
     });

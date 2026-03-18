@@ -62,7 +62,7 @@ public class LoginServlet extends HttpServlet {
             session.setMaxInactiveInterval(60 * 60 * 24);
         }
 
-        resp.sendRedirect(req.getContextPath() + "/index.jsp");
+        resp.sendRedirect(req.getContextPath() + "/home");
     }
 
     private boolean isEmpty(String val) {

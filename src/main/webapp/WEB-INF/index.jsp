@@ -147,8 +147,7 @@
        Section is hidden by JS if servlet returns no matches.
        Cards injected by home.js — loadInterests()
        ============================================================ -->
-  <c:if test="${not empty sessionScope.currentUser and not empty sessionScope.currentUser.interests}">
-    <section class="rw-section rw-section--personalised" id="interestsSection">
+  <c:if test="${not empty sessionScope.user}">    <section class="rw-section rw-section--personalised" id="interestsSection">
       <div class="container-lg">
         <div class="rw-personalised-header">
           <h2 class="section-title mb-0">Based on Your Interests</h2>
