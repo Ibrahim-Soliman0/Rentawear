@@ -1,7 +1,6 @@
 <%-- admin-dashboard.jsp — Rentawear Admin Dashboard --%>
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
 <%@ page isELIgnored="false" %>
-<%@ page session="false" %>
 <%@ taglib prefix="c" uri="jakarta.tags.core" %>
 <!DOCTYPE html>
 <html lang="en">
@@ -70,7 +69,7 @@
         <i class="bi bi-person-fill"></i>
       </div>
       <div class="adm-admin-info">
-        <span class="adm-admin-name">${sessionScope.userName}</span>
+        <span class="adm-admin-name">${sessionScope.user.name}</span>
         <span class="adm-admin-role">Superuser</span>
       </div>
       <a href="${pageContext.request.contextPath}/logout" class="adm-logout-btn" title="Sign out">
