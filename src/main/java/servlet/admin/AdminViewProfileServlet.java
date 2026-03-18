@@ -30,8 +30,16 @@ public class AdminViewProfileServlet extends HttpServlet {
             return;
         }
 
+        int userId;
+        try {
+            userId = Integer.parseInt(idParam);
+        } catch (NumberFormatException e) {
+            resp.sendRedirect(req.getContextPath() + "/admin/dashboard");
+            return;
+        }
+
         // Load user by id
-        Optional<UserSessionDTO> userOpt = userService.getSessionDTOById(Integer.parseInt(idParam));
+        Optional<UserSessionDTO> userOpt = userService.getSessionDTOById(userId);
         if (userOpt.isEmpty()) {
             resp.sendRedirect(req.getContextPath() + "/admin/dashboard");
             return;
