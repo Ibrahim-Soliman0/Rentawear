@@ -1,5 +1,5 @@
 <%-- index.jsp — Home page --%>
-<%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" session="false"%>
+<%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" session="true"%>
 <%@ page isELIgnored="false" %>
 <%@ taglib prefix="c" uri="jakarta.tags.core" %>
 
@@ -35,9 +35,9 @@
 
     <div class="hero-image">
       <div class="hero-image-placeholder">
-  <img src="${pageContext.request.contextPath}/assets/img/hero.jpg"
-       alt="assets/img/hero.jpg"
-       loading="lazy"/>
+        <img src="${pageContext.request.contextPath}/assets/img/hero.jpg"
+             alt="assets/img/hero.jpg"
+             loading="lazy"/>
         <p class="hero-img-label">Spring / Summer 2026 Edit</p>
       </div>
     </div>
@@ -75,6 +75,27 @@
     </div>
   </div>
 
+  <!-- ============================================================
+     BASED ON YOUR INTERESTS
+     Only rendered when user is logged in and has interests set.
+     Section is hidden by JS if servlet returns no matches.
+     Cards injected by home.js — loadInterests()
+     ============================================================ -->
+  <c:if test="${not empty sessionScope.user}">
+    <section class="section section-alt" id="interestsSection">
+      <div class="section-inner">
+        <div class="section-header">
+          <div>
+            <p class="section-eyebrow">Picked just for you</p>
+            <h2 class="section-title">Based on Your <em>Interests</em></h2>
+          </div>
+          <a href="${pageContext.request.contextPath}/products?sort=interests" class="view-all">View All →</a>
+        </div>
+        <div class="product-scroll" id="interestsScroll" aria-label="Recommended for you"></div>
+      </div>
+    </section>
+  </c:if>
+
   <section class="section">
     <div class="section-inner">
       <div class="section-header">
@@ -88,18 +109,18 @@
     </div>
   </section>
 
-  <section class="section section-alt">
-    <div class="section-inner">
-      <div class="section-header">
-        <div>
-          <p class="section-eyebrow">Most-booked this week</p>
-          <h2 class="section-title">Trending <em>Rentals</em></h2>
-        </div>
-        <a href="${pageContext.request.contextPath}/products?sort=popular" class="view-all">View All →</a>
-      </div>
-      <div class="product-scroll" id="trendingScroll" aria-label="Trending rentals"></div>
-    </div>
-  </section>
+<%--  <section class="section section-alt">--%>
+<%--    <div class="section-inner">--%>
+<%--      <div class="section-header">--%>
+<%--        <div>--%>
+<%--          <p class="section-eyebrow">Most-booked this week</p>--%>
+<%--          <h2 class="section-title">Trending <em>Rentals</em></h2>--%>
+<%--        </div>--%>
+<%--        <a href="${pageContext.request.contextPath}/products?sort=popular" class="view-all">View All →</a>--%>
+<%--      </div>--%>
+<%--      <div class="product-scroll" id="trendingScroll" aria-label="Trending rentals"></div>--%>
+<%--    </div>--%>
+<%--  </section>--%>
 
   <section class="section">
     <div class="section-inner">
@@ -139,41 +160,17 @@
       <div class="product-scroll" id="menScroll" aria-label="Men's collection"></div>
     </div>
   </section>
-
-
-  <!-- ============================================================
-       BASED ON YOUR INTERESTS
-       Only rendered when user is logged in and has interests set.
-       Section is hidden by JS if servlet returns no matches.
-       Cards injected by home.js — loadInterests()
-       ============================================================ -->
-  <c:if test="${not empty sessionScope.currentUser and not empty sessionScope.currentUser.interests}">
-    <section class="rw-section rw-section--personalised" id="interestsSection">
-      <div class="container-lg">
-        <div class="rw-personalised-header">
-          <h2 class="section-title mb-0">Based on Your Interests</h2>
-          <div class="d-flex align-items-center gap-3">
-          <span class="rw-personalised-badge">
-            <i class="bi bi-stars" aria-hidden="true"></i>
-            For you
-          </span>
-            <a href="${pageContext.request.contextPath}/products?sort=interests" class="rw-view-all">View All <i class="bi bi-arrow-right" aria-hidden="true"></i></a>
-          </div>
-        </div>
-        <div class="rw-home-scroll"
-             id="interestsScroll"
-             aria-label="Recommended for you"></div>
-      </div>
-    </section>
-  </c:if>
-
-
 </main>
 
 <%-- Footer --%>
 <jsp:include page="components/footer.jsp"/>
 
-<%-- home.js loaded last — depends on card-factory.js (already in scripts.jsp) --%>
+<script>
+  window.RW_USER = <%= request.getAttribute("userJson") != null
+                       ? request.getAttribute("userJson")
+                       : "null" %>;
+</script>
+
 <jsp:include page="components/scripts.jsp">
   <jsp:param name="extraJS"
              value="${pageContext.request.contextPath}/assets/js/home.js"/>

@@ -1,4 +1,4 @@
-package servlet;
+package servlet.product;
 
 import dto.ProductDetailDTO;
 import jakarta.servlet.annotation.WebServlet;
@@ -51,9 +51,21 @@ public class ProductDetailServlet extends HttpServlet {
             resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "Product id required");
             return null;
         }
+        // Strip leading slash — pathInfo = "/42"
+        String segment = pathInfo.substring(1);
+
+        // Hard-reject non-numeric segments so /products/search is never
+        // intercepted by this servlet even if annotation scanning fires it
+        // before ProductSearchServlet.
+        // ProductSearchServlet is mapped to the exact path /products/search
+        // so it wins in compliant containers, but this guard makes it safe
+        // in all containers.
+        if (!segment.matches("\\d+")) {
+            resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "Invalid product id");
+            return null;
+        }
         try {
-            // pathInfo = "/42" — strip the leading slash
-            return Integer.parseInt(pathInfo.substring(1));
+            return Integer.parseInt(segment);
         } catch (NumberFormatException e) {
             resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "Invalid product id");
             return null;
