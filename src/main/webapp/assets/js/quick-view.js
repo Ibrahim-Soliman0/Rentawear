@@ -228,7 +228,11 @@
   // ── Image helpers ─────────────────────────────────────────
   function setMainImage(basePath) {
     activeImage = basePath;
-    if (mainImg) mainImg.style.backgroundImage = `url('${imgUrl(basePath, 'md')}')`;
+    if (mainImg) {
+      mainImg.src    = imgUrl(basePath, 'md');
+      mainImg.srcset = `${imgUrl(basePath,'sm')} 400w, ${imgUrl(basePath,'md')} 800w, ${imgUrl(basePath,'lg')} 1400w`;
+      mainImg.sizes  = '(max-width:700px) 100vw, 50vw';
+    }
   }
 
   // ── Colour chips ──────────────────────────────────────────

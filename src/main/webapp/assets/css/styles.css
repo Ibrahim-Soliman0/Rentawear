@@ -1173,11 +1173,15 @@ h1, h2, h3, h4, h5, h6 {
   backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px);
   cursor: pointer;
 }
+/* ── Quick View modal shell ───────────────────────────────
+   Fixed size rigid container. Nothing inside can push it taller.
+   Two columns: image left (slightly wider), details right (scrolls).       */
 .qv-modal {
   position: relative; z-index: 1;
-  background: var(--rw-warm-white); border-radius: 8px;
-  width: 100%; max-width: 920px; max-height: 90vh; overflow-y: auto;
-  display: grid; grid-template-columns: 1fr 1fr;
+  background: var(--rw-warm-white); border-radius: 12px;
+  width: min(92vw, 980px); height: min(92vh, 840px);
+  overflow: hidden;
+  display: grid; grid-template-columns: 48% 52%;
   box-shadow: 0 32px 80px rgba(0,0,0,0.22), 0 8px 24px rgba(0,0,0,0.1);
   transform: translateY(16px) scale(0.98);
   transition: transform 0.35s var(--rw-ease-out);
@@ -1185,13 +1189,60 @@ h1, h2, h3, h4, h5, h6 {
 .qv-overlay.open .qv-modal { transform: translateY(0) scale(1); }
 
 /* Image panel */
-.qv-image-panel { position: relative; background: var(--rw-cream); border-radius: 8px 0 0 8px; overflow: hidden; min-height: 520px; }
-.qv-main-img    { width: 100%; height: 100%; min-height: 520px; transition: background 0.4s ease; background-size: cover; background-position: center; }
-.qv-thumbs      { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); display: flex; flex-direction: column; gap: 8px; z-index: 2; }
-.qv-thumb       { width: 44px; height: 56px; border-radius: 4px; border: 2px solid transparent; overflow: hidden; cursor: pointer; transition: border-color 0.15s, transform 0.15s; flex-shrink: 0; }
-.qv-thumb:hover  { transform: scale(1.06); }
+/* Image panel: flex column, cream bg.
+   Image fills the space, thumb strip anchored at the bottom.              */
+.qv-image-panel {
+  position: relative;
+  background: var(--rw-cream);
+  border-radius: 12px 0 0 12px;
+  display: flex; flex-direction: column;
+  overflow: hidden;
+  height: 100%;
+}
+
+/* Frame: fills all space above the thumb strip.
+   Centred so portrait images have equal cream margins left/right.         */
+.qv-img-frame {
+  flex: 1; min-height: 0;
+  display: flex; align-items: center; justify-content: center;
+  padding: 16px;
+  overflow: hidden;
+}
+
+/* The actual product image — contain keeps the full garment visible.
+   Never crops. Cream background fills any letter-box space.               */
+.qv-main-img {
+  display: block;
+  max-width: 100%; max-height: 100%;
+  width: auto;    height: auto;
+  object-fit: contain;
+  transition: opacity 0.25s ease;
+}
+
+/* Thumbnail strip — static flow at the bottom, horizontal.
+   overflow-x: auto handles products with many images.                     */
+.qv-thumbs {
+  flex-shrink: 0;
+  display: flex; flex-direction: row; gap: 6px;
+  padding: 10px 12px;
+  background: rgba(255,255,255,0.82);
+  backdrop-filter: blur(8px);
+  overflow-x: auto; scrollbar-width: none;
+}
+.qv-thumbs::-webkit-scrollbar { display: none; }
+
+.qv-thumb {
+  width: 52px; height: 66px;
+  flex-shrink: 0;
+  border-radius: 4px;
+  border: 2px solid transparent;
+  background-size: cover;
+  background-position: center top;
+  cursor: pointer; padding: 0;
+  transition: border-color 0.15s, transform 0.15s;
+}
+.qv-thumb:hover  { transform: scale(1.06); border-color: var(--rw-stone); }
 .qv-thumb.active { border-color: var(--rw-teal); }
-.qv-thumb-bg     { width: 100%; height: 100%; }
 
 .qv-badge       { position: absolute; top: 16px; right: 16px; background: var(--rw-ink); color: #fff; font-size: 0.6rem; letter-spacing: 0.1em; text-transform: uppercase; padding: 4px 10px; border-radius: 2px; }
 .qv-badge.new   { background: var(--rw-teal); }
@@ -1208,7 +1259,7 @@ h1, h2, h3, h4, h5, h6 {
 .qv-close svg   { width: 14px; height: 14px; stroke: currentColor; fill: none; stroke-width: 2.2; stroke-linecap: round; }
 
 /* Details panel */
-.qv-details   { padding: 36px 36px 32px; display: flex; flex-direction: column; gap: 0; overflow-y: auto; }
+.qv-details   { padding: 36px 36px 32px; display: flex; flex-direction: column; gap: 0; overflow-y: auto; height: 100%; }
 .qv-brand     { font-size: 0.68rem; letter-spacing: 0.15em; text-transform: uppercase; color: var(--rw-teal); margin-bottom: 6px; font-weight: 500; }
 .qv-name      { font-family: var(--rw-font-display); font-size: clamp(1.4rem,2.5vw,1.9rem); font-weight: 300; color: var(--rw-ink); line-height: 1.2; margin-bottom: 10px; }
 .qv-price-row  { display: flex; align-items: baseline; gap: 10px; margin-bottom: 20px; }
@@ -1316,31 +1367,6 @@ h1, h2, h3, h4, h5, h6 {
 .qv-nudge.show { display: block; }
 
 /* Thumbnail strip below main image */
-.qv-thumbs {
-  display: flex;
-  gap: 8px;
-  padding: 8px 12px;
-  overflow-x: auto;
-}
-
-.qv-thumb {
-  width: 56px;
-  height: 56px;
-  flex-shrink: 0;
-  border-radius: 4px;
-  border: 2px solid transparent;
-  background-size: cover;
-  background-position: center;
-  cursor: pointer;
-  padding: 0;
-  transition: border-color 0.15s;
-}
-
-.qv-thumb.active,
-.qv-thumb:hover {
-  border-color: var(--rw-gray-500);
-}
-
 .qv-dates { margin: 18px 0 20px; }
 
 .qv-date-inputs {
@@ -1404,14 +1430,40 @@ h1, h2, h3, h4, h5, h6 {
 
 
 @media (max-width: 700px) {
-  .qv-overlay     { padding: 0; align-items: flex-end; }
-  .qv-modal       { grid-template-columns: 1fr; max-height: 95vh; border-radius: 16px 16px 0 0; transform: translateY(40px); }
+  /* Bottom sheet: slides up from the bottom edge, fills 96% of screen height. */
+  .qv-overlay { padding: 0; align-items: flex-end; }
+
+  /* Switch from grid to flex column so image and details stack.
+     Fixed height so the modal is a rigid shell — same principle as desktop. */
+  .qv-modal {
+    width: 100%;
+    height: 96vh; max-height: none;
+    border-radius: 20px 20px 0 0;
+    grid-template-columns: 1fr;
+    display: flex; flex-direction: column;
+    overflow: hidden;
+    transform: translateY(60px) scale(1);
+  }
   .qv-overlay.open .qv-modal { transform: translateY(0); }
-  .qv-image-panel { min-height: 280px; border-radius: 16px 16px 0 0; }
-  .qv-main-img    { min-height: 280px; }
-  .qv-details     { padding: 24px 20px 32px; }
-  .qv-thumbs      { flex-direction: row; left: 50%; top: auto; bottom: 12px; transform: translateX(-50%); }
-  .qv-thumb       { width: 36px; height: 46px; }
+
+  /* Image panel: fixed 46% of modal height — enough to see the full garment
+     on portrait phones without eating the detail panel.
+     Rounded only on top corners to match the bottom-sheet shape.           */
+  .qv-image-panel {
+    flex: 0 0 46%;
+    height: 46%;
+    border-radius: 20px 20px 0 0;
+  }
+
+  /* Image frame: a little less padding on mobile to maximise image area.   */
+  .qv-img-frame { padding: 12px 12px 4px; }
+
+  /* Thumbnail strip: slightly smaller thumbs on mobile.                    */
+  .qv-thumbs { padding: 6px 10px; gap: 5px; }
+  .qv-thumb  { width: 40px; height: 52px; }
+
+  /* Details panel: takes remaining 54% and scrolls within it.             */
+  .qv-details { flex: 1; min-height: 0; height: auto; padding: 20px 20px 28px; }
 }
 
 

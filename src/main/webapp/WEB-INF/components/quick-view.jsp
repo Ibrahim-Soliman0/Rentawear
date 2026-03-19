@@ -11,8 +11,10 @@
 
     <%-- Image panel --%>
     <div class="qv-image-panel">
-      <div class="qv-main-img" id="qvMainImg" aria-hidden="true"></div>
-      <div class="qv-thumbs"   id="qvThumbs"></div>
+      <div class="qv-img-frame">
+        <img class="qv-main-img" id="qvMainImg" alt="" />
+      </div>
+      <div class="qv-thumbs" id="qvThumbs"></div>
       <button class="qv-close" id="qvClose" aria-label="Close quick view" type="button">
         <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round">
           <line x1="18" y1="6" x2="6" y2="18"/>
@@ -84,8 +86,8 @@
         <span>Add to Wishlist</span>
       </button>
 
-<%--      &lt;%&ndash; View full product page link — populated by quick-view.js &ndash;%&gt;--%>
-<%--      <a class="qv-view-full" id="qvViewFull" href="#" style="display:none;">View full details</a>--%>
+      <%--      &lt;%&ndash; View full product page link — populated by quick-view.js &ndash;%&gt;--%>
+      <%--      <a class="qv-view-full" id="qvViewFull" href="#" style="display:none;">View full details</a>--%>
 
       <%-- Description accordion at bottom --%>
       <div class="qv-accordion-item" id="qvDescSection">
