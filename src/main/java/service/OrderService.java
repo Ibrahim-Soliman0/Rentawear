@@ -1,14 +1,20 @@
 package service;
 
+import dto.AdminOrderDTO;
 import dto.OrderDTO;
 import dto.OrderItemDTO;
 import entity.Order;
+import mapper.OrderMapper;
+import org.mapstruct.factory.Mappers;
 import entity.OrderItem;
 import entity.enums.OrderStatus;
 import mapper.OrderMapper;
 import org.mapstruct.factory.Mappers;
 import repository.OrderRepository;
 import repository.impl.OrderRepositoryImpl;
+
+import java.util.List;
+import java.util.stream.Collectors;
 
 import java.time.ZoneId;
 import java.util.ArrayList;
@@ -17,6 +23,7 @@ import java.util.List;
 public class OrderService extends BaseService<Order> {
 
     private final OrderRepository orderRepository;
+    private final OrderMapper orderMapper = Mappers.getMapper(OrderMapper.class);
 
     private final OrderMapper mapper = Mappers.getMapper(OrderMapper.class);
 
@@ -28,6 +35,20 @@ public class OrderService extends BaseService<Order> {
     public OrderService(OrderRepository orderRepository) {
         super(orderRepository);
         this.orderRepository = orderRepository;
+    }
+
+    public List<AdminOrderDTO> getAllOrders() {
+        return orderRepository.findAll()
+                .stream()
+                .map(order -> {
+                    // Force load lazy associations
+                    order.getUser();
+                    order.getOrderItems().forEach(item -> {
+                        item.getVariant().getProduct().getName();
+                    });
+                    return orderMapper.toOrderDTO(order);
+                })
+                .collect(Collectors.toList());
     }
 
     /**

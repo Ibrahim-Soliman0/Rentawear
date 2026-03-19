@@ -1,5 +1,6 @@
 package service;
 
+import dto.CustomerDTO;
 import dto.UpdateProfileDTO;
 import dto.UserRegisterDTO;
 import dto.UserSessionDTO;
@@ -12,11 +13,13 @@ import repository.UserRepository;
 import repository.impl.UserRepositoryImpl;
 import util.HashUtil;
 
+import java.util.List;
 import java.time.LocalDate;
 import java.time.format.DateTimeParseException;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -170,5 +173,23 @@ public class UserService extends BaseService<User> {
 
     private boolean isBlank(String s) {
         return s == null || s.isBlank();
+    }
+
+    public List<CustomerDTO> getAllCustomer(){
+        return userRepository.findAll()
+                .stream()
+                .map(user -> {
+                    user.getInterests().forEach(uc -> uc.getCategory().getName());
+                    return mapper.toCustomerDto(user);
+                })
+                .collect(Collectors.toList());
+    }
+
+    public Optional<UserSessionDTO> getSessionDTOById(Integer id) {
+        return Optional.ofNullable(repository.findById(id))
+                .map(user -> {
+                    user.getInterests().forEach(uc -> uc.getCategory().getName());
+                    return mapper.toSessionDTO(user);
+                });
     }
 }
