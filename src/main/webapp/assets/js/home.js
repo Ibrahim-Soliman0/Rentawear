@@ -102,26 +102,63 @@ function loadInterests() {
   const container = document.getElementById('interestsScroll');
   if (!section || !container) return;
 
-  const sk = document.createDocumentFragment(); for (let i = 0; i < SECTION_LIMIT; i++) sk.appendChild(CardFactory.skeleton());
+  // 1. Access the global user object
+  const u = window.RW_USER;
+  if (u)
+    console.log(`[home.js] Loading interests for categories:`);
+  // 2. Validate user and interests
+  if (!u || !u.interests || !u.interests.length) {
+    section.hidden = true;
+    console.log('[home.js] No user interests found, skipping section.');
+    return;
+  }
+
+
+  // 3. Setup loading state (skeletons)
+  const sk = document.createDocumentFragment();
+  for (let i = 0; i < SECTION_LIMIT; i++) sk.appendChild(CardFactory.skeleton());
   container.replaceChildren(sk);
 
-  const key = 'interests'; if (_controllers.has(key)) try { _controllers.get(key).abort(); } catch (e) { }
-  const controller = new AbortController(); _controllers.set(key, controller);
+  // 4. Abort previous request if still flying
+  const key = 'interests';
+  if (_controllers.has(key)) try { _controllers.get(key).abort(); } catch (e) { }
+  const controller = new AbortController();
+  _controllers.set(key, controller);
 
-  fetchJson(`${CTX}/products/interests?pageSize=${SECTION_LIMIT}`, { outerSignal: controller.signal, timeout: 8000 })
+  // 5. Construct URL with multiple categoryIds parameters
+  const params = new URLSearchParams();
+  params.append('pageSize', SECTION_LIMIT);
+
+  // Add each interest categoryId to the query string
+  u.interests.forEach(interest => {
+    if (interest.categoryId != null) {
+      params.append('categoryIds', interest.categoryId);
+    }
+  });
+
+  const url = `${CTX}/products?${params.toString()}`;
+
+  // 6. Fetch from the standard ProductCatalogServlet
+  _fetchJson(url, { outerSignal: controller.signal, timeout: 8000 })
       .then(data => {
         _controllers.delete(key);
         const products = data && Array.isArray(data.products) ? data.products : [];
-      if (!products.length) { section.hidden = true; return; }
-      const frag = document.createDocumentFragment(); for (const p of products) frag.appendChild(CardFactory.grid(p));
-      container.replaceChildren(frag);
-    })
-    .catch(err => {
-      _controllers.delete(key);
-      if (err && err.name === 'AbortError') return;
-      console.error('[home.js] Interests:', err);
-      section.hidden = true;
-    });
+
+        if (!products.length) {
+          section.hidden = true;
+          return;
+        }
+
+        const frag = document.createDocumentFragment();
+        for (const p of products) frag.appendChild(CardFactory.grid(p));
+        container.replaceChildren(frag);
+      })
+      .catch(err => {
+        _controllers.delete(key);
+        if (err && err.name === 'AbortError') return;
+        console.error('[home.js] Interests Error:', err);
+        section.hidden = true;
+      });
 }
 
 document.addEventListener('DOMContentLoaded', () => {

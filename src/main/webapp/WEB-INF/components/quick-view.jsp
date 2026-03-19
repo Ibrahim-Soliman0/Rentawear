@@ -46,7 +46,7 @@
 
       <%-- Rental dates --%>
       <div class="qv-dates">
-        <div class="qv-label" style="margin-top:18px;">Rental Dates</div>
+        <div class="qv-label">Rental Dates</div>
         <div class="qv-date-inputs">
           <div class="qv-date-field" id="qvStartField">
             <label for="qvStartDate">From</label>

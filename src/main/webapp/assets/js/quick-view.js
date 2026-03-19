@@ -21,10 +21,12 @@
   const colorLabelEl = document.getElementById('qvColorLabel');
   const colorNameEl  = document.getElementById('qvColorName');
 
-  let active      = null;
-  let activeColor = null;
-  let activeSize  = null;
-  let activeImage = null;
+  let active           = null;
+  let activeColor      = null;
+  let activeSize       = null;
+  let activeVariantId  = null;   // product_variants.id — for cart_items insert
+  let activeInventoryQty = null; // stock qty for + button cap in cart
+  let activeImage      = null;
   let startDate   = null;
   let endDate     = null;
   let fpStart     = null;
@@ -87,6 +89,37 @@
     addBtn.disabled = !activeSize;
   }
 
+  // ── Enable / disable date pickers ────────────────────────
+  // Called when switching to a sold-out colour — no point selecting
+  // dates if nothing in this colour can be added to the bag.
+  function _setDatesEnabled(enabled) {
+    [startInput, endInput].forEach(inp => {
+      if (!inp) return;
+      inp.disabled = !enabled;
+      inp.closest?.('.rw-input-wrap, .qv-date-field')
+          ?.classList.toggle('qv-field-disabled', !enabled);
+    });
+    if (!enabled) {
+      fpStart?.clear(); fpEnd?.clear();
+      startDate = null; endDate = null;
+      if (fpEnd) { fpEnd.set('minDate', 'today'); fpEnd.set('maxDate', null); }
+      if (summaryEl) summaryEl.textContent = '';
+    }
+  }
+
+  // ── Resolve variant ID and inventory qty from loaded detail ──
+  // Must be called whenever activeColor or activeSize changes.
+  function _resolveVariant() {
+    const detail = overlay._detail;
+    if (!detail || !activeColor) {
+      activeVariantId = null; activeInventoryQty = null; return;
+    }
+    const sizeKey      = activeSize || 'OS';
+    activeVariantId    = detail.variantIdByColorAndSize?.[activeColor]?.[sizeKey] ?? null;
+    activeInventoryQty = activeVariantId != null
+        ? (detail.quantityByVariantId?.[activeVariantId] ?? null)
+        : null;
+  }
   function _updateDateSummary() {
     if (!summaryEl) return;
     if (!startDate || !endDate || !active) { summaryEl.textContent = ''; return; }
@@ -107,9 +140,11 @@
 
   // ── Open (sync — zero latency) ────────────────────────────
   function openImmediate(data) {
-    active          = data;
-    activeSize      = null;
-    overlay._detail = null;
+    active             = data;
+    activeSize         = null;
+    activeVariantId    = null;
+    activeInventoryQty = null;
+    overlay._detail    = null;
 
     brandEl.textContent = data.brand;
     nameEl.textContent  = data.name;
@@ -139,6 +174,7 @@
     fpStart?.clear(); fpEnd?.clear();
     if (fpEnd) { fpEnd.set('minDate', 'today'); fpEnd.set('maxDate', null); }
     if (summaryEl) summaryEl.textContent = '';
+    _setDatesEnabled(true);
 
     descSection?.classList.remove('open');
     if (nudgeEl) nudgeEl.classList.remove('show');
@@ -178,8 +214,11 @@
             dto.sizesByColor?.[activeColor]          || [],
             dto.availableSizesByColor?.[activeColor] || []
         );
+        // Disable date pickers if the default colour is fully sold out
+        _setDatesEnabled(!!defaultGroup.available);
       }
 
+      _resolveVariant();
       _checkAddBtn();
     } catch (e) {
       console.error('[quick-view] detail fetch failed:', e);
@@ -222,6 +261,9 @@
               detail.availableSizesByColor?.[activeColor] || []
           );
         }
+        // Disable date pickers for sold-out colours
+        _setDatesEnabled(g.available);
+        _resolveVariant();
         _checkAddBtn();
       });
       colorsEl.appendChild(btn);
@@ -265,6 +307,7 @@
       span.className = 'qv-size active'; span.textContent = 'One size';
       sizesEl.appendChild(span);
       activeSize = 'OS';
+      _resolveVariant();
       _checkAddBtn();
       return;
     }
@@ -282,6 +325,7 @@
         activeSize = s;
         sizesEl.querySelectorAll('.qv-size')
             .forEach(b => b.classList.toggle('active', b === btn));
+        _resolveVariant();
         _checkAddBtn();
       });
       sizesEl.appendChild(btn);
@@ -291,6 +335,7 @@
       activeSize = firstAvailable.s;
       firstAvailable.btn.classList.add('active');
     }
+    _resolveVariant();
     _checkAddBtn();
   }
 
@@ -333,17 +378,25 @@
       return;
     }
 
-    const days = Math.round((endDate - startDate) / 86400000);
-    const fmt  = d => d.toLocaleDateString('en-GB');
+    const days    = Math.round((endDate - startDate) / 86400000);
+    const isoDate = d => d.toISOString().slice(0, 10);
+
+    const detail    = overlay._detail;
+    const colorMeta = (detail?.swatches || []).find(s => s.color === activeColor);
+
     Cart.add({
-      id:          active.id,
-      name:        active.name,
-      brand:       active.brand,
-      imageUrl:    activeImage || active.image,
-      pricePerDay: Number(active.price),
-      size:        activeSize || 'OS',
+      id:           active.id,
+      name:         active.name,
+      brand:        active.brand,
+      imageUrl:     activeImage || active.image,
+      pricePerDay:  Number(active.price),
+      size:         activeSize  || 'OS',
+      color:        activeColor || null,
+      colorName:    colorMeta?.name || null,
+      variantId:    activeVariantId,
+      inventoryQty: activeInventoryQty,
       days,
-      dates:       `${fmt(startDate)} – ${fmt(endDate)}`,
+      dates:        `${isoDate(startDate)}/${isoDate(endDate)}`,
     });
     close();
   });
@@ -357,7 +410,8 @@
   function close() {
     overlay.classList.remove('open');
     document.body.style.overflow = '';
-    active = null; activeColor = null; activeSize = null; activeImage = null;
+    active = null; activeColor = null; activeSize = null;
+    activeVariantId = null; activeInventoryQty = null; activeImage = null;
     overlay._detail = null;
     startDate = null; endDate = null;
     fpStart?.clear(); fpEnd?.clear();
@@ -366,6 +420,7 @@
     if (descSection) descSection.classList.remove('open');
     if (nudgeEl) nudgeEl.classList.remove('show');
     _setColorName(null);
+    _setDatesEnabled(true);
     clearTimeout(addBtn?._nudgeTimer);
     document.getElementById('qvStartField')?.classList.remove('qv-field-error');
     document.getElementById('qvEndField')?.classList.remove('qv-field-error');

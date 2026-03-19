@@ -1,4 +1,4 @@
-package servlet;
+package servlet.product;
 
 import dto.ProductFilterDTO;
 import dto.ProductListResult;

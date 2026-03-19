@@ -52,9 +52,35 @@
                 swatches:            Array.isArray(raw.swatches) ? raw.swatches : [],
                 primaryImageByColor: raw.primaryImageByColor || {},
                 // cart-only fields
-                dates:               raw.dates ?? null,
-                qty:                 Number(raw.qty ?? 1),
+                dates:               raw.dates      ?? null,
+                qty:                 Number(raw.qty  ?? 1),
+                size:                raw.size        ?? null,
+                color:               raw.color       ?? null,   // machine key  e.g. "#FF0000-Red"
+                colorName:           raw.colorName   ?? null,   // display name e.g. "Red"
+                variantId:           raw.variantId   ?? null,
+                inventoryQty:        raw.inventoryQty ?? null,  // max allowed qty for + cap
             };
+        }
+
+        // ── Date range formatter ──────────────────────────────────────────────
+        // Accepts ISO range: "2026-03-19/2026-03-26"
+        // Produces: "19 Mar – 26 Mar 2026" (same year) or "19 Dec 2025 – 3 Jan 2026"
+        // Falls back to the raw string if unparseable.
+        function _formatDates(raw) {
+            if (!raw) return '';
+            const parts = String(raw).split('/');
+            if (parts.length !== 2) return raw;
+            const months = ['Jan','Feb','Mar','Apr','May','Jun',
+                'Jul','Aug','Sep','Oct','Nov','Dec'];
+            const fmt = (d, showYear) =>
+                `${d.getUTCDate()} ${months[d.getUTCMonth()]}${showYear ? ' ' + d.getUTCFullYear() : ''}`;
+            const a = new Date(parts[0]);
+            const b = new Date(parts[1]);
+            if (isNaN(a) || isNaN(b)) return raw;
+            const sameYear = a.getUTCFullYear() === b.getUTCFullYear();
+            return sameYear
+                ? `${fmt(a, false)} – ${fmt(b, true)}`
+                : `${fmt(a, true)} – ${fmt(b, true)}`;
         }
 
         // ── Badge node ────────────────────────────────────────────────────────
@@ -202,10 +228,21 @@
 
             const p = _normalise(rawProduct);
 
+            // ── Resolve the correct initial image ─────────────────────────────
+            // Swatch[0] is rendered as active, so the card image must match it.
+            // primaryImageByColor keys are the raw color strings (e.g. "#FF0000-Red"),
+            // identical to swatch.color — both are built from the same product_images
+            // rows in the mapper. We fall back to p.imageUrl only when no images exist.
+            const firstSwatchColor = p.swatches[0]?.color ?? null;
+            const initialImageUrl  =
+                (firstSwatchColor != null && p.primaryImageByColor[firstSwatchColor] != null)
+                    ? p.primaryImageByColor[firstSwatchColor]
+                    : p.imageUrl;
+
             // Image wrap
             const imgWrap = document.createElement('div');
             imgWrap.className = 'product-img-wrap';
-            imgWrap.appendChild(_productImgNode(p.imageUrl, p.name));
+            imgWrap.appendChild(_productImgNode(initialImageUrl, p.name));
 
             // Badge (sold-out or new — mutually exclusive, sold-out wins)
             const badge = _badgeNode(p);
@@ -291,13 +328,15 @@
             if (swatchNode) el.appendChild(swatchNode);
             el.appendChild(footer);
 
-            // QV dataset — minimum for instant open; full detail loaded async
+            // QV dataset — minimum for instant open; full detail loaded async.
+            // dataset.image uses the same resolved URL as the card so the QV
+            // panel opens with the correct colour image before async detail loads.
             qvBtn.dataset.qv    = '';
             qvBtn.dataset.id    = String(p.id);
             qvBtn.dataset.name  = p.name;
             qvBtn.dataset.brand = p.brand;
             qvBtn.dataset.price = String(p.pricePerDay);
-            qvBtn.dataset.image = p.imageUrl;
+            qvBtn.dataset.image = initialImageUrl;
 
             return el;
         }
@@ -346,17 +385,19 @@
         }
 
         // ── Cart drawer item ──────────────────────────────────────────────────
-        // Used by: cart drawer. cart.js calls this for every item in state.
-        // Input is a flat object (not ProductCardDTO) — core || raw fallback
-        // in _normalise keeps this working transparently.
-        // Image: _sm — smallest file for smallest surface.
-        // Qty controls and remove button wired by cart.js via event delegation.
+        // All interactive elements carry data-key (variantKey = "id:size:color")
+        // so cart.js can target the exact variant even when multiple variants of
+        // the same product are in the cart simultaneously.
+        // data-inv on the inc button carries the inventory cap so cart.js can
+        // disable it when qty reaches the stock limit.
         function cartItem(raw) {
-            const it = _normalise(raw);
+            const it  = _normalise(raw);
+            const key = `${it.id}:${it.size || ''}:${it.color || ''}`;
 
             const li = document.createElement('li');
-            li.className  = 'cart-item';
-            li.dataset.id = String(it.id);
+            li.className   = 'cart-item';
+            li.dataset.key = key;
+            li.dataset.id  = it.id;
 
             const imgWrap = document.createElement('div');
             imgWrap.className = 'cart-item-img';
@@ -371,33 +412,46 @@
             info.className = 'cart-item-info';
 
             const brand = document.createElement('span');
-            brand.className  = 'cart-item-brand';
+            brand.className   = 'cart-item-brand';
             brand.textContent = it.brand;
+            info.appendChild(brand);
 
             const name = document.createElement('p');
-            name.className  = 'cart-item-name';
+            name.className   = 'cart-item-name';
             name.textContent = it.name;
+            info.appendChild(name);
+
+            // Size · Color line
+            const sizePart  = it.size      ? `Size ${it.size}` : '';
+            const colorPart = it.colorName
+                ? it.colorName
+                : it.color
+                    ? it.color.replace(/^#[0-9a-fA-F]+-/, '') // strip hex prefix if no display name
+                    : '';
+            if (sizePart || colorPart) {
+                const variant = document.createElement('p');
+                variant.className   = 'cart-item-dates';
+                variant.textContent = [sizePart, colorPart].filter(Boolean).join(' · ');
+                info.appendChild(variant);
+            }
 
             const dates = document.createElement('p');
-            dates.className  = 'cart-item-dates';
-            dates.textContent = it.dates || '';
+            dates.className   = 'cart-item-dates';
+            dates.textContent = _formatDates(it.dates);
+            info.appendChild(dates);
 
             const price = document.createElement('p');
-            price.className  = 'cart-item-price';
+            price.className   = 'cart-item-price';
             price.textContent = `£${it.pricePerDay.toFixed(0)}/day`;
-
-            info.appendChild(brand);
-            info.appendChild(name);
-            info.appendChild(dates);
             info.appendChild(price);
 
             const actions = document.createElement('div');
             actions.className = 'cart-item-qty';
 
             const removeBtn = document.createElement('button');
-            removeBtn.className = 'cart-remove';
-            removeBtn.dataset.id = String(it.id);
-            removeBtn.type       = 'button';
+            removeBtn.className   = 'cart-remove';
+            removeBtn.dataset.key = key;
+            removeBtn.type        = 'button';
             removeBtn.setAttribute('aria-label', `Remove ${it.name} from bag`);
             removeBtn.textContent = 'Remove';
 
@@ -405,24 +459,27 @@
             qtyControls.className = 'qty-controls';
 
             const dec = document.createElement('button');
-            dec.className        = 'qty-btn';
-            dec.dataset.action   = 'dec';
-            dec.dataset.id       = String(it.id);
-            dec.type             = 'button';
+            dec.className      = 'qty-btn';
+            dec.dataset.action = 'dec';
+            dec.dataset.key    = key;
+            dec.type           = 'button';
             dec.setAttribute('aria-label', 'Decrease quantity');
-            dec.textContent      = '−';
+            dec.textContent    = '−';
 
             const num = document.createElement('span');
-            num.className  = 'qty-num';
+            num.className   = 'qty-num';
             num.textContent = String(it.qty);
 
             const inc = document.createElement('button');
-            inc.className        = 'qty-btn';
-            inc.dataset.action   = 'inc';
-            inc.dataset.id       = String(it.id);
-            inc.type             = 'button';
+            inc.className      = 'qty-btn';
+            inc.dataset.action = 'inc';
+            inc.dataset.key    = key;
+            inc.type           = 'button';
             inc.setAttribute('aria-label', 'Increase quantity');
-            inc.textContent      = '+';
+            inc.textContent    = '+';f
+            // Store inventory cap so cart.js can disable when qty reaches limit
+            if (it.inventoryQty != null) inc.dataset.inv = String(it.inventoryQty);
+            if (it.inventoryQty != null && it.qty >= it.inventoryQty) inc.disabled = true;
 
             qtyControls.appendChild(dec);
             qtyControls.appendChild(num);
