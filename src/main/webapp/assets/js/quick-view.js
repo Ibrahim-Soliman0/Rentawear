@@ -228,11 +228,12 @@
   // ── Image helpers ─────────────────────────────────────────
   function setMainImage(basePath) {
     activeImage = basePath;
-    if (mainImg) {
-      mainImg.src    = imgUrl(basePath, 'md');
-      mainImg.srcset = `${imgUrl(basePath,'sm')} 400w, ${imgUrl(basePath,'md')} 800w, ${imgUrl(basePath,'lg')} 1400w`;
-      mainImg.sizes  = '(max-width:700px) 100vw, 50vw';
-    }
+    if (!mainImg) return;
+    // mainImg is now an <img> element (quick-view.jsp), not a div.
+    // Setting backgroundImage on an <img> has no visual effect — use src/srcset.
+    mainImg.src    = imgUrl(basePath, 'md');
+    mainImg.srcset = `${imgUrl(basePath,'sm')} 400w, ${imgUrl(basePath,'md')} 800w, ${imgUrl(basePath,'lg')} 1400w`;
+    mainImg.sizes  = '(max-width:700px) 100vw, 50vw';
   }
 
   // ── Colour chips ──────────────────────────────────────────
@@ -388,21 +389,27 @@
     const detail    = overlay._detail;
     const colorMeta = (detail?.swatches || []).find(s => s.color === activeColor);
 
-    Cart.add({
-      id:           active.id,
-      name:         active.name,
-      brand:        active.brand,
-      imageUrl:     activeImage || active.image,
-      pricePerDay:  Number(active.price),
-      size:         activeSize  || 'OS',
-      color:        activeColor || null,
-      colorName:    colorMeta?.name || null,
-      variantId:    activeVariantId,
-      inventoryQty: activeInventoryQty,
-      days,
-      dates:        `${isoDate(startDate)}/${isoDate(endDate)}`,
-    });
-    close();
+    // try-finally guarantees close() fires even if Cart.add or render() throws.
+    try {
+      Cart.add({
+        id:           active.id,
+        name:         active.name,
+        brand:        active.brand,
+        imageUrl:     activeImage || active.image,
+        pricePerDay:  Number(active.price),
+        size:         activeSize  || 'OS',
+        color:        activeColor || null,
+        colorName:    colorMeta?.name || null,
+        variantId:    activeVariantId,
+        inventoryQty: activeInventoryQty,
+        days,
+        dates:        `${isoDate(startDate)}/${isoDate(endDate)}`,
+      });
+    } catch (err) {
+      console.error('[quick-view] Cart.add failed:', err);
+    } finally {
+      close();
+    }
   });
 
   // ── Description accordion ─────────────────────────────────

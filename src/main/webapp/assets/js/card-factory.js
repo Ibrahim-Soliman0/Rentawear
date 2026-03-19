@@ -476,11 +476,10 @@
             inc.dataset.key    = key;
             inc.type           = 'button';
             inc.setAttribute('aria-label', 'Increase quantity');
-            inc.textContent    = '+';f
+            inc.textContent    = '+';
             // Store inventory cap so cart.js can disable when qty reaches limit
             if (it.inventoryQty != null) inc.dataset.inv = String(it.inventoryQty);
             if (it.inventoryQty != null && it.qty >= it.inventoryQty) inc.disabled = true;
-
             qtyControls.appendChild(dec);
             qtyControls.appendChild(num);
             qtyControls.appendChild(inc);

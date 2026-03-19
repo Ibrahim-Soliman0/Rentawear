@@ -118,17 +118,25 @@ const Cart = (function () {
     if (listChanged) {
       while (wrap.firstChild) wrap.removeChild(wrap.firstChild);
       const frag = document.createDocumentFragment();
-      items.forEach(item => frag.appendChild(CardFactory.cartItem(item)));
+      items.forEach(item => {
+        try {
+          frag.appendChild(CardFactory.cartItem(item));
+        } catch (err) {
+          console.error('[cart] CartFactory.cartItem failed for item:', item, err);
+        }
+      });
       wrap.appendChild(frag);
     } else {
-      // Only qty changed — patch qty-num and + button state in-place
+      // Only qty changed — patch qty-num and + button state in-place.
+      // Use a simple attribute-safe escaper instead of CSS.escape (not available in all envs).
       items.forEach(item => {
         const key = variantKey(item);
-        const li  = wrap.querySelector(`.cart-item[data-key="${CSS.escape(key)}"]`);
+        // Escape only the characters that break a CSS attribute selector string
+        const safeKey = key.replace(/\\/g, '\\\\').replace(/"/g, '\\"');
+        const li  = wrap.querySelector(`.cart-item[data-key="${safeKey}"]`);
         if (!li) return;
         const num = li.querySelector('.qty-num');
         if (num) num.textContent = String(item.qty);
-        // Sync + button disabled state with inventory cap
         const inc = li.querySelector('.qty-btn[data-action="inc"]');
         if (inc) {
           const cap = item.inventoryQty;
