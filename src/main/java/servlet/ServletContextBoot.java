@@ -8,10 +8,7 @@ import mapper.ProductMapperImpl;
 import repository.impl.ProductImageRepositoryImpl;
 import repository.impl.ProductRepositoryImpl;
 import repository.impl.ProductVariantRepositoryImpl;
-import service.ProductFacadeService;
-import service.ProductImageService;
-import service.ProductService;
-import service.ProductVariantService;
+import service.*;
 import util.EnvLoaderUtil;
 import util.JPAUtil;
 
@@ -33,9 +30,10 @@ public class ServletContextBoot implements ServletContextListener {
         ProductVariantService variantService = new ProductVariantService(variantRepo);
         ProductImageService imageService   = new ProductImageService(imageRepo);
         ProductMapper mapper = new ProductMapperImpl();
+        CategoryService categoryService = new CategoryService();
 
         ProductFacadeService facade = new ProductFacadeService(
-                productService, variantService, imageService, mapper);
+                productService, variantService, imageService, mapper,categoryService);
         System.out.println("[AppContextListener] Dependency graph initialized");
         ctx.setAttribute("productFacadeService", facade);
     }

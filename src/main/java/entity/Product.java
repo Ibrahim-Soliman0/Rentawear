@@ -2,6 +2,7 @@ package entity;
 
 import jakarta.persistence.*;
 import org.hibernate.annotations.ColumnDefault;
+import org.hibernate.annotations.CreationTimestamp;
 
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -197,8 +198,8 @@ public class Product {
     // @Column(name = "brand", length = 100)
     // private String brand;
 
-    @ColumnDefault("CURRENT_TIMESTAMP")
-    @Column(name = "created_at")
+    @CreationTimestamp
+    @Column(name = "created_at",updatable = false)
     private Instant createdAt;
 
     @OneToMany(mappedBy = "product",

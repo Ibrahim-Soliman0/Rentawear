@@ -509,8 +509,8 @@ document.getElementById('saveProductBtn')?.addEventListener('click', () => {
         if (isNew) {
           // ── Step 1 complete: product created ──
           // Store the new ID so subsequent saves go to PUT
-          currentEditProductId = data.core.id;
-          document.getElementById('productId').value = data.core.id;
+          currentEditProductId = data.id;
+          document.getElementById('productId').value = data.id;
 
           // Enable variants tab and switch to it
           const variantsTabBtn = document.getElementById('variantsTabBtn');

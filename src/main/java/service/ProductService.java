@@ -79,4 +79,7 @@ public class ProductService {
             productRepo.delete(product);
         }
     }
+
+    public Product save(Product product){return productRepo.save(product);}
+
 }

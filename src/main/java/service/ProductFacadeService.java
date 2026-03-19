@@ -6,6 +6,7 @@ import entity.ProductImage;
 import entity.ProductVariant;
 import mapper.ProductMapper;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -21,15 +22,17 @@ public class ProductFacadeService {
     private final ProductVariantService variantService;
     private final ProductImageService   imageService;
     private final ProductMapper         mapper;
+    private final CategoryService       categoryService;
 
     public ProductFacadeService(ProductService productService,
                                 ProductVariantService variantService,
                                 ProductImageService imageService,
-                                ProductMapper mapper) {
+                                ProductMapper mapper, CategoryService categoryService) {
         this.productService = productService;
         this.variantService = variantService;
         this.imageService   = imageService;
         this.mapper         = mapper;
+        this.categoryService = categoryService;
     }
 
     // ── Catalog listing ───────────────────────────────────────────────────────
@@ -158,5 +161,62 @@ public class ProductFacadeService {
         if (f.isNewOnly())       return productService.countNew();
         if (f.isInterestBased()) return productService.countByInterests(f);
         return productService.countFiltered(f);
+    }
+
+    public Integer saveProduct(SaveProductDTO dto) {
+        Product product = new Product();
+        applyDtoToProduct(product, dto);
+        Product saved = productService.save(product);
+        return saved.getId();
+    }
+
+    public AdminProductDetailDTO updateProduct(Integer id, SaveProductDTO dto) {
+        Product product = productService.getById(id);
+        if (product == null) return null;
+
+        applyDtoToProduct(product, dto);
+
+        // Handle variants — update existing, add new, remove deleted
+        List<Integer> incomingIds = dto.variants().stream()
+                .filter(v -> v.variantId() != null)
+                .map(VariantSaveDTO::variantId)
+                .collect(Collectors.toList());
+
+        // Remove variants not in incoming list
+        product.getProductVariants().removeIf(v -> !incomingIds.contains(v.getId()));
+
+        // Update existing / add new
+        dto.variants().forEach(v -> {
+            if (v.variantId() != null) {
+                product.getProductVariants().stream()
+                        .filter(pv -> pv.getId().equals(v.variantId()))
+                        .findFirst()
+                        .ifPresent(pv -> {
+                            pv.setSize(v.size());
+                            pv.setColor(v.color());
+                            pv.setQuantity(v.quantity());
+                        });
+            } else {
+                ProductVariant newVariant = new ProductVariant();
+                newVariant.setColor(v.color());
+                newVariant.setSize(v.size());
+                newVariant.setQuantity(v.quantity());
+                product.addProductVariant(newVariant);
+            }
+        });
+
+        Product saved = productService.save(product);
+        return getAdminDetail(saved.getId());
+    }
+
+    private void applyDtoToProduct(Product product, SaveProductDTO dto) {
+        product.setName(dto.name());
+        product.setBasePrice(BigDecimal.valueOf(dto.pricePerDay()));
+        product.setImageUrl(dto.imageUrl());
+        product.setDescription(dto.description());
+        if (dto.categoryId() != null) {
+            categoryService.getById(dto.categoryId())
+                    .ifPresent(product::setCategory);
+        }
     }
 }

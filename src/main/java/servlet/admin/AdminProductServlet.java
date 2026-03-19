@@ -3,6 +3,7 @@ package servlet.admin;
 import dto.AdminProductDetailDTO;
 import dto.AdminProductListResult;
 import dto.ProductFilterDTO;
+import dto.SaveProductDTO;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
@@ -57,6 +58,32 @@ public class AdminProductServlet extends HttpServlet {
         } else {
             resp.sendError(HttpServletResponse.SC_NOT_FOUND, "Product not found");
         }
+    }
+
+    @Override
+    protected void doPost(HttpServletRequest req, HttpServletResponse resp)
+            throws IOException {
+        SaveProductDTO dto = JsonUtil.fromJson(req, SaveProductDTO.class);
+        Integer productId =  facade.saveProduct(dto);
+        JsonUtil.writeJson(resp, new CreatedResponse(productId));
+    }
+
+    record CreatedResponse(Integer id) {}
+
+    @Override
+    protected void doPut(HttpServletRequest req, HttpServletResponse resp)
+            throws IOException {
+        String pathInfo = req.getPathInfo();
+        Integer id = parseId(pathInfo, resp);
+        if (id == null) return;
+
+        SaveProductDTO dto = JsonUtil.fromJson(req, SaveProductDTO.class);
+        AdminProductDetailDTO updated = facade.updateProduct(id, dto);
+        if (updated == null) {
+            resp.sendError(HttpServletResponse.SC_NOT_FOUND, "Product not found");
+            return;
+        }
+        JsonUtil.writeJson(resp, updated);
     }
 
     // Simple response DTO
