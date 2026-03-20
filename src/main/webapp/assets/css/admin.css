@@ -821,9 +821,6 @@
 }
 
 /* Remove bottom border from last size row in each group */
-.adm-stock-size-row:last-child {
-  border-bottom: none; /* ← already have this */
-}
 .adm-stock-color-header {
   display: flex;
   align-items: center;
