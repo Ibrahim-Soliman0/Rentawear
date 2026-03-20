@@ -231,15 +231,6 @@ function getStockBadge(inStock) {
   }
 }
 
-/* ── Tab switching inside modal ─────────────────────────────── */
-document.querySelectorAll('.adm-modal-tab').forEach(tab => {
-  tab.addEventListener('click', () => {
-    document.querySelectorAll('.adm-modal-tab').forEach(t => t.classList.remove('active'));
-    document.querySelectorAll('.adm-tab-panel').forEach(p => p.classList.remove('active'));
-    tab.classList.add('active');
-    document.getElementById('tab-' + tab.dataset.tab).classList.add('active');
-  });
-});
 
 /* ── Color/hex picker sync ──────────────────────────────────── */
 document.getElementById('newColorHex')?.addEventListener('input', function () {
