@@ -868,22 +868,50 @@ function renderStockPopover(stockByColor, description) {
     return;
   }
 
-  body.innerHTML = descHtml + Object.entries(stockByColor).map(([color, variants]) => `
-    <div class="adm-stock-color-group">
-      <div class="adm-stock-color-header">
-        <span class="adm-stock-color-swatch" style="background:${isHexColor(color) ? color : '#ccc'}"></span>
-        <span class="adm-stock-color-name">${escHtml(color)}</span>
-      </div>
-      <div class="adm-stock-sizes">
-        ${variants.map(v => `
-          <div class="adm-stock-size-row">
-            <span class="adm-stock-size-label">Size ${escHtml(v.size || '—')}</span>
-            <span class="adm-stock-size-qty ${v.quantity === 0 ? 'adm-stock-qty--zero' : v.quantity <= 3 ? 'adm-stock-qty--low' : 'adm-stock-qty--ok'}">
-              ${v.quantity}
-            </span>
-          </div>`).join('')}
-      </div>
-    </div>`).join('');
+  body.innerHTML = descHtml + Object.entries(stockByColor).map(([colorKey, variants]) => {
+
+    let hex = '#ccc';
+    let name = colorKey;
+
+    const dashIndex = colorKey.indexOf('-');
+
+    if (dashIndex !== -1) {
+      const hexPart = colorKey.substring(0, dashIndex);
+      const namePart = colorKey.substring(dashIndex + 1);
+
+      if (isHexColor(hexPart)) {
+        hex = hexPart;
+      }
+
+      name = namePart || hexPart;
+    } else if (isHexColor(colorKey)) {
+      hex = colorKey;
+    }
+
+    return `
+      <div class="adm-stock-color-group">
+        <div class="adm-stock-color-header">
+          <span class="adm-stock-color-swatch" style="background:${hex}"></span>
+          <span class="adm-stock-color-name">${escHtml(name)}</span>
+        </div>
+        <div class="adm-stock-sizes">
+          ${variants.map(v => `
+            <div class="adm-stock-size-row">
+              <span class="adm-stock-size-label">Size ${escHtml(v.size || '—')}</span>
+              <span class="adm-stock-size-qty ${
+        v.quantity === 0
+            ? 'adm-stock-qty--zero'
+            : v.quantity <= 3
+                ? 'adm-stock-qty--low'
+                : 'adm-stock-qty--ok'
+    }">
+                ${v.quantity}
+              </span>
+            </div>
+          `).join('')}
+        </div>
+      </div>`;
+  }).join('');
 }
 
 function isHexColor(str) {
