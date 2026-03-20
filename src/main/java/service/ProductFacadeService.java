@@ -182,8 +182,11 @@ public class ProductFacadeService {
                 .map(VariantSaveDTO::variantId)
                 .collect(Collectors.toList());
 
-        // Remove variants not in incoming list
-        product.getProductVariants().removeIf(v -> !incomingIds.contains(v.getId()));
+        // Remove variants not in incoming list using helper to keep bidirectional association consistent
+        List<ProductVariant> variantsToRemove = product.getProductVariants().stream()
+                .filter(v -> !incomingIds.contains(v.getId()))
+                .collect(Collectors.toList());
+        variantsToRemove.forEach(product::removeProductVariant);
 
         // Update existing / add new
         dto.variants().forEach(v -> {
