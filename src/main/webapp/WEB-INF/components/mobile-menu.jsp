@@ -70,10 +70,10 @@
         <i class="bi bi-person"></i>
         My Profile
       </a>
-      <a href="${pageContext.request.contextPath}/wishlist" class="drawer-footer-item">
-        <i class="bi bi-heart"></i>
-        Wishlist
-      </a>
+<%--      <a href="${pageContext.request.contextPath}/wishlist" class="drawer-footer-item">--%>
+<%--        <i class="bi bi-heart"></i>--%>
+<%--        Wishlist--%>
+<%--      </a>--%>
     </div>
 
   </div>
