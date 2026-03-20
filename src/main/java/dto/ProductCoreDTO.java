@@ -8,5 +8,6 @@ public record ProductCoreDTO(
         double pricePerDay,
         String imageUrl,
         String gender,
-        int categoryId
+        Integer categoryId,
+        String categoryName
 ) {}

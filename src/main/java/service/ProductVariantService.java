@@ -51,4 +51,8 @@ public class ProductVariantService {
     public void deleteColor(int productId, String color) {
         variantRepo.deleteByProductIdAndColor(productId, color);
     }
+
+    public void deleteByProductId(int productId) {
+        variantRepo.deleteByProductId(productId);
+    }
 }

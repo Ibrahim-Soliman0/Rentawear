@@ -31,9 +31,10 @@ public class ServletContextBoot implements ServletContextListener {
         ProductVariantService variantService = new ProductVariantService(variantRepo);
         ProductImageService imageService   = new ProductImageService(imageRepo);
         ProductMapper mapper = new ProductMapperImpl();
+        CategoryService categoryService = new CategoryService();
 
         ProductFacadeService facade = new ProductFacadeService(
-                productService, variantService, imageService, mapper);
+                productService, variantService, imageService, mapper,categoryService);
         System.out.println("[AppContextListener] Dependency graph initialized");
         ctx.setAttribute("productFacadeService", facade);
 

@@ -19,6 +19,7 @@ public interface ProductMapper {
 
     @Mapping(target = "pricePerDay", expression = "java(product.getBasePrice().doubleValue())")
     @Mapping(target = "categoryId",  expression = "java(product.getCategory() != null ? product.getCategory().getId() : null)")
+    @Mapping(target = "categoryName",  expression = "java(product.getCategory() != null ? product.getCategory().getName() : null)")
     @Mapping(target = "gender",      expression = "java(product.getCategory() != null && product.getCategory().getGender() != null ? product.getCategory().getGender().name() : null)")
     @Mapping(target = "brand",       constant = "rentawear")
     ProductCoreDTO toCoreDTO(Product product);
@@ -47,6 +48,7 @@ public interface ProductMapper {
 
     @Mapping(target = "core",    expression = "java(toCoreDTO(product))")
     @Mapping(target = "inStock", expression = "java(isInStock(variants))")
+    @Mapping(target = "totalStock", expression = "java(calcTotalStock(variants))")
     AdminProductRowDTO toAdminRowDTO(Product product, List<ProductVariant> variants);
 
 
@@ -165,5 +167,12 @@ public interface ProductMapper {
                     .add(toVariantStockDTO(v));
         }
         return map;
+    }
+
+    default int calcTotalStock(List<ProductVariant> variants) {
+        if (variants == null || variants.isEmpty()) return 0;
+        return variants.stream()
+                .mapToInt(ProductVariant::getQuantity)
+                .sum();
     }
 }
