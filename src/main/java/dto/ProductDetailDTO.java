@@ -9,5 +9,8 @@ public record ProductDetailDTO(
         List<ColorSwatchDTO>         swatches,
         Map<String, List<String>>    sizesByColor,
         Map<String, List<String>>    availableSizesByColor,
-        Map<String, List<String>>    imagesByColor
+        Map<String, List<String>>    imagesByColor,
+        // For one-size products the size key is "OS".
+        Map<String, Map<String, Integer>> variantIdByColorAndSize,
+        Map<Integer, Integer>        quantityByVariantId
 ) {}

@@ -110,9 +110,6 @@
         <i class="bi bi-bag"></i>
         <span class="cart-badge" id="cartBadge">0</span>
       </button>
-      <a class="nav-icon-btn nav-desktop-only" aria-label="Wishlist" href="${pageContext.request.contextPath}/wishlist">
-        <i class="bi bi-heart"></i>
-      </a>
       <a class="nav-icon-btn nav-desktop-only" aria-label="Profile" id="desktopProfile" href="${pageContext.request.contextPath}/profile">
         <i class="bi bi-person"></i>
       </a>

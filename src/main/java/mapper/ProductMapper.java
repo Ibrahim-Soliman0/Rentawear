@@ -26,15 +26,17 @@ public interface ProductMapper {
 
     @Mapping(target = "core",                expression = "java(toCoreDTO(product))")
     @Mapping(target = "isNew",               expression = "java(isNew(product))")
+    @Mapping(target = "soldOut",             expression = "java(product.getProductVariants().stream().noneMatch(v -> v.getQuantity() > 0))")
     @Mapping(target = "swatches",            expression = "java(buildSwatches(images))")
     @Mapping(target = "primaryImageByColor", expression = "java(buildPrimaryImageByColor(images))")
     ProductCardDTO toCardDTO(Product product, List<ProductImage> images);
 
-    @Mapping(target = "core",                  expression = "java(toCoreDTO(product))")
-    @Mapping(target = "swatches",              expression = "java(buildSwatches(images))")
-    @Mapping(target = "sizesByColor",          expression = "java(buildSizesByColor(variants))")
-    @Mapping(target = "availableSizesByColor", expression = "java(buildAvailableSizes(variants))")
-    @Mapping(target = "imagesByColor",         expression = "java(buildImagesByColor(images))")
+    @Mapping(target = "core",                      expression = "java(toCoreDTO(product))")
+    @Mapping(target = "swatches",                  expression = "java(buildSwatches(images))")
+    @Mapping(target = "sizesByColor",              expression = "java(buildSizesByColor(variants))")
+    @Mapping(target = "availableSizesByColor",     expression = "java(buildAvailableSizes(variants))")
+    @Mapping(target = "imagesByColor",             expression = "java(buildImagesByColor(images))")
+    @Mapping(target = "variantIdByColorAndSize",   expression = "java(buildVariantIdByColorAndSize(variants))")
     ProductDetailDTO toDetailDTO(Product product,
                                  List<ProductVariant> variants,
                                  List<ProductImage> images);
@@ -58,6 +60,13 @@ public interface ProductMapper {
     @Mapping(target = "variantId", source = "id")
     VariantStockDTO toVariantStockDTO(ProductVariant variant);
 
+    default Map<Integer, Integer> buildQuantityByVariantId(List<ProductVariant> variants) {
+        Map<Integer, Integer> map = new LinkedHashMap<>();
+        for (ProductVariant v : variants) {
+            map.put(v.getId(), v.getQuantity());
+        }
+        return map;
+    }
 
     default boolean isNew(Product product) {
         return product.getCreatedAt()
@@ -127,6 +136,24 @@ public interface ProductMapper {
         for (ProductImage img : images) {
             map.computeIfAbsent(img.getColor(), k -> new ArrayList<>())
                     .add(img.getImageUrl());
+        }
+        return map;
+    }
+
+    // Maps color → size → variantId.
+    // Used by quick-view.js so Cart.add() can carry the exact product_variants.id
+    // needed for cart_items inserts at checkout — no reverse lookup required.
+    //
+    // Size key: v.getSize() is nullable (one-size products have no size row).
+    // We normalise null/blank to "OS" here to match the "OS" sentinel that
+    // quick-view.js writes to activeSize when renderSizes() finds no sizes.
+    default Map<String, Map<String, Integer>> buildVariantIdByColorAndSize(
+            List<ProductVariant> variants) {
+        Map<String, Map<String, Integer>> map = new LinkedHashMap<>();
+        for (ProductVariant v : variants) {
+            String sizeKey = (v.getSize() == null || v.getSize().isBlank()) ? "OS" : v.getSize();
+            map.computeIfAbsent(v.getColor(), k -> new LinkedHashMap<>())
+                    .put(sizeKey, v.getId());
         }
         return map;
     }

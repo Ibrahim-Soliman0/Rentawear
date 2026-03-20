@@ -45,10 +45,12 @@
 
   async function loadPriceBounds(category) {
     try {
-      const url = `${CTX}/ProductServlet?action=priceRange&category=${encodeURIComponent(category)}`;
+      const genderMap = { women: 'FEMALE', men: 'MALE' };
+      const gender = genderMap[category] || '';
+      const url = `${CTX}/products?${gender ? 'gender=' + gender + '&' : ''}pageSize=1`;
       const data = await fetchJson(url, { timeout: 8000 });
-      const min = data.min ?? 0;
-      const max = data.max ?? 0;
+      const min = data.priceRange?.min ?? 0;
+      const max = data.priceRange?.max ?? 0;
       priceBounds = { min: Math.floor(min || 0), max: Math.ceil(max || 0) };
       selectedPrice.min = priceBounds.min;
       selectedPrice.max = priceBounds.max;
@@ -171,9 +173,11 @@
       // include price bounds in the search request so server can filter results
       const minP = selectedPrice.min ?? priceBounds.min;
       const maxP = selectedPrice.max ?? priceBounds.max;
-      const url = `${CTX}/ProductServlet?action=search&q=${encodeURIComponent(q)}&category=${activeCategory}&minPrice=${minP}&maxPrice=${maxP}&limit=6`;
+      const genderMap = { women: 'FEMALE', men: 'MALE' };
+      const gender = genderMap[activeCategory] || '';
+      const url = `${CTX}/products/search?q=${encodeURIComponent(q)}${gender ? '&gender=' + gender : ''}&minPrice=${minP}&maxPrice=${maxP}&pageSize=6`;
       const data = await fetchJson(url, { timeout: 8000 });
-      renderResults(data.results, data.total, q);
+      renderResults(data.products, data.total, q);
     } catch (e) {
       console.error('[search.js] Search error:', e);
       setError();
