@@ -26,11 +26,12 @@
         Designer fashion for every occasion - delivered to your door, starting from $25 per day.
       </p>
       <div class="hero-actions">
-        <a href="${pageContext.request.contextPath}/products?category=women" class="btn-primary">
+        <a href="${pageContext.request.contextPath}/catalog?gender=FEMALE" class="btn-primary">
           Shop Women →
         </a>
-        <a href="${pageContext.request.contextPath}/products?category=men" class="btn-outline">Shop Men</a>
-      </div>
+        <a href="${pageContext.request.contextPath}/catalog?gender=MALE" class="btn-outline">
+          Shop Men
+        </a>      </div>
     </div>
 
     <div class="hero-image">
@@ -89,25 +90,25 @@
             <p class="section-eyebrow">Picked just for you</p>
             <h2 class="section-title">Based on Your <em>Interests</em></h2>
           </div>
-          <a href="${pageContext.request.contextPath}/products?sort=interests" class="view-all">View All →</a>
+          <a href="${pageContext.request.contextPath}/catalog" class="view-all">View All →</a>
         </div>
         <div class="product-scroll" id="interestsScroll" aria-label="Recommended for you"></div>
       </div>
     </section>
   </c:if>
 
-  <section class="section">
-    <div class="section-inner">
-      <div class="section-header">
-        <div>
-          <p class="section-eyebrow">Curated for Every Event</p>
-          <h2 class="section-title">Shop by <em>Occasion</em></h2>
-        </div>
-        <a href="${pageContext.request.contextPath}/products" class="view-all">View All →</a>
-      </div>
-      <div class="occasion-grid" id="occasionScroll" aria-label="Shop by occasion"></div>
-    </div>
-  </section>
+<%--  <section class="section">--%>
+<%--    <div class="section-inner">--%>
+<%--      <div class="section-header">--%>
+<%--        <div>--%>
+<%--          <p class="section-eyebrow">Curated for Every Event</p>--%>
+<%--          <h2 class="section-title">Shop by <em>Occasion</em></h2>--%>
+<%--        </div>--%>
+<%--        <a href="${pageContext.request.contextPath}/products" class="view-all">View All →</a>--%>
+<%--      </div>--%>
+<%--      <div class="occasion-grid" id="occasionScroll" aria-label="Shop by occasion"></div>--%>
+<%--    </div>--%>
+<%--  </section>--%>
 
 <%--  <section class="section section-alt">--%>
 <%--    <div class="section-inner">--%>
@@ -129,7 +130,7 @@
           <p class="section-eyebrow">Fresh in this week</p>
           <h2 class="section-title">New <em>Arrivals</em></h2>
         </div>
-        <a href="${pageContext.request.contextPath}/products?sort=new" class="view-all">View All →</a>
+        <a href="${pageContext.request.contextPath}/catalog?newOnly=true" class="view-all">View All →</a>
       </div>
       <div class="product-scroll" id="newArrivalsScroll" aria-label="New arrivals"></div>
     </div>
@@ -142,7 +143,7 @@
           <p class="section-eyebrow">Tailored for her</p>
           <h2 class="section-title">Women's <em>Collection</em></h2>
         </div>
-        <a href="${pageContext.request.contextPath}/products?category=women" class="view-all">View All →</a>
+        <a href="${pageContext.request.contextPath}/catalog?gender=FEMALE" class="view-all">View All →</a>
       </div>
       <div class="product-scroll" id="womenScroll" aria-label="Women's collection"></div>
     </div>
@@ -155,8 +156,7 @@
           <p class="section-eyebrow">Tailored for him</p>
           <h2 class="section-title">Men's <em>Collection</em></h2>
         </div>
-        <a href="${pageContext.request.contextPath}/products?category=men" class="view-all">View All →</a>
-      </div>
+        <a href="${pageContext.request.contextPath}/catalog?gender=MALE" class="view-all">View All →</a>      </div>
       <div class="product-scroll" id="menScroll" aria-label="Men's collection"></div>
     </div>
   </section>
