@@ -391,8 +391,14 @@
 
     // try-finally guarantees close() fires even if Cart.add or render() throws.
     try {
-      Cart.add({
-        id:           active.id,
+      window.Cart.add({
+        // ── CHANGED ───────────────────────────────────────────────────────
+        // id must be variantId (the normalised item's identity root).
+        // productId is kept separately so the server knows which product
+        // this variant belongs to.
+        id:           activeVariantId,          // was: active.id
+        productId:    active.id,                // NEW: product PK for server payload
+        // ─────────────────────────────────────────────────────────────────
         name:         active.name,
         brand:        active.brand,
         imageUrl:     activeImage || active.image,
@@ -400,10 +406,13 @@
         size:         activeSize  || 'OS',
         color:        activeColor || null,
         colorName:    colorMeta?.name || null,
-        variantId:    activeVariantId,
+        variantId:    activeVariantId,          // kept for clarity / server payload
         inventoryQty: activeInventoryQty,
         days,
-        dates:        `${isoDate(startDate)}/${isoDate(endDate)}`,
+        startDate:    isoDate(startDate),       // was buried inside dates string
+        endDate:      isoDate(endDate),         // now separate — server needs these
+        dates:        `${isoDate(startDate)}/${isoDate(endDate)}`, // CardFactory._formatDates()
+        qty:          1,
       });
     } catch (err) {
       console.error('[quick-view] Cart.add failed:', err);

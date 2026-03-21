@@ -2,6 +2,7 @@ package service;
 
 import entity.ProductVariant;
 import repository.ProductVariantRepository;
+import repository.impl.ProductVariantRepositoryImpl;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -11,14 +12,18 @@ import java.util.Map;
 // Owns variant-level operations only.
 // Grouping helpers live here because they operate purely on variant data
 // no product or image context needed.
-public class ProductVariantService {
+public class ProductVariantService extends BaseService<ProductVariant> {
 
     private final ProductVariantRepository variantRepo;
 
-    public ProductVariantService(ProductVariantRepository variantRepo) {
-        this.variantRepo = variantRepo;
+    public ProductVariantService() {
+        this(new ProductVariantRepositoryImpl());
     }
 
+    public ProductVariantService(ProductVariantRepository variantRepo) {
+        super(variantRepo);
+        this.variantRepo = variantRepo;
+    }
 
     public List<ProductVariant> getByProductId(int productId) {
         return variantRepo.findByProductId(productId);
