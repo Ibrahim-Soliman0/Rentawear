@@ -24,4 +24,7 @@ public interface ProductImageRepository extends Repository<ProductImage> {
 
     //Writes
     void deleteByProductIdAndColor(int productId, String color);
+
+    // Deletes all images for a product
+    void deleteByProductId(int productId);
 }

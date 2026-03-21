@@ -129,6 +129,8 @@
         </div>
       </div>
 
+      <div id="productsPagination"></div>
+
     </section>
 
     <!-- ══ CUSTOMERS SECTION ═════════════════════════════════ -->
@@ -203,7 +205,7 @@
 
 <!-- ══ ADD / EDIT PRODUCT MODAL ════════════════════════════ -->
 <div class="adm-modal-overlay" id="productModalOverlay">
-  <div class="adm-modal">
+  <div class="adm-modal adm-modal--lg">
 
     <div class="adm-modal-header">
       <h3 class="adm-modal-title" id="productModalTitle">Add New Product</h3>
@@ -212,11 +214,23 @@
       </button>
     </div>
 
+    <!-- Tabs -->
+    <div class="adm-modal-tabs">
+      <button class="adm-modal-tab active" data-tab="info">
+        <i class="bi bi-info-circle"></i> Basic Info
+      </button>
+      <button class="adm-modal-tab" data-tab="variants" id="variantsTabBtn">
+        <i class="bi bi-grid"></i> Variants & Stock
+      </button>
+    </div>
+
     <div class="adm-modal-body">
       <form id="productForm" novalidate>
         <input type="hidden" id="productId" name="productId"/>
 
-        <div class="adm-form-row-2">
+        <!-- ── TAB: BASIC INFO ── -->
+        <div class="adm-tab-panel active" id="tab-info">
+
           <div class="adm-form-group">
             <label class="adm-form-label">Product Name</label>
             <input type="text" id="productName" name="productName"
@@ -224,54 +238,80 @@
                    maxlength="150" required/>
             <div class="adm-field-error" id="productNameError"></div>
           </div>
-        </div>
 
-        <div class="adm-form-row-2">
-          <div class="adm-form-group">
-            <label class="adm-form-label">Category</label>
-            <div class="adm-select-wrap">
-              <select id="productCategory" name="productCategory" class="adm-form-input adm-form-select" required>
-                <option value="" disabled selected>Select category</option>
-                <c:forEach var="category" items="${categories}">
-                  <option value="${category.id}">${category.name}</option>
-                </c:forEach>
-              </select>
-              <i class="bi bi-chevron-down adm-select-chevron"></i>
+          <div class="adm-form-row-2">
+            <div class="adm-form-group">
+              <label class="adm-form-label">Category</label>
+              <div class="adm-select-wrap">
+                <select id="productCategory" name="productCategory"
+                        class="adm-form-input adm-form-select" required>
+                  <option value="" disabled selected>Select category</option>
+                  <c:forEach var="category" items="${categories}">
+                    <option value="${category.id}">${category.name}</option>
+                  </c:forEach>
+                </select>
+                <i class="bi bi-chevron-down adm-select-chevron"></i>
+              </div>
+              <div class="adm-field-error" id="productCategoryError"></div>
             </div>
-            <div class="adm-field-error" id="productCategoryError"></div>
+            <div class="adm-form-group">
+              <label class="adm-form-label">Rental Price / day ($)</label>
+              <input type="number" id="productPrice" name="productPrice"
+                     class="adm-form-input" placeholder="45.00"
+                     min="0" step="0.01" required/>
+              <div class="adm-field-error" id="productPriceError"></div>
+            </div>
           </div>
-          <div class="adm-form-group">
-            <label class="adm-form-label">Rental Price / day ($)</label>
-            <input type="number" id="productPrice" name="productPrice"
-                   class="adm-form-input" placeholder="45.00"
-                   min="0" step="0.01" required/>
-            <div class="adm-field-error" id="productPriceError"></div>
-          </div>
-        </div>
 
-        <div class="adm-form-row-2">
-          <!-- Replace stockQty field with info message -->
-          <div class="adm-form-group">
-            <label class="adm-form-label">Stock</label>
-            <p style="font-size:0.78rem;color:var(--adm-muted);margin:0;padding:0.6rem 0;">
-              <i class="bi bi-info-circle"></i>
-              Stock is managed per variant (color + size) after the product is created.
-            </p>
-          </div>
           <div class="adm-form-group">
             <label class="adm-form-label">Image URL</label>
             <input type="text" id="productImage" name="productImage"
                    class="adm-form-input" placeholder="https://..."/>
           </div>
-        </div>
 
-        <div class="adm-form-group">
-          <label class="adm-form-label">Description</label>
-          <textarea id="productDescription" name="productDescription"
-                    class="adm-form-input adm-form-textarea"
-                    placeholder="Product description..."
-                    rows="3" maxlength="500"></textarea>
-        </div>
+          <div class="adm-form-group">
+            <label class="adm-form-label">Description</label>
+            <textarea id="productDescription" name="productDescription"
+                      class="adm-form-input adm-form-textarea"
+                      placeholder="Product description..."
+                      rows="4" maxlength="1000"></textarea>
+          </div>
+
+        </div><!-- /tab-info -->
+
+        <!-- ── TAB: VARIANTS & STOCK ── -->
+        <div class="adm-tab-panel" id="tab-variants">
+
+          <!-- Add new color group -->
+          <div class="adm-variants-add-row">
+            <div class="adm-form-group" style="flex:1">
+              <label class="adm-form-label">Color Name</label>
+              <input type="text" id="newColorName" class="adm-form-input"
+                     placeholder="e.g. Midnight Navy"/>
+            </div>
+            <div class="adm-form-group" style="flex:0 0 120px">
+              <label class="adm-form-label">Hex Code</label>
+              <div style="display:flex;gap:0.4rem;align-items:center;">
+                <input type="color" id="newColorHex" class="adm-color-picker" value="#000000"/>
+                <input type="text"  id="newColorHexText" class="adm-form-input"
+                       placeholder="#000000" maxlength="7" style="flex:1"/>
+              </div>
+            </div>
+            <button type="button" class="adm-btn adm-btn--primary adm-variants-add-btn"
+                    onclick="addColorGroup()">
+              <i class="bi bi-plus-lg"></i> Add Color
+            </button>
+          </div>
+
+          <!-- Color groups rendered here -->
+          <div id="variantColorGroups"></div>
+
+          <p class="adm-variants-hint" id="variantsEmptyHint">
+            <i class="bi bi-info-circle"></i>
+            No variants yet. Add a color above to get started.
+          </p>
+
+        </div><!-- /tab-variants -->
 
       </form>
     </div>
@@ -288,7 +328,6 @@
 
   </div>
 </div>
-
 <!-- ══ DELETE CONFIRM MODAL ════════════════════════════════ -->
 <div class="adm-modal-overlay" id="deleteModalOverlay">
   <div class="adm-modal adm-modal--sm">

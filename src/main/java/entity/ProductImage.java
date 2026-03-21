@@ -80,6 +80,13 @@ import java.util.Objects;
                 query = "DELETE FROM ProductImage pi " +
                         "WHERE pi.product.id = :pid " +
                         "AND   pi.color      = :color"
+        ),
+
+        // Deletes all images for a product (used when deleting entire product)
+        @NamedQuery(
+                name  = "ProductImage.deleteByProductId",
+                query = "DELETE FROM ProductImage pi " +
+                        "WHERE pi.product.id = :pid"
         )
 })
 @Entity

@@ -60,4 +60,11 @@ public class ProductVariantRepositoryImpl extends BaseRepositoryImpl<ProductVari
                 .setParameter("color", color)
                 .executeUpdate();
     }
+
+    @Override
+    public void deleteByProductId(int productId) {
+        em().createNamedQuery("ProductVariant.deleteByProductId")
+                .setParameter("pid", productId)
+                .executeUpdate();
+    }
 }

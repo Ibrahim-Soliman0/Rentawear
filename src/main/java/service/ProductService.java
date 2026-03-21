@@ -72,4 +72,14 @@ public class ProductService {
     public PriceRangeDTO getMinMaxPrice(ProductFilterDTO f) {
         return productRepo.getMinMaxPrice(f.gender(), f.categoryIds());
     }
+
+    public void delete(int productId) {
+        Product product = productRepo.findById(productId);
+        if (product != null) {
+            productRepo.delete(product);
+        }
+    }
+
+    public Product save(Product product){return productRepo.save(product);}
+
 }

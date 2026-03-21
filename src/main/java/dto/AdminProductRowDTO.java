@@ -2,5 +2,7 @@ package dto;
 
 public record AdminProductRowDTO(
         ProductCoreDTO core,
-        boolean inStock
+        boolean inStock,
+        int totalStock  // ← add this
+
 ) {}

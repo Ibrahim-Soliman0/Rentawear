@@ -71,6 +71,13 @@ import jakarta.persistence.*;
                 query = "DELETE FROM ProductVariant pv " +
                         "WHERE pv.product.id = :pid " +
                         "AND   pv.color      = :color"
+        ),
+
+        // Deletes all variants for a product (used when deleting entire product)
+        @NamedQuery(
+                name  = "ProductVariant.deleteByProductId",
+                query = "DELETE FROM ProductVariant pv " +
+                        "WHERE pv.product.id = :pid"
         )
 })
 @Entity

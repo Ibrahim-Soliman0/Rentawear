@@ -44,4 +44,8 @@ public class ProductImageService {
     public void deleteColorImages(int productId, String color) {
         imageRepo.deleteByProductIdAndColor(productId, color);
     }
+
+    public void deleteByProductId(int productId) {
+        imageRepo.deleteByProductId(productId);
+    }
 }
