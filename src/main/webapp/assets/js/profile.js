@@ -198,6 +198,8 @@ function switchTab(name) {
 
 if (location.hash === '#billing') switchTab('billing');
 
+if (location.hash === '#history') switchTab('history');
+
 /* ══════════════════════════════════════════════════════════════
    AVATAR PREVIEW
    ══════════════════════════════════════════════════════════════ */
