@@ -90,7 +90,7 @@
             <p class="section-eyebrow">Picked just for you</p>
             <h2 class="section-title">Based on Your <em>Interests</em></h2>
           </div>
-          <a href="${pageContext.request.contextPath}/catalog" class="view-all">View All →</a>
+          <a href="${pageContext.request.contextPath}/catalog" class="view-all" id="interestsViewAll">View All →</a>
         </div>
         <div class="product-scroll" id="interestsScroll" aria-label="Recommended for you"></div>
       </div>

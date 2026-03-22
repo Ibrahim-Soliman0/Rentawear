@@ -50,7 +50,10 @@ public class ProductFacadeService {
     public ProductListResult getProducts(ProductFilterDTO filter) {
         List<Product> products = fetchProducts(filter);
         long          total    = countProducts(filter);
-        PriceRangeDTO range    = productService.getMinMaxPrice(filter);
+//        PriceRangeDTO range    = productService.getMinMaxPrice(filter);
+        PriceRangeDTO range = filter.isInterestBased()
+                ? productService.getMinMaxPriceForInterests(filter)
+                : productService.getMinMaxPrice(filter);
 
         // Batch image fetch -> single query for the whole page
         List<Integer> ids = products.stream()

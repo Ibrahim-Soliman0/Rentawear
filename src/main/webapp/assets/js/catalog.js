@@ -4,13 +4,16 @@
                card-factory.js (CardFactory)
    Loaded on:  catalog.jsp only (via extraJS param)
 
-   Flow:
-     1. Parse URL params → build initial filter state
-     2. Sync sidebar controls to state
-     3. Fetch products from GET /products with filter params
-     4. Price range calibrated from first API response's priceRange
-     5. On any filter change → update state → pushState → re-fetch
-     6. popstate (back/forward) → restore state → re-fetch
+   Filter group visibility rules:
+   ─────────────────────────────────────────────────────────────
+   Entry URL                          Gender fgroup  Cat fgroup
+   /catalog                           Visible        All cats
+   /catalog?gender=FEMALE             Hidden         Female cats only
+   /catalog?gender=FEMALE&categoryIds=3  Hidden      Hidden entirely
+   /catalog?categoryIds=3             Visible        Hidden entirely
+   /catalog?newOnly=true              Visible        All cats
+   /catalog?interestIds=1&interestIds=3  Hidden      Interest cats only
+   ─────────────────────────────────────────────────────────────
    ============================================================ */
 
 'use strict';
@@ -19,13 +22,13 @@
 
     /* ── Constants ───────────────────────────────────────────── */
     const PAGE_SIZE      = 12;
-    const PRICE_DEBOUNCE = 500; // ms after slider stops before fetching
+    const PRICE_DEBOUNCE = 500;
 
     /* ── State ────────────────────────────────────────────────── */
     let state = {
-        gender:      null,   // 'MALE' | 'FEMALE' | null
-        categoryIds: [],     // number[]
-        interestIds: [],     // number[]
+        gender:      null,
+        categoryIds: [],
+        interestIds: [],
         newOnly:     false,
         minPrice:    null,
         maxPrice:    null,
@@ -33,12 +36,12 @@
         sort:        'newest',
     };
 
-    /* Gender present in the URL on first load.
-       When set the gender fgroup is hidden — the user arrived
-       from a gendered nav link and the filter is implicit.     */
-    let urlGender = null;
+    /* Captured once on load from the original URL — never mutated.
+       Used to determine which filter groups to lock/hide.          */
+    let urlGender      = null;
+    let urlCategoryIds = [];
 
-    /* Price range from the last API response */
+    /* Price range from last API response */
     let priceBounds = { min: 0, max: 500 };
 
     /* In-flight request controller */
@@ -72,6 +75,7 @@
     const bcMid        = document.getElementById('catalogBreadcrumbMid');
     const bcCurrent    = document.getElementById('catalogBreadcrumbCurrent');
     const genderFgroup = document.getElementById('fgroup-gender');
+    const catFgroup    = document.getElementById('fgroup-cats');
 
     const priceMinInput = document.getElementById('priceRangeMin');
     const priceMaxInput = document.getElementById('priceRangeMax');
@@ -88,11 +92,15 @@
             if (!isNaN(id)) catNames[id] = chk.dataset.name || String(id);
         });
 
-        /* Capture gender from URL before any JS changes it */
-        urlGender = new URLSearchParams(window.location.search).get('gender') || null;
+        /* Capture context from original URL before any JS changes it */
+        const initParams   = new URLSearchParams(window.location.search);
+        urlGender          = initParams.get('gender') || null;
+        urlCategoryIds     = initParams.getAll('categoryIds')
+            .map(v => parseInt(v, 10))
+            .filter(v => !isNaN(v));
 
         readUrlIntoState();
-        applyGenderVisibility();
+        applyFilterGroupVisibility();
         syncSidebarToState();
         initPriceSlider();
         updateHeading();
@@ -101,22 +109,71 @@
 
     /* Browser back / forward */
     window.addEventListener('popstate', function () {
-        urlGender = new URLSearchParams(window.location.search).get('gender') || null;
+        const params   = new URLSearchParams(window.location.search);
+        urlGender      = params.get('gender') || null;
+        urlCategoryIds = params.getAll('categoryIds')
+            .map(v => parseInt(v, 10))
+            .filter(v => !isNaN(v));
         readUrlIntoState();
-        applyGenderVisibility();
+        applyFilterGroupVisibility();
         syncSidebarToState();
         updateHeading();
         fetchProducts();
     });
 
-    /* ── Gender filter visibility ─────────────────────────────── */
+    /* ── Filter group visibility ──────────────────────────────────
+       Single function that owns all sidebar group show/hide logic.
+       Called on init, popstate, and every onFilterChange().
 
-    /* Hide the gender fgroup when the user arrived on a gendered URL.
-       The gender is implicit from the nav link — showing the filter
-       would let them switch to the other gender, which is confusing
-       since the URL and title would become inconsistent.            */
-    function applyGenderVisibility() {
-        if (genderFgroup) genderFgroup.classList.toggle('is-hidden', !!urlGender);
+       Gender fgroup hidden when:
+         - arrived from gendered URL (gender is implicit from context)
+         - on interests page (gender has no effect on interests query)
+
+       Categories fgroup behaviour:
+         - specific category URL  → hidden entirely (already scoped)
+         - interests page         → show only interest categories
+         - normal browsing        → show all, filtered by selected gender
+       ─────────────────────────────────────────────────────────── */
+    function applyFilterGroupVisibility() {
+        const onInterests = state.interestIds.length > 0;
+        const onSingleCat = urlCategoryIds.length > 0;
+
+        /* Gender fgroup */
+        if (genderFgroup) {
+            genderFgroup.classList.toggle('is-hidden', !!urlGender || onInterests);
+        }
+
+        /* Categories fgroup */
+        if (onSingleCat) {
+            /* Scoped to a specific category from the nav — hide the entire
+               fgroup so the user cannot switch to a different category
+               while staying on e.g. the Dresses page.                     */
+            if (catFgroup) catFgroup.classList.add('is-hidden');
+
+        } else if (onInterests) {
+            /* Interests page — show only the categories in the user's
+               interests. Other categories are hidden regardless of gender.
+               The interests query ignores gender, so gender-based hiding
+               is not applied here.                                        */
+            if (catFgroup) catFgroup.classList.remove('is-hidden');
+            document.querySelectorAll('.catalog-chk-label[data-cat-gender]').forEach(label => {
+                const chk = label.querySelector('.cat-chk');
+                if (!chk) return;
+                const id          = parseInt(chk.value, 10);
+                const inInterests = state.interestIds.includes(id);
+                label.classList.toggle('is-hidden', !inInterests);
+                /* Uncheck and remove from state if hidden */
+                if (!inInterests && chk.checked) {
+                    chk.checked = false;
+                    state.categoryIds = state.categoryIds.filter(c => c !== id);
+                }
+            });
+
+        } else {
+            /* Normal browsing — show all categories, filter by gender */
+            if (catFgroup) catFgroup.classList.remove('is-hidden');
+            filterCategoriesByGender();
+        }
     }
 
     /* ── URL ↔ State ──────────────────────────────────────────── */
@@ -187,17 +244,13 @@
     }
 
     function resolveTitle() {
-        if (state.interestIds.length)  return 'Based on Your Interests';
+        if (state.interestIds.length) return 'Based on Your Interests';
 
-        /* Single category selected — use its name as the title.
-           When newOnly is also active: "New [CategoryName]" reads oddly,
-           so just use the category name and let the eyebrow carry context. */
         if (state.categoryIds.length === 1 && catNames[state.categoryIds[0]]) {
             return catNames[state.categoryIds[0]];
         }
 
-        if (state.newOnly) return 'New Arrivals';
-
+        if (state.newOnly)             return 'New Arrivals';
         if (state.gender === 'FEMALE') return "Women's Collection";
         if (state.gender === 'MALE')   return "Men's Collection";
         return 'All Products';
@@ -218,12 +271,12 @@
         let mid = null;
 
         if (state.gender && state.categoryIds.length === 1) {
-            /* Home › Women's › Dresses  (or with newOnly: Home › Women's › Dresses) */
+            /* Home › Women's › Dresses */
             mid = {
-                label: state.gender === 'FEMALE' ? "Women's" : "Men's",
+                label: state.gender === 'FEMALE' ? "Women's Collection   " : "Men's Collection   ",
                 href:  CTX + '/catalog?gender=' + state.gender,
             };
-        } else if (state.gender && state.newOnly && state.categoryIds.length === 0) {
+        } else if (state.gender && state.newOnly && !state.categoryIds.length) {
             /* Home › Women's › New Arrivals */
             mid = {
                 label: state.gender === 'FEMALE' ? "Women's" : "Men's",
@@ -232,7 +285,7 @@
         } else if (!state.gender && !state.interestIds.length
             && (state.categoryIds.length > 0 || state.newOnly)) {
             /* Home › All Products › New Arrivals */
-            mid = { label: 'All Products', href: CTX + '/catalog' };
+            mid = { label: 'All Products   ', href: CTX + '/catalog' };
         }
 
         if (mid) {
@@ -401,8 +454,8 @@
         chips.replaceChildren();
         const frag = document.createDocumentFragment();
 
-        /* Gender chip only when the filter is visible (not URL-locked) */
-        if (state.gender && !urlGender) {
+        /* Gender chip — only when gender fgroup is visible */
+        if (state.gender && !urlGender && !state.interestIds.length) {
             frag.appendChild(makeChip(
                 state.gender === 'FEMALE' ? 'Women' : 'Men',
                 () => { state.gender = null; onFilterChange(); }
@@ -415,13 +468,17 @@
             }));
         }
 
-        state.categoryIds.forEach(id => {
-            frag.appendChild(makeChip(catNames[id] || `Cat ${id}`, () => {
-                state.categoryIds = state.categoryIds.filter(c => c !== id);
-                onFilterChange();
-            }));
-        });
+        /* Category chips — only when categories fgroup is visible */
+        if (!urlCategoryIds.length && !state.interestIds.length) {
+            state.categoryIds.forEach(id => {
+                frag.appendChild(makeChip(catNames[id] || `Cat ${id}`, () => {
+                    state.categoryIds = state.categoryIds.filter(c => c !== id);
+                    onFilterChange();
+                }));
+            });
+        }
 
+        /* Interests — single combined chip */
         if (state.interestIds.length) {
             frag.appendChild(makeChip('Your Interests', () => {
                 state.interestIds = []; onFilterChange();
@@ -456,10 +513,10 @@
 
     function renderFilterBadge() {
         let count = 0;
-        if (state.gender && !urlGender) count++;
-        if (state.newOnly)              count++;
-        count += state.categoryIds.length;
-        if (state.interestIds.length)   count++;
+        if (state.gender && !urlGender && !state.interestIds.length) count++;
+        if (state.newOnly) count++;
+        if (!urlCategoryIds.length && !state.interestIds.length) count += state.categoryIds.length;
+        if (state.interestIds.length) count++;
         if (state.minPrice != null || state.maxPrice != null) count++;
         filterBadge.textContent   = String(count);
         filterBadge.style.display = count > 0 ? 'inline-flex' : 'none';
@@ -481,7 +538,11 @@
         document.querySelectorAll('.cat-chk').forEach(chk => {
             chk.checked = state.categoryIds.includes(parseInt(chk.value, 10));
         });
-        filterCategoriesByGender();
+
+        /* applyFilterGroupVisibility() owns category row visibility.
+           filterCategoriesByGender() is called inside it for normal browsing.
+           We do NOT call filterCategoriesByGender() separately here.          */
+        applyFilterGroupVisibility();
 
         /* Sort */
         if (sortSel) sortSel.value = state.sort;
@@ -492,12 +553,13 @@
         updatePriceDisplay();
     }
 
-    /* Show only categories matching the selected gender */
+    /* Show only categories matching the selected gender.
+       Only called from applyFilterGroupVisibility() for the
+       normal browsing case — not called anywhere else.          */
     function filterCategoriesByGender() {
         document.querySelectorAll('.catalog-chk-label[data-cat-gender]').forEach(label => {
             const hidden = !!state.gender && label.dataset.catGender !== state.gender;
             label.classList.toggle('is-hidden', hidden);
-            /* Uncheck hidden categories from state */
             if (hidden) {
                 const chk = label.querySelector('.cat-chk');
                 if (chk && chk.checked) {
@@ -521,13 +583,11 @@
         });
     }
 
-    /* Fires 500ms after the user stops dragging — no Apply button needed */
     function schedulePriceFetch() {
         clearTimeout(priceTimer);
         priceTimer = setTimeout(() => {
             const lo = parseInt(priceMinInput.value, 10);
             const hi = parseInt(priceMaxInput.value, 10);
-            /* Only set a price filter when it differs from the full range */
             state.minPrice = lo > priceBounds.min ? lo : null;
             state.maxPrice = hi < priceBounds.max ? hi : null;
             onFilterChange();
@@ -538,13 +598,12 @@
         let lo = priceBounds.min;
         let hi = priceBounds.max;
 
-        /* Edge case: single price point — widen by ±1 so both thumbs are draggable */
+        /* Edge case: single price point — widen so both thumbs are draggable */
         if (lo === hi) { lo = Math.max(0, lo - 1); hi = hi + 1; }
 
         priceMinInput.min = lo; priceMinInput.max = hi;
         priceMaxInput.min = lo; priceMaxInput.max = hi;
 
-        /* Only reset position when there is no active price filter */
         if (state.minPrice == null) priceMinInput.value = lo;
         if (state.maxPrice == null) priceMaxInput.value = hi;
 
@@ -593,7 +652,6 @@
     document.querySelectorAll('input[name="filterGender"]').forEach(radio => {
         radio.addEventListener('change', () => {
             state.gender = radio.value || null;
-            filterCategoriesByGender();
             onFilterChange();
         });
     });
@@ -622,8 +680,6 @@
         sortSel.addEventListener('change', () => {
             state.sort = sortSel.value;
             pushUrl();
-            /* Price sorts reorder the current page client-side without a re-fetch.
-               Newest requires a re-fetch because the server controls ORDER BY.    */
             if (state.sort !== 'newest') applySortToGrid();
             else fetchProducts();
         });
@@ -641,15 +697,25 @@
     /* ── Clear all ────────────────────────────────────────────── */
 
     function clearFilters() {
-        state.categoryIds = [];
-        state.interestIds = [];
-        state.newOnly     = false;
-        state.minPrice    = null;
-        state.maxPrice    = null;
-        state.page        = 0;
-        /* Preserve urlGender — clearing the locked gender would break
-           the page context (e.g. Women's would show Men's products)   */
+        state.newOnly  = false;
+        state.minPrice = null;
+        state.maxPrice = null;
+        state.page     = 0;
+
+        /* Preserve gender when it was locked from the URL */
         if (!urlGender) state.gender = null;
+
+        /* On a scoped category URL, restore to the original category
+           rather than clearing entirely — the user is still on e.g.
+           the Dresses page, just removing price/newOnly filters.     */
+        if (urlCategoryIds.length > 0) {
+            state.categoryIds = [...urlCategoryIds];
+            state.interestIds = [];
+        } else {
+            state.categoryIds = [];
+            state.interestIds = [];
+        }
+
         resetPriceSlider();
         onFilterChange();
     }
