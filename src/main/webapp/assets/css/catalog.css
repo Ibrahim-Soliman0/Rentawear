@@ -642,3 +642,362 @@
     .catalog-grid { gap: 10px; }
     .catalog-page-title { font-size: 1.7rem; }
 }
+/* ============================================================
+   styles_search_additions.css
+   Append ALL of these rules to the END of styles.css.
+   Also append the .catalog-search-query / .catalog-clear-search
+   rules to the END of catalog.css.
+   ============================================================ */
+
+/* ── Filter icon button — inside the search field wrap ─────── */
+
+.search-field-divider {
+    width: 1px;
+    height: 18px;
+    background: var(--rw-stone);
+    flex-shrink: 0;
+}
+
+.search-filter-btn {
+    position: relative;
+    width: 32px;
+    height: 32px;
+    border-radius: var(--rw-radius);
+    border: none;
+    background: transparent;
+    color: var(--rw-muted);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: color 0.15s, background 0.15s;
+    padding: 0;
+}
+.search-filter-btn svg {
+    width: 15px;
+    height: 15px;
+    flex-shrink: 0;
+}
+.search-filter-btn:hover,
+.search-filter-btn.has-filters {
+    color: var(--rw-teal);
+}
+.search-filter-btn.has-filters {
+    background: var(--rw-teal-light);
+}
+
+.search-filter-badge {
+    position: absolute;
+    top: 2px;
+    right: 2px;
+    min-width: 14px;
+    height: 14px;
+    background: var(--rw-teal);
+    color: #fff;
+    font-size: 0.55rem;
+    font-weight: 700;
+    border-radius: 99px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 3px;
+    pointer-events: none;
+    border: 1.5px solid var(--rw-warm-white);
+}
+
+/* ── Filter panel ─────────────────────────────────────────────
+   IMPORTANT: the grid-template-rows collapse trick requires
+   exactly ONE direct child. That child is .sfp-inner.
+   DO NOT add siblings to .search-filter-panel.
+   ─────────────────────────────────────────────────────────── */
+
+.search-filter-panel {
+    display: grid;
+    grid-template-rows: 0fr;          /* collapsed by default */
+    transition: grid-template-rows 0.28s var(--rw-ease-out),
+    border-color       0.28s var(--rw-ease-out);
+    border-top: 0px solid rgba(0,0,0,.06);
+    overflow: hidden;
+}
+.search-filter-panel.is-open {
+    grid-template-rows: 1fr;          /* expanded */
+    border-top-width: 1px;
+}
+
+/* Single wrapper child — min-height:0 is required for collapse */
+.sfp-inner {
+    min-height: 0;
+    overflow: hidden;
+}
+
+.sfp-section {
+    padding: 14px 20px;
+    border-bottom: 1px solid rgba(0,0,0,.06);
+}
+.sfp-section:last-child { border-bottom: none; }
+
+.sfp-label {
+    font-size: 0.65rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--rw-muted);
+    margin: 0 0 10px;
+}
+
+/* Gender radio row — styled as pill buttons */
+.sfp-radio-row { display: flex; gap: 8px; flex-wrap: wrap; }
+.sfp-radio-label { cursor: pointer; }
+.sfp-radio { position: absolute; opacity: 0; width: 0; height: 0; pointer-events: none; }
+.sfp-radio-btn {
+    display: inline-flex;
+    align-items: center;
+    padding: 5px 14px;
+    border-radius: 99px;
+    border: 1px solid var(--rw-stone);
+    font-size: 0.78rem;
+    color: var(--rw-charcoal);
+    background: transparent;
+    font-family: var(--rw-font-body);
+    transition: all 0.15s;
+    cursor: pointer;
+}
+.sfp-radio-btn:hover { border-color: var(--rw-teal); color: var(--rw-teal); }
+.sfp-radio:checked + .sfp-radio-btn {
+    background: var(--rw-teal);
+    border-color: var(--rw-teal);
+    color: #fff;
+}
+
+/* Category grid — two columns */
+.sfp-cats-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2px 16px;
+}
+@media (max-width: 480px) { .sfp-cats-grid { grid-template-columns: 1fr; } }
+
+.sfp-cat-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 5px 0;
+    cursor: pointer;
+    font-size: 0.81rem;
+    color: var(--rw-charcoal);
+    line-height: 1.4;
+    transition: color 0.12s;
+}
+.sfp-cat-label:hover { color: var(--rw-teal); }
+.sfp-cat-label.is-hidden { display: none; }
+
+.sfp-cat-chk {
+    position: absolute;
+    opacity: 0;
+    width: 0;
+    height: 0;
+    pointer-events: none;
+}
+.sfp-cat-box {
+    width: 14px;
+    height: 14px;
+    min-width: 14px;
+    border: 1.5px solid var(--rw-stone);
+    border-radius: 3px;
+    background: var(--rw-warm-white);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: var(--rw-transition);
+    flex-shrink: 0;
+}
+.sfp-cat-chk:checked + .sfp-cat-box {
+    background: var(--rw-teal);
+    border-color: var(--rw-teal);
+}
+.sfp-cat-chk:checked + .sfp-cat-box::after {
+    content: '';
+    display: block;
+    width: 3px;
+    height: 6px;
+    border: 1.5px solid #fff;
+    border-top: none;
+    border-left: none;
+    transform: rotate(43deg) translateY(-1px);
+}
+.sfp-cat-chk:focus + .sfp-cat-box {
+    box-shadow: 0 0 0 3px rgba(0,168,152,.15);
+}
+.sfp-cat-tag {
+    margin-left: auto;
+    font-size: 0.56rem;
+    font-weight: 700;
+    color: var(--rw-muted);
+    background: var(--rw-stone);
+    border-radius: 2px;
+    padding: 1px 4px;
+    flex-shrink: 0;
+}
+
+/* ── Active filter chips row ─────────────────────────────────── */
+
+.search-chips {
+    flex-wrap: wrap;
+    gap: 6px;
+    padding: 10px 0 6px;
+}
+
+.search-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 8px 4px 10px;
+    background: var(--rw-teal-light);
+    border: 1px solid rgba(0,168,152,0.28);
+    border-radius: 99px;
+    font-size: 0.73rem;
+    color: var(--rw-teal-dark);
+    white-space: nowrap;
+}
+.search-chip-x {
+    background: none;
+    border: none;
+    color: var(--rw-teal);
+    cursor: pointer;
+    font-size: 1rem;
+    line-height: 1;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    transition: background 0.15s, color 0.15s;
+    flex-shrink: 0;
+}
+.search-chip-x:hover { background: var(--rw-danger); color: #fff; }
+
+/* ── Price slider in modal ───────────────────────────────────── */
+
+.search-price-wrap {
+    padding: 10px 0 14px;
+    border-bottom: 1px solid rgba(0,0,0,.06);
+}
+.search-price-hd {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+}
+.search-price-label {
+    font-size: 0.72rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--rw-muted);
+}
+.search-price-vals {
+    font-size: 0.82rem;
+    font-weight: 500;
+    color: var(--rw-ink);
+}
+
+/* Dual-handle slider — identical technique to catalog sidebar */
+.search-range-wrap {
+    position: relative;
+    height: 20px;
+    margin: 0 2px;
+}
+.search-range-track {
+    position: absolute;
+    top: 50%;
+    left: 0;
+    right: 0;
+    height: 3px;
+    border-radius: 99px;
+    background: var(--rw-stone);
+    transform: translateY(-50%);
+    pointer-events: none;
+}
+.search-range-fill {
+    position: absolute;
+    top: 0;
+    height: 100%;
+    border-radius: 99px;
+    background: var(--rw-teal);
+}
+.search-range-input {
+    position: absolute;
+    top: 50%;
+    left: 0;
+    width: 100%;
+    height: 0;
+    margin: 0;
+    padding: 0;
+    transform: translateY(-50%);
+    appearance: none;
+    -webkit-appearance: none;
+    background: transparent;
+    outline: none;
+    pointer-events: none;
+}
+.search-range-input::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: var(--rw-warm-white);
+    border: 2.5px solid var(--rw-teal);
+    box-shadow: 0 1px 4px rgba(0,0,0,0.14);
+    cursor: pointer;
+    pointer-events: all;
+    transition: border-color 0.15s, box-shadow 0.15s, transform 0.15s;
+}
+.search-range-input::-webkit-slider-thumb:hover {
+    border-color: var(--rw-teal-dark);
+    box-shadow: 0 0 0 4px rgba(0,168,152,0.15);
+    transform: scale(1.12);
+}
+.search-range-input::-moz-range-thumb {
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: var(--rw-warm-white);
+    border: 2.5px solid var(--rw-teal);
+    cursor: pointer;
+    pointer-events: all;
+}
+.search-range-input::-moz-range-track { background: transparent; border: none; }
+.search-range-input::-moz-range-progress { background: transparent; }
+
+/* ── Hide the old filter pills (no longer in JSP markup) ─────── */
+.search-filters { display: none; }
+
+/* ================================================================
+   APPEND THESE TO catalog.css (not styles.css)
+   Catalog page search mode — query display in the page header.
+   ================================================================ */
+
+/* Inline query italic highlight inside h1 */
+.catalog-search-query {
+    font-style: italic;
+    color: var(--rw-teal);
+}
+
+/* "Clear search" link below the h1 */
+.catalog-clear-search {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    margin-top: 6px;
+    font-size: 0.74rem;
+    color: var(--rw-muted);
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+    font-family: var(--rw-font-body);
+    transition: color 0.15s;
+}
+.catalog-clear-search:hover { color: var(--rw-danger); }
+.catalog-clear-search svg   { flex-shrink: 0; }

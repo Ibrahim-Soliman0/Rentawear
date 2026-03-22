@@ -78,13 +78,15 @@ public class ProductFacadeService {
     public ProductSearchResult searchProducts(ProductFilterDTO filter) {
         List<Product> products = productService.searchFiltered(filter);
         long          total    = productService.countSearchFiltered(filter);
+        PriceRangeDTO range    = productService.getMinMaxPrice(filter);
 
         List<ProductSearchDTO> results = products.stream()
                 .map(mapper::toSearchDTO)
                 .collect(Collectors.toList());
 
-        return new ProductSearchResult(results, total, filter.page(), filter.pageSize());
+        return new ProductSearchResult(results, total, range, filter.page(), filter.pageSize());
     }
+
 
 
     // Fetches product + all variants + all images — three queries, always.

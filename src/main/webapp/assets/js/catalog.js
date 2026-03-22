@@ -4,16 +4,14 @@
                card-factory.js (CardFactory)
    Loaded on:  catalog.jsp only (via extraJS param)
 
-   Filter group visibility rules:
-   ─────────────────────────────────────────────────────────────
-   Entry URL                          Gender fgroup  Cat fgroup
-   /catalog                           Visible        All cats
-   /catalog?gender=FEMALE             Hidden         Female cats only
-   /catalog?gender=FEMALE&categoryIds=3  Hidden      Hidden entirely
-   /catalog?categoryIds=3             Visible        Hidden entirely
-   /catalog?newOnly=true              Visible        All cats
-   /catalog?interestIds=1&interestIds=3  Hidden      Interest cats only
-   ─────────────────────────────────────────────────────────────
+   Search mode additions (this version):
+     - state.q: search query read from URL ?q= param
+     - buildApiUrl / buildPageUrl include q
+     - resolveTitle / resolveEyebrow handle search mode
+     - Eyebrow updates with result count after fetch in search mode
+     - #catalogSearchQuery / #catalogClearSearch elements wired
+     - Clear search navigates to /catalog (all products, no query)
+     - q chip shown in filter chips
    ============================================================ */
 
 'use strict';
@@ -26,6 +24,7 @@
 
     /* ── State ────────────────────────────────────────────────── */
     let state = {
+        q:           null,   // search query | null (browse mode when null)
         gender:      null,
         categoryIds: [],
         interestIds: [],
@@ -36,46 +35,41 @@
         sort:        'newest',
     };
 
-    /* Captured once on load from the original URL — never mutated.
-       Used to determine which filter groups to lock/hide.          */
     let urlGender      = null;
-    let urlCategoryIds = [];
+    let urlCategoryIds = [];   // locked category IDs from the original URL
 
-    /* Price range from last API response */
-    let priceBounds = { min: 0, max: 500 };
-
-    /* In-flight request controller */
+    let priceBounds    = { min: 0, max: 500 };
     let fetchController = null;
+    let priceTimer      = null;
 
-    /* Price debounce timer */
-    let priceTimer = null;
-
-    /* category id → name, built from sidebar checkboxes */
     const catNames = {};
 
     /* ── DOM refs ─────────────────────────────────────────────── */
-    const grid         = document.getElementById('catalogGrid');
-    const emptyState   = document.getElementById('catalogEmpty');
-    const pagination   = document.getElementById('catalogPagination');
-    const pgPrev       = document.getElementById('pgPrev');
-    const pgNext       = document.getElementById('pgNext');
-    const pgNums       = document.getElementById('pgNums');
-    const resultCount  = document.getElementById('catalogResultCount');
-    const chips        = document.getElementById('catalogChips');
-    const filterBadge  = document.getElementById('catalogFilterBadge');
-    const filterToggle = document.getElementById('catalogFilterToggle');
-    const sidebar      = document.getElementById('catalogSidebar');
-    const backdrop     = document.getElementById('catalogBackdrop');
-    const sidebarClose = document.getElementById('catalogSidebarClose');
-    const clearAllBtn  = document.getElementById('catalogClearAll');
-    const emptyClear   = document.getElementById('catalogEmptyClear');
-    const sortSel      = document.getElementById('catalogSort');
-    const titleEl      = document.getElementById('catalogTitle');
-    const eyebrowEl    = document.getElementById('catalogEyebrow');
-    const bcMid        = document.getElementById('catalogBreadcrumbMid');
-    const bcCurrent    = document.getElementById('catalogBreadcrumbCurrent');
-    const genderFgroup = document.getElementById('fgroup-gender');
-    const catFgroup    = document.getElementById('fgroup-cats');
+    const grid          = document.getElementById('catalogGrid');
+    const emptyState    = document.getElementById('catalogEmpty');
+    const pagination    = document.getElementById('catalogPagination');
+    const pgPrev        = document.getElementById('pgPrev');
+    const pgNext        = document.getElementById('pgNext');
+    const pgNums        = document.getElementById('pgNums');
+    const resultCount   = document.getElementById('catalogResultCount');
+    const chips         = document.getElementById('catalogChips');
+    const filterBadge   = document.getElementById('catalogFilterBadge');
+    const filterToggle  = document.getElementById('catalogFilterToggle');
+    const sidebar       = document.getElementById('catalogSidebar');
+    const backdrop      = document.getElementById('catalogBackdrop');
+    const sidebarClose  = document.getElementById('catalogSidebarClose');
+    const clearAllBtn   = document.getElementById('catalogClearAll');
+    const emptyClear    = document.getElementById('catalogEmptyClear');
+    const sortSel       = document.getElementById('catalogSort');
+    const titleEl       = document.getElementById('catalogTitle');
+    const eyebrowEl     = document.getElementById('catalogEyebrow');
+    const bcMid         = document.getElementById('catalogBreadcrumbMid');
+    const bcCurrent     = document.getElementById('catalogBreadcrumbCurrent');
+    const genderFgroup  = document.getElementById('fgroup-gender');
+    const catFgroup     = document.getElementById('fgroup-cats');
+    /* Search query display (catalog.jsp search mode markup) */
+    const searchQueryEl = document.getElementById('catalogSearchQuery');
+    const clearSearchEl = document.getElementById('catalogClearSearch');
 
     const priceMinInput = document.getElementById('priceRangeMin');
     const priceMaxInput = document.getElementById('priceRangeMax');
@@ -86,75 +80,55 @@
     /* ── Init ─────────────────────────────────────────────────── */
     document.addEventListener('DOMContentLoaded', function () {
 
-        /* Build category name lookup from sidebar checkboxes */
         document.querySelectorAll('.cat-chk').forEach(function (chk) {
             const id = parseInt(chk.value, 10);
             if (!isNaN(id)) catNames[id] = chk.dataset.name || String(id);
         });
 
-        /* Capture context from original URL before any JS changes it */
-        const initParams   = new URLSearchParams(window.location.search);
-        urlGender          = initParams.get('gender') || null;
-        urlCategoryIds     = initParams.getAll('categoryIds')
-            .map(v => parseInt(v, 10))
-            .filter(v => !isNaN(v));
+        const initParams = new URLSearchParams(window.location.search);
+        urlGender        = initParams.get('gender') || null;
+        urlCategoryIds   = initParams.getAll('categoryIds')
+            .map(v => parseInt(v, 10)).filter(v => !isNaN(v));
 
         readUrlIntoState();
         applyFilterGroupVisibility();
         syncSidebarToState();
         initPriceSlider();
         updateHeading();
+        updateSearchQueryDisplay();
         fetchProducts();
     });
 
-    /* Browser back / forward */
     window.addEventListener('popstate', function () {
-        const params   = new URLSearchParams(window.location.search);
-        urlGender      = params.get('gender') || null;
-        urlCategoryIds = params.getAll('categoryIds')
-            .map(v => parseInt(v, 10))
-            .filter(v => !isNaN(v));
+        const p      = new URLSearchParams(window.location.search);
+        urlGender    = p.get('gender') || null;
+        urlCategoryIds = p.getAll('categoryIds')
+            .map(v => parseInt(v, 10)).filter(v => !isNaN(v));
         readUrlIntoState();
         applyFilterGroupVisibility();
         syncSidebarToState();
         updateHeading();
+        updateSearchQueryDisplay();
         fetchProducts();
     });
 
-    /* ── Filter group visibility ──────────────────────────────────
-       Single function that owns all sidebar group show/hide logic.
-       Called on init, popstate, and every onFilterChange().
+    /* ── Filter group visibility ──────────────────────────────── */
 
-       Gender fgroup hidden when:
-         - arrived from gendered URL (gender is implicit from context)
-         - on interests page (gender has no effect on interests query)
-
-       Categories fgroup behaviour:
-         - specific category URL  → hidden entirely (already scoped)
-         - interests page         → show only interest categories
-         - normal browsing        → show all, filtered by selected gender
-       ─────────────────────────────────────────────────────────── */
     function applyFilterGroupVisibility() {
         const onInterests = state.interestIds.length > 0;
         const onSingleCat = urlCategoryIds.length > 0;
 
-        /* Gender fgroup */
+        /* Gender fgroup: hide when gender is locked from URL or on interests page */
         if (genderFgroup) {
             genderFgroup.classList.toggle('is-hidden', !!urlGender || onInterests);
         }
 
         /* Categories fgroup */
         if (onSingleCat) {
-            /* Scoped to a specific category from the nav — hide the entire
-               fgroup so the user cannot switch to a different category
-               while staying on e.g. the Dresses page.                     */
+            /* Locked to a specific category from nav — hide the fgroup */
             if (catFgroup) catFgroup.classList.add('is-hidden');
-
         } else if (onInterests) {
-            /* Interests page — show only the categories in the user's
-               interests. Other categories are hidden regardless of gender.
-               The interests query ignores gender, so gender-based hiding
-               is not applied here.                                        */
+            /* Interests page — show only interest categories */
             if (catFgroup) catFgroup.classList.remove('is-hidden');
             document.querySelectorAll('.catalog-chk-label[data-cat-gender]').forEach(label => {
                 const chk = label.querySelector('.cat-chk');
@@ -162,15 +136,13 @@
                 const id          = parseInt(chk.value, 10);
                 const inInterests = state.interestIds.includes(id);
                 label.classList.toggle('is-hidden', !inInterests);
-                /* Uncheck and remove from state if hidden */
                 if (!inInterests && chk.checked) {
                     chk.checked = false;
                     state.categoryIds = state.categoryIds.filter(c => c !== id);
                 }
             });
-
         } else {
-            /* Normal browsing — show all categories, filter by gender */
+            /* Normal browsing or search mode — show all, filter by gender */
             if (catFgroup) catFgroup.classList.remove('is-hidden');
             filterCategoriesByGender();
         }
@@ -181,6 +153,7 @@
     function readUrlIntoState() {
         const p = new URLSearchParams(window.location.search);
 
+        state.q       = p.get('q')       || null;
         state.gender  = p.get('gender')  || null;
         state.newOnly = p.get('newOnly') === 'true';
         state.page    = Math.max(0, parseInt(p.get('page') || '0', 10));
@@ -200,8 +173,9 @@
 
     function buildPageUrl() {
         const p = new URLSearchParams();
-        if (state.gender)            p.set('gender',  state.gender);
-        if (state.newOnly)           p.set('newOnly', 'true');
+        if (state.q)             p.set('q',       state.q);
+        if (state.gender)        p.set('gender',  state.gender);
+        if (state.newOnly)       p.set('newOnly', 'true');
         state.categoryIds.forEach(id => p.append('categoryIds', id));
         state.interestIds.forEach(id => p.append('interestIds', id));
         if (state.minPrice != null)  p.set('minPrice', state.minPrice);
@@ -214,8 +188,9 @@
 
     function buildApiUrl() {
         const p = new URLSearchParams();
-        if (state.gender)            p.set('gender',  state.gender);
-        if (state.newOnly)           p.set('newOnly', 'true');
+        if (state.q)             p.set('q',       state.q);
+        if (state.gender)        p.set('gender',  state.gender);
+        if (state.newOnly)       p.set('newOnly', 'true');
         state.categoryIds.forEach(id => p.append('categoryIds', id));
         state.interestIds.forEach(id => p.append('interestIds', id));
         if (state.minPrice != null)  p.set('minPrice', state.minPrice);
@@ -232,6 +207,27 @@
         }
     }
 
+    /* ── Search query display elements ───────────────────────── */
+
+    function updateSearchQueryDisplay() {
+        if (!searchQueryEl) return;
+        if (state.q) {
+            searchQueryEl.textContent = `"${state.q}"`;
+            searchQueryEl.style.display = 'inline';
+            if (clearSearchEl) clearSearchEl.style.display = 'inline-flex';
+        } else {
+            searchQueryEl.style.display = 'none';
+            if (clearSearchEl) clearSearchEl.style.display = 'none';
+        }
+    }
+
+    /* Clear search → navigate to all products page, no query */
+    if (clearSearchEl) {
+        clearSearchEl.addEventListener('click', () => {
+            window.location.href = CTX + '/catalog';
+        });
+    }
+
     /* ── Dynamic heading & breadcrumb ────────────────────────── */
 
     function updateHeading() {
@@ -243,7 +239,17 @@
         updateBreadcrumb(title);
     }
 
+    /* Update eyebrow with result count once fetch completes */
+    function updateEyebrowWithCount(total) {
+        if (!state.q || !eyebrowEl) return;
+        eyebrowEl.textContent =
+            `${total} result${total !== 1 ? 's' : ''} for \u201c${state.q}\u201d`;
+    }
+
     function resolveTitle() {
+        /* Search mode — q present */
+        if (state.q) return 'Search Results';
+
         if (state.interestIds.length) return 'Based on Your Interests';
 
         if (state.categoryIds.length === 1 && catNames[state.categoryIds[0]]) {
@@ -257,6 +263,8 @@
     }
 
     function resolveEyebrow() {
+        /* Set as placeholder — updateEyebrowWithCount() replaces it after fetch */
+        if (state.q)                   return `Searching for \u201c${state.q}\u201d\u2026`;
         if (state.interestIds.length)  return 'Picked just for you';
         if (state.newOnly)             return 'Fresh in this week';
         if (state.gender === 'FEMALE') return 'Tailored for her';
@@ -270,22 +278,22 @@
 
         let mid = null;
 
-        if (state.gender && state.categoryIds.length === 1) {
-            /* Home › Women's › Dresses */
-            mid = {
-                label: state.gender === 'FEMALE' ? "Women's Collection   " : "Men's Collection   ",
-                href:  CTX + '/catalog?gender=' + state.gender,
-            };
-        } else if (state.gender && state.newOnly && !state.categoryIds.length) {
-            /* Home › Women's › New Arrivals */
+        if (state.q) {
+            /* Search mode: Home › Search Results — no mid segment */
+            mid = null;
+        } else if (state.gender && state.categoryIds.length === 1) {
             mid = {
                 label: state.gender === 'FEMALE' ? "Women's" : "Men's",
                 href:  CTX + '/catalog?gender=' + state.gender,
             };
-        } else if (!state.gender && !state.interestIds.length
+        } else if (state.gender && state.newOnly && state.categoryIds.length === 0) {
+            mid = {
+                label: state.gender === 'FEMALE' ? "Women's" : "Men's",
+                href:  CTX + '/catalog?gender=' + state.gender,
+            };
+        } else if (!state.gender && !state.interestIds.length && !state.q
             && (state.categoryIds.length > 0 || state.newOnly)) {
-            /* Home › All Products › New Arrivals */
-            mid = { label: 'All Products   ', href: CTX + '/catalog' };
+            mid = { label: 'All Products', href: CTX + '/catalog' };
         }
 
         if (mid) {
@@ -314,7 +322,6 @@
             .then(function (data) {
                 fetchController = null;
 
-                /* Calibrate price slider when bounds change */
                 const pr = data.priceRange;
                 if (pr && pr.min != null && pr.max != null) {
                     const lo = Math.floor(pr.min);
@@ -324,6 +331,9 @@
                         calibratePriceSlider();
                     }
                 }
+
+                /* Update eyebrow with actual result count in search mode */
+                updateEyebrowWithCount(data.total || 0);
 
                 renderResultCount(data.total || 0, data.page, data.pageSize);
                 renderCards(data.products || []);
@@ -454,7 +464,15 @@
         chips.replaceChildren();
         const frag = document.createDocumentFragment();
 
-        /* Gender chip — only when gender fgroup is visible */
+        /* Search query chip */
+        if (state.q) {
+            frag.appendChild(makeChip(`"${state.q}"`, () => {
+                /* Removing the query chip → go to all products */
+                window.location.href = CTX + '/catalog';
+            }));
+        }
+
+        /* Gender chip — only when not URL-locked and not in interests mode */
         if (state.gender && !urlGender && !state.interestIds.length) {
             frag.appendChild(makeChip(
                 state.gender === 'FEMALE' ? 'Women' : 'Men',
@@ -468,7 +486,7 @@
             }));
         }
 
-        /* Category chips — only when categories fgroup is visible */
+        /* Category chips — only when not locked by URL and not interests mode */
         if (!urlCategoryIds.length && !state.interestIds.length) {
             state.categoryIds.forEach(id => {
                 frag.appendChild(makeChip(catNames[id] || `Cat ${id}`, () => {
@@ -478,7 +496,6 @@
             });
         }
 
-        /* Interests — single combined chip */
         if (state.interestIds.length) {
             frag.appendChild(makeChip('Your Interests', () => {
                 state.interestIds = []; onFilterChange();
@@ -513,10 +530,11 @@
 
     function renderFilterBadge() {
         let count = 0;
+        if (state.q)                              count++;
         if (state.gender && !urlGender && !state.interestIds.length) count++;
-        if (state.newOnly) count++;
+        if (state.newOnly)                        count++;
         if (!urlCategoryIds.length && !state.interestIds.length) count += state.categoryIds.length;
-        if (state.interestIds.length) count++;
+        if (state.interestIds.length)             count++;
         if (state.minPrice != null || state.maxPrice != null) count++;
         filterBadge.textContent   = String(count);
         filterBadge.style.display = count > 0 ? 'inline-flex' : 'none';
@@ -525,37 +543,26 @@
     /* ── Sidebar sync ─────────────────────────────────────────── */
 
     function syncSidebarToState() {
-        /* Gender radios */
         document.querySelectorAll('input[name="filterGender"]').forEach(r => {
             r.checked = r.value === (state.gender || '');
         });
 
-        /* New only */
         const newChk = document.getElementById('filterNewOnly');
         if (newChk) newChk.checked = state.newOnly;
 
-        /* Category checkboxes */
         document.querySelectorAll('.cat-chk').forEach(chk => {
             chk.checked = state.categoryIds.includes(parseInt(chk.value, 10));
         });
 
-        /* applyFilterGroupVisibility() owns category row visibility.
-           filterCategoriesByGender() is called inside it for normal browsing.
-           We do NOT call filterCategoriesByGender() separately here.          */
         applyFilterGroupVisibility();
 
-        /* Sort */
         if (sortSel) sortSel.value = state.sort;
 
-        /* Price slider */
         if (state.minPrice != null) priceMinInput.value = state.minPrice;
         if (state.maxPrice != null) priceMaxInput.value = state.maxPrice;
         updatePriceDisplay();
     }
 
-    /* Show only categories matching the selected gender.
-       Only called from applyFilterGroupVisibility() for the
-       normal browsing case — not called anywhere else.          */
     function filterCategoriesByGender() {
         document.querySelectorAll('.catalog-chk-label[data-cat-gender]').forEach(label => {
             const hidden = !!state.gender && label.dataset.catGender !== state.gender;
@@ -597,16 +604,11 @@
     function calibratePriceSlider() {
         let lo = priceBounds.min;
         let hi = priceBounds.max;
-
-        /* Edge case: single price point — widen so both thumbs are draggable */
         if (lo === hi) { lo = Math.max(0, lo - 1); hi = hi + 1; }
-
         priceMinInput.min = lo; priceMinInput.max = hi;
         priceMaxInput.min = lo; priceMaxInput.max = hi;
-
         if (state.minPrice == null) priceMinInput.value = lo;
         if (state.maxPrice == null) priceMaxInput.value = hi;
-
         updatePriceDisplay();
     }
 
@@ -643,6 +645,7 @@
         state.page = 0;
         syncSidebarToState();
         updateHeading();
+        updateSearchQueryDisplay();
         pushUrl();
         fetchProducts();
     }
@@ -694,20 +697,20 @@
         });
     });
 
-    /* ── Clear all ────────────────────────────────────────────── */
+    /* ── Clear all filters ────────────────────────────────────── */
 
     function clearFilters() {
+        /* If in search mode, clear all goes back to all products */
+        if (state.q) {
+            window.location.href = CTX + '/catalog';
+            return;
+        }
         state.newOnly  = false;
         state.minPrice = null;
         state.maxPrice = null;
         state.page     = 0;
-
-        /* Preserve gender when it was locked from the URL */
         if (!urlGender) state.gender = null;
-
-        /* On a scoped category URL, restore to the original category
-           rather than clearing entirely — the user is still on e.g.
-           the Dresses page, just removing price/newOnly filters.     */
+        /* Restore locked category context if present */
         if (urlCategoryIds.length > 0) {
             state.categoryIds = [...urlCategoryIds];
             state.interestIds = [];
@@ -715,7 +718,6 @@
             state.categoryIds = [];
             state.interestIds = [];
         }
-
         resetPriceSlider();
         onFilterChange();
     }

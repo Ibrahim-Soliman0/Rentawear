@@ -12,23 +12,17 @@ import java.io.IOException;
 import java.util.List;
 
 /**
- * Serves the product catalog page (WEB-INF/catalog.jsp).
+ * Serves the product catalog HTML page at GET /catalog.
  *
- * All URL params are read client-side by catalog.js — the servlet only:
- *   1. Loads all categories for the filter sidebar.
- *   2. Resolves a human-readable page title + eyebrow from the URL params
- *      so the initial server render has the correct heading without a flash.
+ * Supports two modes — both handled by the same JSP, distinguished
+ * by the presence of the q param:
  *
- * Catalog URL convention:
- *   /catalog                             -> All Products
- *   /catalog?gender=FEMALE               -> Women's Collection
- *   /catalog?gender=MALE                 -> Men's Collection
- *   /catalog?gender=FEMALE&categoryIds=3 -> [Category Name]
- *   /catalog?newOnly=true                -> New Arrivals
- *   /catalog?categoryIds=1&categoryIds=2 -> personalised / multi-cat
+ *   Browse mode  /catalog?gender=FEMALE&categoryIds=3
+ *   Search mode  /catalog?q=shirt&gender=FEMALE
  *
- * Filtering + pagination is handled entirely by catalog.js, which
- * calls the existing ProductCatalogServlet at GET /products.
+ * The servlet only sets request attributes for the initial server
+ * render (title, eyebrow, category list for sidebar). catalog.js
+ * then reads all URL params client-side and calls GET /products.
  */
 @WebServlet("/catalog")
 public class CatalogServlet extends HttpServlet {
@@ -40,29 +34,28 @@ public class CatalogServlet extends HttpServlet {
             throws ServletException, IOException {
 
         List<Category> categories = categoryService.getAll();
-
-        // All categories for the filter sidebar checkbox list
         req.setAttribute("filterCategories", categories);
 
-        // Resolve headings from URL params for correct first-render
+        String   q       = req.getParameter("q");
         String   gender  = req.getParameter("gender");
         String[] catIds  = req.getParameterValues("categoryIds");
         String   newOnly = req.getParameter("newOnly");
 
-        req.setAttribute("pageTitle",   resolveTitle(gender, catIds, newOnly, categories));
-        req.setAttribute("pageEyebrow", resolveEyebrow(gender, newOnly));
+        req.setAttribute("pageTitle",   resolveTitle(q, gender, catIds, newOnly, categories));
+        req.setAttribute("pageEyebrow", resolveEyebrow(q, gender, newOnly));
 
         req.getRequestDispatcher("/WEB-INF/catalog.jsp").forward(req, resp);
     }
 
-    /* ── heading helpers ──────────────────────────────────────────────── */
+    /* ── Heading helpers ──────────────────────────────────────── */
 
-    private String resolveTitle(String gender, String[] catIds,
+    private String resolveTitle(String q, String gender, String[] catIds,
                                 String newOnly, List<Category> categories) {
+        /* Search mode */
+        if (q != null && !q.isBlank()) return "Search Results";
 
         if ("true".equalsIgnoreCase(newOnly)) return "New Arrivals";
 
-        // Single category → use its name as title
         if (catIds != null && catIds.length == 1) {
             try {
                 int id = Integer.parseInt(catIds[0]);
@@ -71,7 +64,7 @@ public class CatalogServlet extends HttpServlet {
                         .findFirst()
                         .map(Category::getName)
                         .orElse(genderTitle(gender));
-            } catch (NumberFormatException ignored) { /* fall through */ }
+            } catch (NumberFormatException ignored) {}
         }
 
         return genderTitle(gender);
@@ -83,7 +76,9 @@ public class CatalogServlet extends HttpServlet {
         return "All Products";
     }
 
-    private String resolveEyebrow(String gender, String newOnly) {
+    private String resolveEyebrow(String q, String gender, String newOnly) {
+        if (q != null && !q.isBlank())
+            return "Showing results for \u201c" + q + "\u201d"; // "q"
         if ("true".equalsIgnoreCase(newOnly))  return "Fresh in this week";
         if ("FEMALE".equalsIgnoreCase(gender)) return "Tailored for her";
         if ("MALE".equalsIgnoreCase(gender))   return "Tailored for him";
