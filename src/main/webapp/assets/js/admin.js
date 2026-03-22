@@ -83,7 +83,7 @@ function clearFieldError(inputId, errorId) {
 }
 function clearAllProductErrors() {
   ['productName','productCategory','productPrice']
-    .forEach((_, i, arr) => clearFieldError(arr[i], arr[i] + 'Error'));
+      .forEach((_, i, arr) => clearFieldError(arr[i], arr[i] + 'Error'));
 }
 
 /* ══════════════════════════════════════════════════════════════
@@ -192,8 +192,15 @@ function renderProductsTable(products) {
       <td>
         <div class="adm-product-cell">
           ${core.imageUrl
-            ? `<img src="${core.imageUrl}" alt="${escHtml(core.name)}" class="adm-product-img"/>`
-            : `<div class="adm-product-img-placeholder"><i class="bi bi-image"></i></div>`}
+        ? `<img
+       src="${imgUrl(core.imageUrl, 'sm')}"
+       srcset="${imgUrl(core.imageUrl, 'sm')} 400w, ${imgUrl(core.imageUrl, 'md')} 800w"
+       sizes="60px"
+       alt="${escHtml(core.name)}"
+       class="adm-product-img"
+       loading="lazy"
+       decoding="async"/>`
+        : `<div class="adm-product-img-placeholder"><i class="bi bi-image"></i></div>`}
           <div>
             <div class="adm-product-name">${escHtml(core.name)}</div>
             ${core.brand ? `<div class="adm-product-brand">${escHtml(core.brand)}</div>` : ''}
@@ -754,12 +761,34 @@ function getOrderBadge(status) {
 }
 
 /* ── Utilities ──────────────────────────────────────────────── */
+
+// ADD TO CSS:
+/*
+.adm-product-img {
+  width: 48px;
+  height: 60px;
+  object-fit: cover;
+  object-position: top;
+  border-radius: var(--adm-radius);
+  background: var(--adm-stone);
+  flex-shrink: 0;
+}
+*/
+
+/* ── Image URL helper (mirrors card-factory.js) ─────────────── */
+function imgUrl(base, size) {
+  const b = (base && !base.endsWith('.jpg') && !base.endsWith('.png'))
+      ? base
+      : '/assets/img/placeholder';
+  return `${CTX}${b}_${size}.jpg`;
+}
+
 function escHtml(str) {
   return String(str || '')
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;');
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;');
 }
 
 /* ── Stock Popover ──────────────────────────────────────────── */

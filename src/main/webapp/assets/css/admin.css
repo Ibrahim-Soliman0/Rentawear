@@ -303,6 +303,7 @@
   width: 48px;
   height: 60px;
   object-fit: cover;
+  object-position: top;
   border-radius: var(--adm-radius);
   background: var(--adm-stone);
   flex-shrink: 0;
