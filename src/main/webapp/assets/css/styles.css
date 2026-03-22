@@ -1936,6 +1936,23 @@ h1, h2, h3, h4, h5, h6 {
   color: var(--rw-muted);
   font-size: 2rem;
 }
+
+.product-card:hover .product-img-bg {
+    transform: scale(1.04);
+}
+
+.product-img-bg .img-layer {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    transition: opacity 0.35s ease;
+    border-radius: 4px;
+}
+
+.product-img-bg .img-layer.visible {
+    opacity: 1;
+}
+
 .product-badge {
     position: absolute;
     top: 12px;
