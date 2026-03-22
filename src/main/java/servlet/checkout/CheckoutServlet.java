@@ -96,7 +96,7 @@ public class CheckoutServlet extends HttpServlet {
             Map<String, Object> response = new LinkedHashMap<>();
             response.put("success", true);
             response.put("orderId", orderId);
-            response.put("redirect", req.getContextPath() + "/profile");
+            response.put("redirect", req.getContextPath() + "/profile#history");
 
             resp.getWriter().write(JsonUtil.toJson(response));
 

@@ -121,13 +121,15 @@ public class OrderService extends BaseService<Order> {
             ProductVariant variant = productVariantService.getById(variantId)
                     .orElseThrow(() -> new IllegalStateException("Item no longer available."));
 
-            // Optional: check stock is still sufficient
+            // check stock is still sufficient
             if (variant.getQuantity() < qty) {
                 throw new IllegalStateException(
                         variant.getProduct().getName() + " only has "
                                 + variant.getProduct() + " left in stock."
                 );
             }
+
+            variant.setQuantity(variant.getQuantity() - qty);
 
             OrderItem orderItem = new OrderItem();
             orderItem.setVariant(variant);
