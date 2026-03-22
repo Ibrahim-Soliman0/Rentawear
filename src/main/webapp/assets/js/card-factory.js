@@ -26,10 +26,10 @@
     // size: "sm" (400px) | "md" (800px) | "lg" (1400px)
     // Falls back to placeholder when base is empty or already has an extension.
     function imgUrl(base, size) {
-        const b = (base && !base.endsWith('.jpg') && !base.endsWith('.png'))
-            ? base
-            : '/assets/img/placeholder';
-        return `${CTX}${b}_${size}.jpg`;
+        if (!base || base.includes('placeholder') || base.endsWith('.jpg') || base.endsWith('.png')) {
+            return null;
+        }
+        return `${CTX}${base}_${size}.jpg`;
     }
     window.imgUrl = imgUrl;
 
@@ -45,7 +45,7 @@
                 name:                core.name               ?? '',
                 brand:               core.brand              ?? '',
                 pricePerDay:         Number(core.pricePerDay ?? 0),
-                imageUrl:            core.imageUrl           || '/assets/img/placeholder',
+                imageUrl:            core.imageUrl           || null,
                 isNew:               Boolean(raw.isNew),
                 soldOut:             Boolean(raw.soldOut),
                 category:            core.categoryId         ?? raw.category ?? '',
@@ -105,17 +105,38 @@
         }
 
         // ── Product image with srcset ─────────────────────────────────────────
-        // Real <img> so srcset/lazy-loading work natively.
+        // Returns a placeholder icon div when no real image is available.
+        // Never makes a network request for placeholder paths.
+        function _makePlaceholderIcon() {
+            const icon = document.createElement('div');
+            icon.className = 'product-img-placeholder';
+            const i = document.createElement('i');
+            i.className = 'bi bi-image';
+            icon.appendChild(i);
+            return icon;
+        }
+
         function _productImgNode(base, name) {
             const div = document.createElement('div');
             div.className = 'product-img-inner';
+
+            const src = imgUrl(base, 'md');
+            if (!src) {
+                div.appendChild(_makePlaceholderIcon());
+                return div;
+            }
+
             const img = document.createElement('img');
-            img.src     = imgUrl(base, 'md');
-            img.srcset  = `${imgUrl(base,'sm')} 400w, ${imgUrl(base,'md')} 800w, ${imgUrl(base,'lg')} 1400w`;
-            img.sizes   = '(max-width:480px) 100vw, (max-width:900px) 50vw, 33vw';
-            img.alt     = name ? String(name) : '';
+            img.src      = src;
+            img.srcset   = `${imgUrl(base,'sm')} 400w, ${imgUrl(base,'md')} 800w, ${imgUrl(base,'lg')} 1400w`;
+            img.sizes    = '(max-width:480px) 100vw, (max-width:900px) 50vw, 33vw';
+            img.alt      = name ? String(name) : '';
             img.loading  = 'lazy';
             img.decoding = 'async';
+            img.onerror  = function() {
+                div.replaceChild(_makePlaceholderIcon(), img);
+            };
+
             div.appendChild(img);
             return div;
         }
@@ -164,24 +185,6 @@
             return wrap;
         }
 
-        // ── Wishlist heart SVG ────────────────────────────────────────────────
-        function _wishlistSvgNode(filled) {
-            const svg  = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-            svg.setAttribute('viewBox', '0 0 15 15');
-            svg.setAttribute('aria-hidden', 'true');
-            const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-            path.setAttribute('d', 'M7.5 13S1 9 1 4.5a3.5 3.5 0 0 1 6.5-1.8A3.5 3.5 0 0 1 14 4.5C14 9 7.5 13 7.5 13z');
-            path.setAttribute('stroke-width', '1.8');
-            if (filled) {
-                path.setAttribute('fill', 'currentColor');
-            } else {
-                path.setAttribute('fill', 'none');
-                path.setAttribute('stroke', 'currentColor');
-            }
-            svg.appendChild(path);
-            return svg;
-        }
-
         // ── Skeleton ──────────────────────────────────────────────────────────
         // Shown while the section fetch is in-flight.
         // Matches grid() DOM structure so CSS sizing is identical.
@@ -214,10 +217,6 @@
 
         // ── Grid card ─────────────────────────────────────────────────────────
         // Used by: home page strips, catalog grid.
-        //
-        // Sold-out logic:
-        //   soldOut = true  → charcoal badge replaces wishlist button entirely
-        //   soldOut = false → wishlist button shown as normal
         //
         // QV dataset carries the minimum needed for the instant open (Phase 1).
         // Full detail (description, swatches, sizes, images) is fetched async
@@ -264,27 +263,6 @@
             qvSvg.appendChild(pth);
             qvBtn.appendChild(qvSvg);
             qvBtn.appendChild(document.createTextNode(' Quick View'));
-
-            // Wishlist button — hidden when sold out
-            if (!p.soldOut) {
-                const wishBtn = document.createElement('button');
-                wishBtn.className = 'product-wishlist';
-                wishBtn.type      = 'button';
-                wishBtn.setAttribute('aria-label', `Add ${p.name} to wishlist`);
-                wishBtn.appendChild(_wishlistSvgNode(false));
-
-                wishBtn.addEventListener('click', e => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    const isActive = wishBtn.classList.toggle('active');
-                    while (wishBtn.firstChild) wishBtn.removeChild(wishBtn.firstChild);
-                    wishBtn.appendChild(_wishlistSvgNode(isActive));
-                    wishBtn.setAttribute('aria-label',
-                        `${isActive ? 'Remove' : 'Add'} ${p.name} ${isActive ? 'from' : 'to'} wishlist`);
-                });
-
-                imgWrap.appendChild(wishBtn);
-            }
 
             imgWrap.appendChild(qvBtn);
 
@@ -354,12 +332,18 @@
 
             const thumb = document.createElement('div');
             thumb.className = 'search-result-thumb';
-            const img = document.createElement('img');
-            img.src      = imgUrl(p.imageUrl, 'sm');
-            img.alt      = p.name || '';
-            img.loading  = 'lazy';
-            img.decoding = 'async';
-            thumb.appendChild(img);
+            const thumbSrc = imgUrl(p.imageUrl, 'sm');
+            if (thumbSrc) {
+                const img = document.createElement('img');
+                img.src      = thumbSrc;
+                img.alt      = p.name || '';
+                img.loading  = 'lazy';
+                img.decoding = 'async';
+                img.onerror  = function() { thumb.replaceChild(_makePlaceholderIcon(), img); };
+                thumb.appendChild(img);
+            } else {
+                thumb.appendChild(_makePlaceholderIcon());
+            }
 
             const info = document.createElement('div');
             info.className = 'search-result-info';
@@ -401,12 +385,18 @@
 
             const imgWrap = document.createElement('div');
             imgWrap.className = 'cart-item-img';
-            const img = document.createElement('img');
-            img.src      = imgUrl(it.imageUrl, 'sm');
-            img.alt      = it.name || '';
-            img.loading  = 'lazy';
-            img.decoding = 'async';
-            imgWrap.appendChild(img);
+            const cartSrc = imgUrl(it.imageUrl, 'sm');
+            if (cartSrc) {
+                const img = document.createElement('img');
+                img.src      = cartSrc;
+                img.alt      = it.name || '';
+                img.loading  = 'lazy';
+                img.decoding = 'async';
+                img.onerror  = function() { imgWrap.replaceChild(_makePlaceholderIcon(), img); };
+                imgWrap.appendChild(img);
+            } else {
+                imgWrap.appendChild(_makePlaceholderIcon());
+            }
 
             const info = document.createElement('div');
             info.className = 'cart-item-info';
