@@ -509,8 +509,7 @@ function attachFormHandler() {
                 localStorage.removeItem('rw_cart_synced');
                 if (window.Cart?.clearLocalStorage) window.Cart.clearLocalStorage();
 
-                window.location.href = data.redirect
-                    ?? `${window.CTX ?? ''}/profile#history`;
+                window.location.href = data.redirect ?? `${window.CTX ?? ''}/profile#history`;
             } else {
                 showSubmitError(data.message
                     ? `${data.message}.`

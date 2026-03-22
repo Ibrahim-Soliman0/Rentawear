@@ -715,3 +715,55 @@ function escHtml(str) {
         .replace(/"/g, '&quot;');
 }
 
+function increaseCredit() {
+    const btn      = document.getElementById('increaseCreditBtn');
+    const feedback = document.getElementById('creditFeedback');
+
+    btn.disabled    = true;
+    btn.textContent = 'Updating…';
+
+    fetch(CTX + '/profile/credit/increase', {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' }
+    })
+        .then(r => r.json())
+        .then(data => {
+            if (data.success) {
+                const newLimit = parseFloat(data.newLimit);
+
+                /* Update local RW_USER */
+                window.RW_USER.creditLimit = newLimit;
+
+                /* Update the displayed amount */
+                setText('creditLimitDisplay', newLimit.toFixed(2));
+
+                /* Update the progress bar */
+                const bar = document.getElementById('creditBar');
+                if (bar) bar.style.width = Math.min((newLimit / 2000) * 100, 100) + '%';
+
+                showCreditFeedback('Credit limit increased to £' + newLimit.toFixed(2), false);
+            } else {
+                showCreditFeedback(data.message || 'Could not increase limit. Please try again.', true);
+            }
+        })
+        .catch(() => showCreditFeedback('Network error. Please try again.', true))
+        .finally(() => {
+            btn.disabled    = false;
+            btn.textContent = 'Increase by £500';
+
+            /* Auto-hide feedback after 4 seconds */
+            setTimeout(() => {
+                if (feedback) feedback.style.display = 'none';
+            }, 4000);
+        });
+}
+
+function showCreditFeedback(msg, isError) {
+    const fb = document.getElementById('creditFeedback');
+    if (!fb) return;
+    fb.textContent = msg;
+    fb.className   = 'account-credit-feedback '
+        + (isError ? 'account-credit-feedback--error'
+            : 'account-credit-feedback--success');
+    fb.style.display = 'block';
+}
