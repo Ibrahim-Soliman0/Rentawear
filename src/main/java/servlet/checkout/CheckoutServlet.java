@@ -12,6 +12,7 @@ import service.OrderService;
 import util.JsonUtil;
 
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -63,7 +64,7 @@ public class CheckoutServlet extends HttpServlet {
         try {
             // ── Read parameters ───────────────────────────────────────────
             String cartJson = req.getParameter("cartJson");
-            Double totalAmount = Double.parseDouble(req.getParameter("totalAmount"));
+            BigDecimal totalAmount = new BigDecimal(req.getParameter("totalAmount"));
 
             // ── Validate ──────────────────────────────────────────────────
             if (cartJson == null || cartJson.isBlank()) {
@@ -108,7 +109,7 @@ public class CheckoutServlet extends HttpServlet {
         } catch (NumberFormatException e) {
             resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
             resp.getWriter().write("{\"success\": false," +
-                    " \"message\": \"Invalid payment method.\"}");
+                    " \"message\": \"Invalid numeric value in request.\"}");
 
         } catch (IllegalStateException e) {
             // Business rule violations from OrderService

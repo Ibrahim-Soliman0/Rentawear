@@ -72,7 +72,7 @@ function formatDateRange(startIso, endIso) {
 }
 
 function fmt(amount) {
-    return '$' + Number(amount).toFixed(2);
+    return '£' + Number(amount).toFixed(2);
 }
 
 /* ── Read cart from localStorage ─────────────────────────────────────────── */

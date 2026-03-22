@@ -94,9 +94,22 @@ public class CartService extends BaseService<Cart> {
         User user = userOptional.get();
         Cart userCart = user.getCart();
 
+        if (userCart == null) {
+            System.out.println("the user id [" + userId + "] has no purchases made yet");
+            throw new CartItemNotFoundException(
+                    "Cart item with id [" + cartItemId + "] doesn't exist");
+        }
+
         CartItem itemToRemove = cartItemService.getById(cartItemId)
                 .orElseThrow(() -> new CartItemNotFoundException(
                         "Cart item with id [" + cartItemId + "] doesn't exist"));
+
+        if (userCart.getCartItems() == null || !userCart.getCartItems().contains(itemToRemove)) {
+            System.out.println("the user id [" + userId + "] has no items in the cart or" +
+                    " doesn't have the requested item");
+            throw new CartItemNotFoundException(
+                    "Cart item with id [" + cartItemId + "] doesn't exist");
+        }
 
         userCart.removeCartItem(itemToRemove);
     }
@@ -109,9 +122,25 @@ public class CartService extends BaseService<Cart> {
             throw new UserNotFoundException("User with id [" + userId + "] doesn't exit");
         }
 
+        User user = userOptional.get();
+        Cart userCart = user.getCart();
+
+        if (userCart == null) {
+            System.out.println("the user id [" + userId + "] has no purchases made yet");
+            throw new CartItemNotFoundException(
+                    "Cart item with id [" + cartItemId + "] doesn't exist");
+        }
+
         CartItem itemToUpdate = cartItemService.getById(cartItemId)
                 .orElseThrow(() -> new CartItemNotFoundException(
                         "Cart item with id [" + cartItemId + "] doesn't exist"));
+
+        if (userCart.getCartItems() == null || !userCart.getCartItems().contains(itemToUpdate)) {
+            System.out.println("the user id [" + userId + "] has no items in the cart or" +
+                    " doesn't have the requested item");
+            throw new CartItemNotFoundException(
+                    "Cart item with id [" + cartItemId + "] doesn't exist");
+        }
 
         itemToUpdate.setQuantity(newQty);
     }

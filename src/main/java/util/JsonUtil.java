@@ -32,7 +32,7 @@ public final class JsonUtil {
         return GSON.fromJson(req.getReader(), clazz);
     }
 
-    public static <T> T fromJson(String json, Class<T> clazz) throws IOException {
+    public static <T> T fromJson(String json, Class<T> clazz) {
         return GSON.fromJson(json, clazz);
     }
 }

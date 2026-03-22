@@ -327,8 +327,8 @@ class CartRenderer {
     _renderEmpty() {
         if (this._empty)    this._empty.style.display  = 'flex';
         if (this._cta)      this._cta.style.display    = 'none';
-        if (this._subtotal) this._subtotal.textContent = '$0.00';
-        if (this._total)    this._total.textContent    = '$0.00';
+        if (this._subtotal) this._subtotal.textContent = '£0.00';
+        if (this._total)    this._total.textContent    = '£0.00';
         const wrap = this._itemsWrap;
         wrap.style.display = 'none';
         while (wrap.firstChild) wrap.removeChild(wrap.firstChild);
@@ -366,7 +366,7 @@ class CartRenderer {
     }
 
     _renderTotals(subtotal) {
-        const formatted = `$${subtotal.toFixed(2)}`;
+        const formatted = `£${subtotal.toFixed(2)}`;
         if (this._subtotal) this._subtotal.textContent = formatted;
         if (this._total)    this._total.textContent    = formatted;
     }

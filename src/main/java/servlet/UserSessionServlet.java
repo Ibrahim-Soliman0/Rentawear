@@ -1,6 +1,5 @@
 package servlet;
 
-import com.google.gson.Gson;
 import dto.UserSessionDTO;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;

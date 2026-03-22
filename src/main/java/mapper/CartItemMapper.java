@@ -142,7 +142,7 @@ public interface CartItemMapper {
                 "Rentawear", //p.getBrand()
                 p.getBasePrice().doubleValue(),
                 p.getImageUrl(),
-                "MALE", //p.getGender(),
+                p.getCategory().getGender().toString(),
                 p.getCategory().getId(),
                 p.getCategory().getName()
         );

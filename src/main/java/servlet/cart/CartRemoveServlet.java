@@ -23,19 +23,14 @@ public class CartRemoveServlet extends HttpServlet {
         resp.setContentType("application/json");
         resp.setCharacterEncoding("UTF-8");
 
-        HttpSession session = req.getSession();
+        HttpSession session = req.getSession(false);
 
-        if (session == null) {
+        if (session == null || session.getAttribute("user") == null) {
             resp.getWriter().write("{\"success\": false, \"message\": \"Not logged in.\"}");
             return;
         }
 
         UserSessionDTO user = (UserSessionDTO) session.getAttribute("user");
-
-        if (user == null) {
-            resp.getWriter().write("{\"success\": false, \"message\": \"Not logged in.\"}");
-            return;
-        }
 
         try {
             Integer cartItemId = Integer.parseInt(req.getParameter("cartItemId"));

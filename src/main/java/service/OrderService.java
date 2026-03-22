@@ -80,7 +80,7 @@ public class OrderService extends BaseService<Order> {
         return List.of(active, past);
     }
 
-    public Integer placeOrder(Integer userId, String cartJson, Double orderAmount) {
+    public Integer placeOrder(Integer userId, String cartJson, BigDecimal orderAmount) {
 
         // 1. Parse the cart JSON from localStorage
         //    cartJson is an array of normalised cart items (see CartItemNormaliser shape)
@@ -88,8 +88,9 @@ public class OrderService extends BaseService<Order> {
 
         try {
             cartItems = JsonUtil.fromJson(cartJson, List.class);
-        } catch (IOException e) {
+        } catch (Exception e) {
             System.out.println("Failed to convert cartJson back to List of cart items");
+            throw new IllegalArgumentException(e.getMessage());
         }
 
         if (cartItems == null || cartItems.isEmpty()) {
@@ -100,18 +101,19 @@ public class OrderService extends BaseService<Order> {
         User user = userService.getById(userId)
                 .orElseThrow(() -> new UserNotFoundException("User not found id [" + userId + "]"));
 
-        if (user.getCreditLimit().intValue() < orderAmount) {
+        // check if the user has enough credit limit
+        if (user.getCreditLimit().compareTo(orderAmount) < 0) {
             throw new InsufficientFundsException(
                     "You don't have enough credit limit to make this order.");
         }
 
-        user.setCreditLimit(user.getCreditLimit().subtract(new BigDecimal(orderAmount)));
+        user.setCreditLimit(user.getCreditLimit().subtract(orderAmount));
 
         // 3. Create the Order entity
         Order order = new Order();
         order.setUser(user);
         order.setStatus(OrderStatus.ORDERED);
-        order.setTotalAmount(new BigDecimal(orderAmount));
+        order.setTotalAmount(orderAmount);
 
         // 4. Create an OrderItem for each cart item
         for (Map item : cartItems) {
@@ -125,7 +127,7 @@ public class OrderService extends BaseService<Order> {
             if (variant.getQuantity() < qty) {
                 throw new IllegalStateException(
                         variant.getProduct().getName() + " only has "
-                                + variant.getProduct() + " left in stock."
+                                + variant.getQuantity() + " left in stock."
                 );
             }
 

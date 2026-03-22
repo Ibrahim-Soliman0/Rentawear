@@ -8,11 +8,6 @@
     <jsp:param name="activePage" value="checkout"/>
 </jsp:include>
 
-<html lang="en">
-<head>
-    <title>Checkout – Rentawear</title>
-</head>
-<body>
 
 <main class="rw-main checkout-page">
     <div class="checkout-container">
@@ -133,7 +128,7 @@
                     <div id="checkoutPricing" style="display:none;">
                         <div class="summary-row">
                             <span class="label">Rental subtotal</span>
-                            <span id="coSubtotal">$0.00</span>
+                            <span id="coSubtotal">£0.00</span>
                         </div>
                         <div class="summary-row">
                             <span class="label">Shipping</span>
@@ -141,7 +136,7 @@
                         </div>
                         <div class="summary-total-row">
                             <span class="summary-total-label">Total</span>
-                            <span class="summary-total-value" id="coTotal">$0.00</span>
+                            <span class="summary-total-value" id="coTotal">£0.00</span>
                         </div>
                     </div>
 
@@ -180,6 +175,3 @@
 <jsp:include page="components/scripts.jsp">
     <jsp:param name="extraJS" value="${pageContext.request.contextPath}/assets/js/checkout.js"/>
 </jsp:include>
-
-</body>
-</html>
