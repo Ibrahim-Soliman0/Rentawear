@@ -163,6 +163,6 @@ function loadInterests() {
 
 document.addEventListener('DOMContentLoaded', () => {
   for (const s of SECTIONS) loadSection(s);
-  // loadOccasions();
+  loadOccasions();
   loadInterests();
 });
