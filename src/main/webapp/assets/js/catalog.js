@@ -3,15 +3,6 @@
    Depends on: utils.js (CTX, esc, fetchJson)
                card-factory.js (CardFactory)
    Loaded on:  catalog.jsp only (via extraJS param)
-
-   Search mode additions (this version):
-     - state.q: search query read from URL ?q= param
-     - buildApiUrl / buildPageUrl include q
-     - resolveTitle / resolveEyebrow handle search mode
-     - Eyebrow updates with result count after fetch in search mode
-     - #catalogSearchQuery / #catalogClearSearch elements wired
-     - Clear search navigates to /catalog (all products, no query)
-     - q chip shown in filter chips
    ============================================================ */
 
 'use strict';
@@ -700,11 +691,11 @@
     /* ── Clear all filters ────────────────────────────────────── */
 
     function clearFilters() {
-        /* If in search mode, clear all goes back to all products */
-        if (state.q) {
-            window.location.href = CTX + '/catalog';
-            return;
-        }
+        /* q is intentionally preserved — "Clear all" only resets the
+           sidebar filters (gender, category, price) while staying on
+           the current search results page.
+           "Clear search" (#catalogClearSearch) is the one that
+           navigates away to /catalog.                                 */
         state.newOnly  = false;
         state.minPrice = null;
         state.maxPrice = null;
