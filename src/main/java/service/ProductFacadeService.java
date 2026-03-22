@@ -151,14 +151,15 @@ public class ProductFacadeService {
 
     private List<Product> fetchProducts(ProductFilterDTO f) {
         if (f.isSearch())        return productService.searchFiltered(f);
-        if (f.isNewOnly())       return productService.findNew(f.pageSize());
+        if (f.isNewOnly())       return productService.findNew(f);            // ← passes full filter
         if (f.isInterestBased()) return productService.findByInterests(f);
         return productService.findFiltered(f);
     }
 
+
     private long countProducts(ProductFilterDTO f) {
         if (f.isSearch())        return productService.countSearchFiltered(f);
-        if (f.isNewOnly())       return productService.countNew();
+        if (f.isNewOnly())       return productService.countNew(f);           // ← passes full filter
         if (f.isInterestBased()) return productService.countByInterests(f);
         return productService.countFiltered(f);
     }

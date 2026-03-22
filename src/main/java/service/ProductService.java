@@ -23,8 +23,8 @@ public class ProductService {
         return productRepo.findById(productId);
     }
 
-    public List<Product> findNew(int pageSize) {
-        return productRepo.findNew(pageSize, NEW_DAYS);
+    public List<Product> findNew(ProductFilterDTO f) {
+        return productRepo.findNew(f.pageSize(), NEW_DAYS, f.gender(), f.categoryIds());
     }
 
     public List<Product> findFiltered(ProductFilterDTO f) {
@@ -48,8 +48,8 @@ public class ProductService {
                 f.pageSize(), f.offset());
     }
 
-    public long countNew() {
-        return productRepo.countNew(NEW_DAYS);
+    public long countNew(ProductFilterDTO f) {
+        return productRepo.countNew(NEW_DAYS, f.gender(), f.categoryIds());
     }
 
     public long countFiltered(ProductFilterDTO f) {

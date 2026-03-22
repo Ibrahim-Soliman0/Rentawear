@@ -20,10 +20,20 @@ public class ProductRepositoryImpl extends BaseRepositoryImpl<Product>
     }
 
     @Override
-    public List<Product> findNew(int limit, int days) {
+    public List<Product> findNew(int limit, int days,
+                                 String gender, List<Integer> categoryIds) {
         Instant cutoff = Instant.now().minus(days, ChronoUnit.DAYS);
-        return pagedFetch("Product.findNewIds",
-                q -> q.setParameter("cutoff", cutoff),
+
+        if (categoryIds != null && !categoryIds.isEmpty()) {
+            return pagedFetch("Product.findNewByCategoriesIds",
+                    q -> q.setParameter("cutoff", cutoff)
+                            .setParameter("ids",    categoryIds)
+                            .setParameter("gender", toGender(gender)),
+                    limit, 0);
+        }
+        return pagedFetch("Product.findNewFilteredIds",
+                q -> q.setParameter("cutoff", cutoff)
+                        .setParameter("gender", toGender(gender)),
                 limit, 0);
     }
 
@@ -82,10 +92,19 @@ public class ProductRepositoryImpl extends BaseRepositoryImpl<Product>
     }
 
     @Override
-    public long countNew(int days) {
+    public long countNew(int days, String gender, List<Integer> categoryIds) {
         Instant cutoff = Instant.now().minus(days, ChronoUnit.DAYS);
-        return em().createNamedQuery("Product.countNew", Long.class)
+
+        if (categoryIds != null && !categoryIds.isEmpty()) {
+            return em().createNamedQuery("Product.countNewByCategories", Long.class)
+                    .setParameter("cutoff", cutoff)
+                    .setParameter("ids",    categoryIds)
+                    .setParameter("gender", toGender(gender))
+                    .getSingleResult();
+        }
+        return em().createNamedQuery("Product.countNewFiltered", Long.class)
                 .setParameter("cutoff", cutoff)
+                .setParameter("gender", toGender(gender))
                 .getSingleResult();
     }
 
