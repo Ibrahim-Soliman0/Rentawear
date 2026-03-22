@@ -246,7 +246,7 @@ INSERT INTO product_images (product_id, image_url, color) VALUES
 -- Update Product.imageUrl to the primary image base path
 -- (lowest id image for the default color = lowest id variant's color)
 UPDATE products SET image_url = '/assets/img/products/1/midnight-navy/img1' WHERE id = 1;
-UPDATE products SET image_url = '/assets/img/products/1/midnight-navy/img2' WHERE id = 1;
+-- UPDATE products SET image_url = '/assets/img/products/1/midnight-navy/img2' WHERE id = 1;
 UPDATE products SET image_url = '/assets/img/products/2/blush-pink/placeholder'    WHERE id = 2;
 UPDATE products SET image_url = '/assets/img/products/3/burgundy/placeholder'      WHERE id = 3;
 UPDATE products SET image_url = '/assets/img/products/4/camel/placeholder'         WHERE id = 4;
