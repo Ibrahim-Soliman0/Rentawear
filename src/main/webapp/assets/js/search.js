@@ -1,16 +1,6 @@
 /* ============================================================
    search.js — Search modal
    Depends on: utils.js (CTX, esc, fetchJson), CardFactory
-
-   Root cause fix for "view all never shows":
-     renderResults() was called INSIDE the try-catch around
-     fetchJson(). If CardFactory.searchResult() threw for any
-     single item, the catch block fired and setError() wiped
-     the container — view-all was never appended.
-     Fix: separate fetch (in try-catch) from DOM rendering
-     (always runs after fetch succeeds), and wrap each
-     individual card build in its own try-catch so one bad
-     item cannot kill the rest of the render.
    ============================================================ */
 
 'use strict';
@@ -452,7 +442,7 @@
     a.href        = buildCatalogUrl(q);
     a.textContent = total > RESULT_SIZE
         ? `View all ${total} result${total !== 1 ? 's' : ''} →`
-        : `View ${total} result${total !== 1 ? 's' : ''} on catalog →`;
+        : `View ${total} result${total !== 1 ? 's' : ''} →`;
     results.appendChild(a);
   }
 

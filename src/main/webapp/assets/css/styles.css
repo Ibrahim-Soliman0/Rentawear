@@ -4244,3 +4244,21 @@ input::-ms-clear {
 }
 .catalog-clear-search:hover { color: var(--rw-danger); }
 .catalog-clear-search svg   { flex-shrink: 0; }
+
+/* ── Search modal: constrain height and scroll results ───────── */
+
+.search-panel {
+  /* Existing rules unchanged — add these two: */
+  max-height: calc(100vh - 28px); /* 14px top + 14px breathing room */
+  display: flex;
+  flex-direction: column;
+  overflow: hidden; /* panel itself never overflows — children scroll */
+}
+
+.search-results-wrap {
+  /* Override: flex-shrink so it gives space back to the fixed header */
+  flex: 1;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  /* Existing border-top and padding stay the same */
+}
