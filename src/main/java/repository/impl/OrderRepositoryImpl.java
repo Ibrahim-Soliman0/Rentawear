@@ -22,7 +22,7 @@ public class OrderRepositoryImpl extends BaseRepositoryImpl<Order> implements Or
                                 "LEFT JOIN FETCH oi.variant v " +
                                 "LEFT JOIN FETCH v.product p " +
                                 "WHERE o.user.id = :userId " +
-                                "ORDER BY o.createdAt ASC",
+                                "ORDER BY o.createdAt DESC",
                         Order.class)
                 .setParameter("userId", userId)
                 .getResultList();
