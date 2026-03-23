@@ -31,4 +31,8 @@ public final class JsonUtil {
     public static <T> T fromJson(HttpServletRequest req, Class<T> clazz) throws IOException {
         return GSON.fromJson(req.getReader(), clazz);
     }
+
+    public static <T> T fromJson(String json, Class<T> clazz) {
+        return GSON.fromJson(json, clazz);
+    }
 }

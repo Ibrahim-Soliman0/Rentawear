@@ -19,11 +19,12 @@ public class Cart {
     @JoinColumn(name = "user_id")
     private User user;
 
-    @ColumnDefault("CURRENT_TIMESTAMP")
     @Column(name = "created_at")
     private Instant createdAt;
 
-    @OneToMany(mappedBy = "cart", cascade = {CascadeType.PERSIST, CascadeType.REMOVE, CascadeType.MERGE})
+    @OneToMany(mappedBy = "cart",
+            cascade = {CascadeType.PERSIST, CascadeType.REMOVE, CascadeType.MERGE},
+            orphanRemoval = true)
     private List<CartItem> cartItems = new ArrayList<>();
 
     public void addCartItem(CartItem cartItem) {
@@ -38,6 +39,13 @@ public class Cart {
 
     public List<CartItem> getCartItems() {
         return cartItems;
+    }
+
+    @PrePersist
+    private void init() {
+        if (createdAt == null) {
+            createdAt = Instant.now();
+        }
     }
 
     public Integer getId() {
