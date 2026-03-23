@@ -26,7 +26,7 @@ INSERT INTO categories (id, name, description, gender) VALUES
 INSERT INTO users (id, name, email, password_hash, birthday, job, address, credit_limit, role, gender) VALUES
 (1, 'Admin User',
 'admin@rentawear.com',
-'$2a$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi',
+'$2a$12$DKv4F6rhbzLBUBfyPPOW8.QaIA39vKILTstjSrNGYXG2Z/7nOqipC',
 '1985-03-12', 'Administrator', '1 Admin Lane, London, EC1A 1BB',
 0.00, 'ADMIN', 'FEMALE'),
 
