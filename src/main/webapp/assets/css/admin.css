@@ -1149,3 +1149,287 @@
   animation: admTabShake 0.45s ease;
   color: var(--adm-warning) !important;
 }
+
+/* ============================================================
+   admin-mobile.css — Mobile & Responsive fixes
+   Paste at the very bottom of admin.css
+   ============================================================ */
+
+/* ── Section header: stack on small screens ─────────────────── */
+@media (max-width: 640px) {
+  .adm-section-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.6rem;
+  }
+  /* Make Add New Product button full width */
+  .adm-section-header .adm-btn {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+/* ── Table: hide less important columns on mobile ───────────── */
+@media (max-width: 768px) {
+
+  /* Products table — hide Status column, keep essential */
+  #productsTable th:nth-child(5),
+  #productsTable td:nth-child(5) { display: none; }
+
+  /* Orders table — hide Created At column */
+  #ordersTable th:nth-child(4),
+  #ordersTable td:nth-child(4) { display: none; }
+
+  /* Customers table — hide Interests column */
+  #customersTable th:nth-child(3),
+  #customersTable td:nth-child(3) { display: none; }
+}
+
+@media (max-width: 576px) {
+
+  /* Products table — hide Category too */
+  #productsTable th:nth-child(2),
+  #productsTable td:nth-child(2) { display: none; }
+
+  /* Orders table — hide Total column */
+  #ordersTable th:nth-child(5),
+  #ordersTable td:nth-child(5) { display: none; }
+
+  /* Customers table — hide Credit Limit */
+  #customersTable th:nth-child(4),
+  #customersTable td:nth-child(4) { display: none; }
+
+  /* Tighten padding */
+  .adm-table th,
+  .adm-table td { padding: 0.6rem 0.75rem; }
+
+  /* Smaller product image */
+  .adm-product-img,
+  .adm-product-img-placeholder {
+    width: 36px;
+    height: 46px;
+    font-size: 1rem;
+  }
+
+  /* Smaller product name */
+  .adm-product-name { font-size: 0.8rem; }
+  .adm-product-brand { display: none; }
+
+  /* Smaller action buttons */
+  .adm-icon-btn {
+    width: 28px;
+    height: 28px;
+    font-size: 0.78rem;
+  }
+
+  /* Stack action buttons vertically */
+  .adm-action-btns {
+    flex-direction: column;
+    gap: 0.3rem;
+  }
+}
+
+/* ── Stock popover: full width on mobile ─────────────────────── */
+@media (max-width: 480px) {
+  .adm-stock-popover {
+    position: fixed !important;
+    top: auto !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    width: 100% !important;
+    border-radius: var(--adm-radius) var(--adm-radius) 0 0;
+    box-shadow: 0 -8px 30px rgba(0,0,0,.15);
+    animation: admSlideUp 0.25s ease;
+  }
+
+  @keyframes admSlideUp {
+    from { transform: translateY(100%); opacity: 0; }
+    to   { transform: translateY(0);    opacity: 1; }
+  }
+
+  .adm-stock-popover-body {
+    max-height: 60vh;
+  }
+}
+
+/* ── Modal: full screen on mobile ───────────────────────────── */
+@media (max-width: 576px) {
+  .adm-modal-overlay {
+    padding: 0;
+    align-items: flex-end;
+  }
+  .adm-modal,
+  .adm-modal--lg,
+  .adm-modal--sm {
+    max-width: 100%;
+    max-height: 92vh;
+    border-radius: var(--adm-radius) var(--adm-radius) 0 0;
+    animation: admSlideUp 0.25s ease;
+  }
+  .adm-modal-body {
+    padding: 1rem;
+  }
+  .adm-modal-header,
+  .adm-modal-footer {
+    padding: 0.85rem 1rem;
+  }
+  .adm-modal-tabs {
+    padding: 0 1rem;
+  }
+  .adm-modal-tab {
+    padding: 0.65rem 0.75rem;
+    font-size: 0.78rem;
+  }
+}
+
+/* ── Topbar: shrink title on mobile ─────────────────────────── */
+@media (max-width: 480px) {
+  .adm-page-title { font-size: 1.1rem; }
+  .adm-page-subtitle { display: none; }
+  .adm-topbar { height: 54px; gap: 0.6rem; }
+}
+
+/* ── Pagination: stack on mobile ────────────────────────────── */
+@media (max-width: 480px) {
+  .adm-pagination {
+    flex-direction: column;
+    align-items: center;
+    gap: 0.6rem;
+  }
+  .adm-pagination-info { order: 2; }
+  .adm-pagination-btns { order: 1; }
+}
+
+/* ── Variants add-row: stack on mobile ──────────────────────── */
+@media (max-width: 540px) {
+  .adm-variants-add-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .adm-variants-add-btn {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+/* ── Order item rows: stack on mobile ───────────────────────── */
+@media (max-width: 480px) {
+  .adm-order-item-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+  .adm-order-item-dates {
+    margin-left: 0;
+  }
+  .adm-order-item-name {
+    min-width: unset;
+  }
+}
+@media (max-width: 720px) {
+
+  /* Hide Actions text, keep buttons visible */
+  #productsTable th:nth-child(6),
+  #customersTable th:nth-child(5),
+  #ordersTable th:nth-child(6) {
+    width: 60px;
+    padding: 0.75rem 0.5rem;
+  }
+
+  #productsTable td:nth-child(6),
+  #customersTable td:nth-child(5),
+  #ordersTable td:nth-child(6) {
+    padding: 0.75rem 0.5rem;
+  }
+
+  /* Tighten all column padding */
+  .adm-table th,
+  .adm-table td {
+    padding: 0.75rem 0.6rem;
+  }
+
+  /* Shrink stock button */
+  .adm-stock-btn {
+    font-size: 0.75rem;
+    padding: 0.2rem 0.45rem;
+  }
+
+  /* Shrink rental price */
+  .adm-table td:nth-child(3) {
+    font-size: 0.8rem;
+    white-space: nowrap;
+  }
+}
+
+/* ── Fix orders table status column cut off ─────────────────── */
+@media (max-width: 720px) {
+
+  /* Hide Created At on orders */
+  #ordersTable th:nth-child(4),
+  #ordersTable td:nth-child(4) { display: none; }
+
+  /* Shrink expand button */
+  .adm-expand-btn {
+    font-size: 0.68rem;
+    padding: 0.15rem 0.45rem;
+    margin-left: 0.25rem;
+  }
+
+  /* Allow status badge to wrap */
+  .adm-badge {
+    font-size: 0.65rem;
+    padding: 0.2rem 0.45rem;
+    letter-spacing: 0.02em;
+  }
+}
+
+@media (max-width: 640px) {
+  /* Hide Total column on orders too */
+  #ordersTable th:nth-child(5),
+  #ordersTable td:nth-child(5) { display: none; }
+
+  /* Hide customer email on small screens */
+  .adm-customer-email { display: none; }
+}
+
+/* ── Fix: Add New Product button cut off when sidebar open ──── */
+@media (min-width: 992px) {
+  .adm-section-header {
+    padding-right: 0.5rem;
+  }
+}
+
+/* ── Fix: Actions column cut off at ~860px ──────────────────── */
+@media (max-width: 900px) and (min-width: 721px) {
+
+  /* Tighten all columns */
+  .adm-table th,
+  .adm-table td { padding: 0.75rem 0.75rem; }
+
+  /* Hide Status column to give Actions room */
+  #productsTable th:nth-child(5),
+  #productsTable td:nth-child(5) { display: none; }
+
+  /* Shrink stock button */
+  .adm-stock-btn {
+    font-size: 0.75rem;
+    padding: 0.2rem 0.4rem;
+  }
+
+  /* Shrink product image */
+  .adm-product-img,
+  .adm-product-img-placeholder {
+    width: 40px;
+    height: 50px;
+  }
+}
+
+/* ── Fix: Add New Product partially hidden at 992px-1100px ──── */
+@media (max-width: 1100px) and (min-width: 992px) {
+  .adm-section {
+    padding: 1.5rem;
+  }
+  .adm-table th,
+  .adm-table td { padding: 0.75rem 0.85rem; }
+}
