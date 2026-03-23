@@ -20,26 +20,35 @@
   const viewFullEl  = document.getElementById('qvViewFull');
   const colorLabelEl = document.getElementById('qvColorLabel');
   const colorNameEl  = document.getElementById('qvColorName');
+  const soldOutEl    = document.getElementById('qvSoldOutBanner'); // new
 
-  let active           = null;
-  let activeColor      = null;
-  let activeSize       = null;
-  let activeVariantId  = null;   // product_variants.id — for cart_items insert
-  let activeInventoryQty = null; // stock qty for + button cap in cart
-  let activeImage      = null;
-  let startDate   = null;
-  let endDate     = null;
-  let fpStart     = null;
-  let fpEnd       = null;
+  let active              = null;
+  let activeColor         = null;
+  let activeSize          = null;
+  let activeVariantId     = null;
+  let activeInventoryQty  = null;
+  let activeImage         = null;
+  let startDate           = null;
+  let endDate             = null;
+  let fpStart             = null;
+  let fpEnd               = null;
 
-  // ── Flatpickr — initialise once per page load ─────────────
+  // ── Earliest bookable date: today + 2 ─────────────────────
+  function getMinStartDate() {
+    const d = new Date();
+    d.setDate(d.getDate() + 2);
+    d.setHours(0, 0, 0, 0);
+    return d;
+  }
+
+  // ── Flatpickr — initialised once per page load ─────────────
   const startInput = document.getElementById('qvStartDate');
   const endInput   = document.getElementById('qvEndDate');
 
   if (startInput && typeof flatpickr === 'function') {
     fpStart = flatpickr(startInput, {
       dateFormat:    'd/m/Y',
-      minDate:       'today',
+      minDate:       getMinStartDate(),   /* earliest = today + 2 */
       disableMobile: true,
       onChange(dates) {
         startDate = dates[0] || null;
@@ -48,7 +57,7 @@
             const minEnd = new Date(startDate);
             minEnd.setDate(minEnd.getDate() + 1);
             const maxEnd = new Date(startDate);
-            maxEnd.setDate(maxEnd.getDate() + 30);
+            maxEnd.setDate(maxEnd.getDate() + 30); /* max 30-day rental */
             fpEnd.set('minDate', minEnd);
             fpEnd.set('maxDate', maxEnd);
             if (endDate && (endDate <= startDate || endDate > maxEnd)) {
@@ -56,7 +65,7 @@
               endDate = null;
             }
           } else {
-            fpEnd.set('minDate', 'today');
+            fpEnd.set('minDate', getMinStartDate());
             fpEnd.set('maxDate', null);
           }
         }
@@ -71,7 +80,7 @@
   if (endInput && typeof flatpickr === 'function') {
     fpEnd = flatpickr(endInput, {
       dateFormat:    'd/m/Y',
-      minDate:       'today',
+      minDate:       getMinStartDate(),
       disableMobile: true,
       onChange(dates) {
         endDate = dates[0] || null;
@@ -83,32 +92,33 @@
     });
   }
 
-  // ── Gate: button disabled only when no size selected ──────
+  // ── Gate: disabled when no size, or colour is sold out ──────
   function _checkAddBtn() {
     if (!addBtn) return;
     addBtn.disabled = !activeSize;
   }
 
-  // ── Enable / disable date pickers ────────────────────────
-  // Called when switching to a sold-out colour — no point selecting
-  // dates if nothing in this colour can be added to the bag.
+  // ── Enable / disable date pickers + show sold-out banner ────
   function _setDatesEnabled(enabled) {
     [startInput, endInput].forEach(inp => {
       if (!inp) return;
       inp.disabled = !enabled;
-      inp.closest?.('.rw-input-wrap, .qv-date-field')
+      inp.closest?.('.qv-date-field')
           ?.classList.toggle('qv-field-disabled', !enabled);
     });
+
+    /* Sold-out banner */
+    if (soldOutEl) soldOutEl.style.display = enabled ? 'none' : 'flex';
+
     if (!enabled) {
       fpStart?.clear(); fpEnd?.clear();
       startDate = null; endDate = null;
-      if (fpEnd) { fpEnd.set('minDate', 'today'); fpEnd.set('maxDate', null); }
+      if (fpEnd) { fpEnd.set('minDate', getMinStartDate()); fpEnd.set('maxDate', null); }
       if (summaryEl) summaryEl.textContent = '';
     }
   }
 
-  // ── Resolve variant ID and inventory qty from loaded detail ──
-  // Must be called whenever activeColor or activeSize changes.
+  // ── Resolve variant from loaded detail ──────────────────────
   function _resolveVariant() {
     const detail = overlay._detail;
     if (!detail || !activeColor) {
@@ -120,6 +130,7 @@
         ? (detail.quantityByVariantId?.[activeVariantId] ?? null)
         : null;
   }
+
   function _updateDateSummary() {
     if (!summaryEl) return;
     if (!startDate || !endDate || !active) { summaryEl.textContent = ''; return; }
@@ -131,7 +142,7 @@
   function _setColorName(name) {
     if (!colorNameEl || !colorLabelEl) return;
     if (name) {
-      colorNameEl.textContent   = name;
+      colorNameEl.textContent    = name;
       colorLabelEl.style.display = 'flex';
     } else {
       colorLabelEl.style.display = 'none';
@@ -157,24 +168,23 @@
     if (colorsEl) while (colorsEl.firstChild) colorsEl.removeChild(colorsEl.firstChild);
     if (sizesEl)  while (sizesEl.firstChild)  sizesEl.removeChild(sizesEl.firstChild);
 
-    // Placeholder while detail loads
+    // Size placeholder while detail loads
     const ph = document.createElement('span');
     ph.className = 'qv-size'; ph.textContent = '—'; ph.style.opacity = '0.3';
     sizesEl?.appendChild(ph);
 
     _setColorName(null);
 
-    // Wire "View full details" link
     if (viewFullEl) {
-      viewFullEl.href    = `${CTX}/product/${data.id}`;
+      viewFullEl.href          = `${CTX}/product/${data.id}`;
       viewFullEl.style.display = 'block';
     }
 
     startDate = null; endDate = null;
     fpStart?.clear(); fpEnd?.clear();
-    if (fpEnd) { fpEnd.set('minDate', 'today'); fpEnd.set('maxDate', null); }
+    if (fpEnd) { fpEnd.set('minDate', getMinStartDate()); fpEnd.set('maxDate', null); }
     if (summaryEl) summaryEl.textContent = '';
-    _setDatesEnabled(true);
+    _setDatesEnabled(true); // resets sold-out banner
 
     descSection?.classList.remove('open');
     if (nudgeEl) nudgeEl.classList.remove('show');
@@ -214,8 +224,7 @@
             dto.sizesByColor?.[activeColor]          || [],
             dto.availableSizesByColor?.[activeColor] || []
         );
-        // Disable date pickers if the default colour is fully sold out
-        _setDatesEnabled(!!defaultGroup.available);
+        _setDatesEnabled(defaultGroup.available);
       }
 
       _resolveVariant();
@@ -229,9 +238,22 @@
   function setMainImage(basePath) {
     activeImage = basePath;
     if (!mainImg) return;
-    // mainImg is now an <img> element (quick-view.jsp), not a div.
-    // Setting backgroundImage on an <img> has no visual effect — use src/srcset.
-    mainImg.src    = imgUrl(basePath, 'md');
+    const src = imgUrl(basePath, 'md');
+    if (!src) {
+      /* Placeholder when no real image */
+      mainImg.removeAttribute('src');
+      mainImg.removeAttribute('srcset');
+      mainImg.style.display = 'none';
+      /* show placeholder icon if present in the panel */
+      const ph = mainImg.parentElement?.querySelector('.qv-img-placeholder');
+      if (ph) ph.style.display = 'flex';
+      return;
+    }
+    /* Hide placeholder if shown */
+    const ph = mainImg.parentElement?.querySelector('.qv-img-placeholder');
+    if (ph) ph.style.display = 'none';
+    mainImg.style.display = '';
+    mainImg.src    = src;
     mainImg.srcset = `${imgUrl(basePath,'sm')} 400w, ${imgUrl(basePath,'md')} 800w, ${imgUrl(basePath,'lg')} 1400w`;
     mainImg.sizes  = '(max-width:700px) 100vw, 50vw';
   }
@@ -266,7 +288,7 @@
               detail.availableSizesByColor?.[activeColor] || []
           );
         }
-        // Disable date pickers for sold-out colours
+        /* Disable/enable dates + show/hide sold-out banner */
         _setDatesEnabled(g.available);
         _resolveVariant();
         _checkAddBtn();
@@ -278,17 +300,30 @@
   function setActiveGroup(group) {
     renderThumbs(group.images);
     if (group.images.length > 0) setMainImage(group.images[0].base);
+    else setMainImage(null);
   }
 
   // ── Thumbnails ────────────────────────────────────────────
+  // Only renders thumbnails for images that have a valid URL.
+  // Hides the entire strip when there are 0 or 1 valid images —
+  // a single thumbnail adds no navigation value and looks broken.
   function renderThumbs(images) {
     if (!thumbsEl) return;
     while (thumbsEl.firstChild) thumbsEl.removeChild(thumbsEl.firstChild);
-    images.forEach((img, i) => {
+
+    /* Filter to only images that produce a real URL */
+    const valid = (images || []).filter(img => !!imgUrl(img.base, 'sm'));
+
+    /* Hide the strip when there is nothing to navigate between */
+    thumbsEl.style.display = valid.length > 1 ? '' : 'none';
+    if (!valid.length) return;
+
+    valid.forEach((img, i) => {
+      const src = imgUrl(img.base, 'sm');
       const btn = document.createElement('button');
-      btn.type      = 'button';
-      btn.className = 'qv-thumb' + (i === 0 ? ' active' : '');
-      btn.style.backgroundImage    = `url('${imgUrl(img.base, 'sm')}')`;
+      btn.type                     = 'button';
+      btn.className                = 'qv-thumb' + (i === 0 ? ' active' : '');
+      btn.style.backgroundImage    = `url('${src}')`;
       btn.style.backgroundSize     = 'cover';
       btn.style.backgroundPosition = 'center';
       btn.setAttribute('aria-label', img.alt || `Image ${i + 1}`);
@@ -301,7 +336,7 @@
     });
   }
 
-  // ── Sizes — allSizes shows all, availSizes marks in-stock ──
+  // ── Sizes ──────────────────────────────────────────────────
   function renderSizes(allSizes, availSizes = []) {
     if (!sizesEl) return;
     while (sizesEl.firstChild) sizesEl.removeChild(sizesEl.firstChild);
@@ -353,7 +388,7 @@
       name:  trigger.dataset.name  || '',
       brand: trigger.dataset.brand || '',
       price: trigger.dataset.price || 0,
-      image: trigger.dataset.image || `${CTX}/assets/img/placeholder`,
+      image: trigger.dataset.image || null,
     };
     openImmediate(data);
     loadImages(data.id);
@@ -383,13 +418,11 @@
       return;
     }
 
-    const days    = Math.round((endDate - startDate) / 86400000);
-    const isoDate = d => d.toISOString().slice(0, 10);
-
+    const days      = Math.round((endDate - startDate) / 86400000);
+    const isoDate   = d => d.toISOString().slice(0, 10);
     const detail    = overlay._detail;
     const colorMeta = (detail?.swatches || []).find(s => s.color === activeColor);
 
-    // try-finally guarantees close() fires even if Cart.add or render() throws.
     try {
       window.Cart.add({
         // ── CHANGED ───────────────────────────────────────────────────────
@@ -408,6 +441,7 @@
         colorName:    colorMeta?.name || null,
         variantId:    activeVariantId,          // kept for clarity / server payload
         inventoryQty: activeInventoryQty,
+        qty:          1,
         days,
         startDate:    isoDate(startDate),       // was buried inside dates string
         endDate:      isoDate(endDate),         // now separate — server needs these
@@ -435,7 +469,7 @@
     overlay._detail = null;
     startDate = null; endDate = null;
     fpStart?.clear(); fpEnd?.clear();
-    if (fpEnd) { fpEnd.set('minDate', 'today'); fpEnd.set('maxDate', null); }
+    if (fpEnd) { fpEnd.set('minDate', getMinStartDate()); fpEnd.set('maxDate', null); }
     if (summaryEl)   summaryEl.textContent = '';
     if (descSection) descSection.classList.remove('open');
     if (nudgeEl) nudgeEl.classList.remove('show');
