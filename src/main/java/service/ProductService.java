@@ -23,8 +23,8 @@ public class ProductService {
         return productRepo.findById(productId);
     }
 
-    public List<Product> findNew(int pageSize) {
-        return productRepo.findNew(pageSize, NEW_DAYS);
+    public List<Product> findNew(ProductFilterDTO f) {
+        return productRepo.findNew(f.pageSize(), NEW_DAYS, f.gender(), f.categoryIds());
     }
 
     public List<Product> findFiltered(ProductFilterDTO f) {
@@ -32,6 +32,16 @@ public class ProductService {
                 f.gender(), f.categoryIds(),
                 f.minPrice(), f.maxPrice(),
                 f.pageSize(), f.offset());
+    }
+
+    public List<Product> findByInterests(ProductFilterDTO f) {
+        return productRepo.findFiltered(
+                null,              // gender — null so cross-gender interests work
+                f.interestIds(),   // use interestIds as the category list
+                f.minPrice(),
+                f.maxPrice(),
+                f.pageSize(),
+                f.offset());
     }
 
     public List<Product> searchFiltered(ProductFilterDTO f) {
@@ -42,14 +52,16 @@ public class ProductService {
                 f.pageSize(), f.offset());
     }
 
-    public List<Product> findByInterests(ProductFilterDTO f) {
-        return productRepo.findByInterests(
-                f.interestIds(), f.gender(),
-                f.pageSize(), f.offset());
+    public long countByInterests(ProductFilterDTO f) {
+        return productRepo.countFiltered(
+                null,
+                f.interestIds(),
+                f.minPrice(),
+                f.maxPrice());
     }
 
-    public long countNew() {
-        return productRepo.countNew(NEW_DAYS);
+    public long countNew(ProductFilterDTO f) {
+        return productRepo.countNew(NEW_DAYS, f.gender(), f.categoryIds());
     }
 
     public long countFiltered(ProductFilterDTO f) {
@@ -65,8 +77,8 @@ public class ProductService {
                 f.minPrice(), f.maxPrice());
     }
 
-    public long countByInterests(ProductFilterDTO f) {
-        return productRepo.countByInterests(f.interestIds(), f.gender());
+    public PriceRangeDTO getMinMaxPriceForInterests(ProductFilterDTO f) {
+        return productRepo.getMinMaxPrice(null, f.interestIds());
     }
 
     public PriceRangeDTO getMinMaxPrice(ProductFilterDTO f) {
