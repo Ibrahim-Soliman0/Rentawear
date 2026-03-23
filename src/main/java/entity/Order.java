@@ -24,7 +24,6 @@ public class Order {
     @Column(name = "total_amount", precision = 10, scale = 2)
     private BigDecimal totalAmount;
 
-    @ColumnDefault("CURRENT_TIMESTAMP")
     @Column(name = "created_at")
     private Instant createdAt;
 
@@ -43,6 +42,13 @@ public class Order {
     public void removeOrderItem(OrderItem orderItem) {
         orderItems.remove(orderItem);
         orderItem.setOrder(null);
+    }
+
+    @PrePersist
+    private void init() {
+        if (createdAt == null) {
+            createdAt = Instant.now();
+        }
     }
 
     public List<OrderItem> getOrderItems() {
