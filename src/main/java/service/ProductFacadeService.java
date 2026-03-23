@@ -212,6 +212,15 @@ public class ProductFacadeService {
         return getAdminDetail(saved.getId());
     }
 
+    public String updateProductImage(int productId, String imageUrl) {
+        Product product = productService.getById(productId);
+        if (product == null) return null;
+        String old = product.getImageUrl();
+        product.setImageUrl(imageUrl);
+        productService.save(product);
+        return old;
+    }
+
     private void applyDtoToProduct(Product product, SaveProductDTO dto) {
         product.setName(dto.name());
         product.setBasePrice(BigDecimal.valueOf(dto.pricePerDay()));

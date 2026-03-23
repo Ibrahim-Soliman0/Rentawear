@@ -187,12 +187,13 @@ function renderProductsTable(products) {
     const core = p.core;
     const inStock = p.inStock;
 
+    const imageUrl = resolveAdminImage(core.imageUrl);
     return `
     <tr>
       <td>
         <div class="adm-product-cell">
-          ${core.imageUrl
-            ? `<img src="${core.imageUrl}" alt="${escHtml(core.name)}" class="adm-product-img"/>`
+          ${imageUrl
+            ? `<img src="${imageUrl}" alt="${escHtml(core.name)}" class="adm-product-img"/>`
             : `<div class="adm-product-img-placeholder"><i class="bi bi-image"></i></div>`}
           <div>
             <div class="adm-product-name">${escHtml(core.name)}</div>
@@ -249,6 +250,8 @@ document.getElementById('openAddProductModal')?.addEventListener('click', () => 
       .querySelector('.adm-btn-text').textContent = 'Save Product';
   document.getElementById('productModalTitle').textContent = 'Add New Product';
   document.getElementById('productForm').reset();
+  const imageFileInput = document.getElementById('productImageFile');
+  if (imageFileInput) imageFileInput.value = '';
   document.getElementById('variantColorGroups').innerHTML = '';
   document.getElementById('variantsEmptyHint').style.display = 'block';
   clearAllProductErrors();
@@ -283,6 +286,8 @@ function openEditProduct(id) {
   clearAllProductErrors();
   document.getElementById('variantColorGroups').innerHTML = '';
   document.getElementById('variantsEmptyHint').style.display = 'block';
+  const imageFileInput = document.getElementById('productImageFile');
+  if (imageFileInput) imageFileInput.value = '';
   // Reset to first tab
   document.querySelectorAll('.adm-modal-tab').forEach((t, i) => t.classList.toggle('active', i === 0));
   document.querySelectorAll('.adm-tab-panel').forEach((p, i) => p.classList.toggle('active', i === 0));
@@ -461,14 +466,50 @@ function showVariantsTabWarning() {
   // Show inline warning inside the variants tab area
   showModalBanner('Please fill in the basic product info and click "Save Product" first.', 'warning');
 }
+
+function setSaveButtonLoading(isLoading) {
+  const btn = document.getElementById('saveProductBtn');
+  if (!btn) return;
+  btn.disabled = isLoading;
+  btn.querySelector('.adm-btn-text').classList.toggle('d-none', isLoading);
+  btn.querySelector('.adm-btn-spinner').classList.toggle('d-none', !isLoading);
+}
+
+function getSelectedImageFile() {
+  const input = document.getElementById('productImageFile');
+  if (!input || !input.files || input.files.length === 0) return null;
+  return input.files[0];
+}
+
+function uploadProductImage(productId) {
+  const file = getSelectedImageFile();
+  if (!file) return Promise.resolve(null);
+
+  const form = new FormData();
+  form.append('productId', productId);
+  form.append('image', file);
+
+  return new Promise((resolve, reject) => {
+    let req = window.XMLHttpRequest ? new XMLHttpRequest() : new ActiveXObject('Microsoft.XMLHTTP');
+    req.onreadystatechange = function () {
+      if (req.readyState === 4) {
+        if (req.status === 200) {
+          resolve(JSON.parse(req.responseText));
+        } else {
+          reject(req);
+        }
+      }
+    };
+    req.open('POST', CTX + '/admin/product-image', true);
+    req.send(form);
+  });
+}
 /* ── Save product ───────────────────────────────────────────── */
 document.getElementById('saveProductBtn')?.addEventListener('click', () => {
   if (!validateProductForm()) return;
 
   const btn = document.getElementById('saveProductBtn');
-  btn.disabled = true;
-  btn.querySelector('.adm-btn-text').classList.add('d-none');
-  btn.querySelector('.adm-btn-spinner').classList.remove('d-none');
+  setSaveButtonLoading(true);
 
   const isNew = !currentEditProductId;
 
@@ -490,10 +531,6 @@ document.getElementById('saveProductBtn')?.addEventListener('click', () => {
   let req = window.XMLHttpRequest ? new XMLHttpRequest() : new ActiveXObject('Microsoft.XMLHTTP');
   req.onreadystatechange = function () {
     if (req.readyState === 4) {
-      btn.disabled = false;
-      btn.querySelector('.adm-btn-text').classList.remove('d-none');
-      btn.querySelector('.adm-btn-spinner').classList.add('d-none');
-
       if (req.status === 200) {
         const data = JSON.parse(req.responseText);
 
@@ -517,13 +554,30 @@ document.getElementById('saveProductBtn')?.addEventListener('click', () => {
 
           // Reload table in background
           loadProducts(currentPage);
-
-        } else {
-          // ── Edit complete: close modal ──
-          closeModal('productModalOverlay');
-          loadProducts(currentPage);
         }
+
+        const productId = currentEditProductId;
+        const finalize = () => {
+          if (!isNew) {
+            closeModal('productModalOverlay');
+            loadProducts(currentPage);
+          }
+          setSaveButtonLoading(false);
+        };
+
+        uploadProductImage(productId)
+          .then(res => {
+            if (res && res.imageUrl) {
+              document.getElementById('productImage').value = res.imageUrl;
+            }
+            finalize();
+          })
+          .catch(() => {
+            showModalBanner('Image upload failed. Product saved without image.', 'warning');
+            finalize();
+          });
       } else {
+        setSaveButtonLoading(false);
         showModalBanner('Something went wrong. Please try again.', 'error');
       }
     }
@@ -762,6 +816,21 @@ function escHtml(str) {
     .replace(/"/g, '&quot;');
 }
 
+function resolveAdminImage(base) {
+  if (!base) return null;
+
+  const hasExtension = /\.(jpg|jpeg|png|webp)$/i.test(base);
+  const isAbsolute   = /^https?:\/\//i.test(base);
+
+  if (isAbsolute) return base;
+  if (base.startsWith(CTX)) return base;
+  if (base.startsWith('/assets/')) {
+    return hasExtension ? CTX + base : `${CTX}${base}_sm.jpg`;
+  }
+
+  return hasExtension ? base : `${CTX}${base}_sm.jpg`;
+}
+
 /* ── Stock Popover ──────────────────────────────────────────── */
 let activePopover = null;
 let activePopoverId = null;
@@ -941,5 +1010,30 @@ function showModalBanner(message, type) {
   banner.style.display = 'flex';
   setTimeout(() => { banner.style.display = 'none'; }, 4000);
 }
+// Auto-upload when a file is selected for an existing product
+document.getElementById('productImageFile')?.addEventListener('change', () => {
+  if (!getSelectedImageFile()) return;
+  if (!currentEditProductId) {
+    return;
+  }
+
+  setSaveButtonLoading(true);
+  uploadProductImage(currentEditProductId)
+    .then(res => {
+      if (res && res.imageUrl) {
+        document.getElementById('productImage').value = res.imageUrl;
+        showModalBanner('Image uploaded successfully.', 'success');
+        loadProducts(currentPage);
+      }
+      setSaveButtonLoading(false);
+    })
+    .catch(() => {
+      setSaveButtonLoading(false);
+      showModalBanner('Image upload failed. Please try again.', 'warning');
+    });
+});
+
 /* ── Init: load products on page load ───────────────────────── */
 loadProducts();
+
+

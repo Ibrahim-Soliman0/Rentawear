@@ -606,6 +606,12 @@
 .adm-form-input.adm-input--error { border-color: var(--adm-danger); background: #fff8f8; }
 .adm-form-input::placeholder { color: var(--adm-muted); }
 .adm-form-textarea { resize: vertical; min-height: 80px; line-height: 1.5; }
+.adm-form-hint {
+  margin-top: 0.35rem;
+  font-size: 0.72rem;
+  color: var(--adm-muted);
+  line-height: 1.4;
+}
 
 .adm-select-wrap { position: relative; }
 .adm-form-select { appearance: none; -webkit-appearance: none; cursor: pointer; padding-right: 2rem; }
