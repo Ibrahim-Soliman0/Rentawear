@@ -1010,30 +1010,8 @@ function showModalBanner(message, type) {
   banner.style.display = 'flex';
   setTimeout(() => { banner.style.display = 'none'; }, 4000);
 }
-// Auto-upload when a file is selected for an existing product
-document.getElementById('productImageFile')?.addEventListener('change', () => {
-  if (!getSelectedImageFile()) return;
-  if (!currentEditProductId) {
-    return;
-  }
-
-  setSaveButtonLoading(true);
-  uploadProductImage(currentEditProductId)
-    .then(res => {
-      if (res && res.imageUrl) {
-        document.getElementById('productImage').value = res.imageUrl;
-        showModalBanner('Image uploaded successfully.', 'success');
-        loadProducts(currentPage);
-      }
-      setSaveButtonLoading(false);
-    })
-    .catch(() => {
-      setSaveButtonLoading(false);
-      showModalBanner('Image upload failed. Please try again.', 'warning');
-    });
-});
-
 /* ── Init: load products on page load ───────────────────────── */
 loadProducts();
+
 
 
