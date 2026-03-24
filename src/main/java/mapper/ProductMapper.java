@@ -27,9 +27,9 @@ public interface ProductMapper {
     @Mapping(target = "core",                expression = "java(toCoreDTO(product))")
     @Mapping(target = "isNew",               expression = "java(isNew(product))")
     @Mapping(target = "soldOut",             expression = "java(product.getProductVariants().stream().noneMatch(v -> v.getQuantity() > 0))")
-    @Mapping(target = "swatches",            expression = "java(buildSwatches(images))")
+    @Mapping(target = "swatches",            expression = "java(buildSwatchesWithFallback(images, variants))")
     @Mapping(target = "primaryImageByColor", expression = "java(buildPrimaryImageByColor(images))")
-    ProductCardDTO toCardDTO(Product product, List<ProductImage> images);
+    ProductCardDTO toCardDTO(Product product, List<ProductVariant> variants, List<ProductImage> images);
 
     // FIX 1: Added missing @Mapping for quantityByVariantId — buildQuantityByVariantId()
     //         existed as a helper but was never wired, causing the field to always be null.
