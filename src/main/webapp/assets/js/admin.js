@@ -315,7 +315,8 @@ function openEditProduct(id) {
           const dashIdx  = colorKey.indexOf('-');
           const hex      = dashIdx > -1 ? colorKey.substring(0, dashIdx) : '#cccccc';
           const colorName = dashIdx > -1 ? colorKey.substring(dashIdx + 1) : colorKey;
-          addColorGroup(colorName, hex, variants);
+          const imageUrl  = variants[0]?.imageUrl || null;
+          addColorGroup(colorName, hex, variants, imageUrl);
         });
       }
 
@@ -328,7 +329,7 @@ function openEditProduct(id) {
 /* ── Variant color group management ─────────────────────────── */
 let colorGroupCounter = 0;
 
-function addColorGroup(colorName, hex, existingVariants) {
+function addColorGroup(colorName, hex, existingVariants, existingImageUrl) {
   colorName = colorName || document.getElementById('newColorName').value.trim();
   hex       = hex       || document.getElementById('newColorHex').value;
 
@@ -337,12 +338,15 @@ function addColorGroup(colorName, hex, existingVariants) {
     return;
   }
 
-  const groupId = 'cg-' + (colorGroupCounter++);
+  const groupId   = 'cg-' + (colorGroupCounter++);
+  const colorKey  = hex + '-' + colorName;
+  const fileInputId = groupId + '-img';
+
   document.getElementById('variantsEmptyHint').style.display = 'none';
 
   const card = document.createElement('div');
-  card.className   = 'adm-color-group-card';
-  card.id          = groupId;
+  card.className     = 'adm-color-group-card';
+  card.id            = groupId;
   card.dataset.color = colorName;
   card.dataset.hex   = hex;
 
@@ -353,27 +357,53 @@ function addColorGroup(colorName, hex, existingVariants) {
         <span>${escHtml(colorName)}</span>
         <span style="font-size:0.72rem;color:var(--adm-muted);font-weight:400;">${hex}</span>
       </div>
-      <button type="button" class="adm-remove-color-btn" onclick="removeColorGroup('${groupId}')">
+      <button type="button" class="adm-remove-color-btn"
+              onclick="removeColorGroup('${groupId}')">
         <i class="bi bi-trash3"></i> Remove color
       </button>
     </div>
+
+    <!-- Color image upload -->
+    <div class="adm-color-image-row">
+      <div class="adm-color-image-preview-wrap" id="${groupId}-preview-wrap">
+        ${existingImageUrl
+      ? `<img src="${resolveAdminImage(existingImageUrl)}"
+                  class="adm-color-img-preview" id="${groupId}-preview"
+                  alt="Color image"/>`
+      : `<div class="adm-color-img-placeholder" id="${groupId}-preview">
+               <i class="bi bi-image"></i>
+             </div>`}
+      </div>
+      <div class="adm-color-image-upload">
+        <label for="${fileInputId}" class="adm-btn adm-btn--ghost adm-btn--sm">
+          <i class="bi bi-upload"></i>
+          ${existingImageUrl ? 'Replace Image' : 'Upload Image'}
+        </label>
+        <input type="file" id="${fileInputId}" accept="image/*"
+               style="display:none"
+               onchange="previewColorImage(this, '${groupId}')"/>
+        <span class="adm-color-img-filename" id="${groupId}-filename">
+          ${existingImageUrl ? 'Image uploaded' : 'No image selected'}
+        </span>
+      </div>
+    </div>
+
     <div class="adm-color-group-body">
       <div class="adm-size-rows" id="${groupId}-sizes"></div>
-      <button type="button" class="adm-add-size-btn" onclick="addSizeRow('${groupId}')">
+      <button type="button" class="adm-add-size-btn"
+              onclick="addSizeRow('${groupId}')">
         <i class="bi bi-plus"></i> Add size
       </button>
     </div>`;
 
   document.getElementById('variantColorGroups').appendChild(card);
 
-  // Populate existing variants or add one empty row
   if (existingVariants && existingVariants.length > 0) {
     existingVariants.forEach(v => addSizeRow(groupId, v.size, v.quantity, v.variantId));
   } else {
     addSizeRow(groupId);
   }
 
-  // Clear the add-color inputs
   document.getElementById('newColorName').value    = '';
   document.getElementById('newColorHex').value     = '#000000';
   document.getElementById('newColorHexText').value = '';
@@ -558,24 +588,30 @@ document.getElementById('saveProductBtn')?.addEventListener('click', () => {
 
         const productId = currentEditProductId;
         const finalize = () => {
-          if (!isNew) {
-            closeModal('productModalOverlay');
-            loadProducts(currentPage);
-          }
-          setSaveButtonLoading(false);
+          uploadProductImage(productId)
+              .then(res => {
+                if (res && res.imageUrl) {
+                  document.getElementById('productImage').value = res.imageUrl;
+                }
+              })
+              .then(() => uploadColorImages(productId)) // ✅ NEW STEP
+              .then(() => {
+                if (!isNew) {
+                  closeModal('productModalOverlay');
+                  loadProducts(currentPage);
+                }
+                setSaveButtonLoading(false);
+              })
+              .catch(() => {
+                showModalBanner('Some images failed to upload. Product saved.', 'warning');
+                if (!isNew) {
+                  closeModal('productModalOverlay');
+                  loadProducts(currentPage);
+                }
+                setSaveButtonLoading(false);
+              });
         };
-
-        uploadProductImage(productId)
-          .then(res => {
-            if (res && res.imageUrl) {
-              document.getElementById('productImage').value = res.imageUrl;
-            }
-            finalize();
-          })
-          .catch(() => {
-            showModalBanner('Image upload failed. Product saved without image.', 'warning');
-            finalize();
-          });
+        finalize();
       } else {
         setSaveButtonLoading(false);
         showModalBanner('Something went wrong. Please try again.', 'error');
@@ -1009,6 +1045,63 @@ function showModalBanner(message, type) {
   banner.innerHTML = `<i class="bi bi-${icons[type] || 'info-circle'}"></i> ${escHtml(message)}`;
   banner.style.display = 'flex';
   setTimeout(() => { banner.style.display = 'none'; }, 4000);
+}
+
+function previewColorImage(input, groupId) {
+  const file = input.files[0];
+  if (!file) return;
+
+  const filenameEl = document.getElementById(groupId + '-filename');
+  if (filenameEl) filenameEl.textContent = file.name;
+
+  // Show image preview
+  const previewEl = document.getElementById(groupId + '-preview');
+  const reader    = new FileReader();
+  reader.onload   = e => {
+    if (previewEl) {
+      previewEl.outerHTML = `<img src="${e.target.result}"
+        class="adm-color-img-preview" id="${groupId}-preview" alt="Color image"/>`;
+    }
+  };
+  reader.readAsDataURL(file);
+}
+
+function uploadColorImages(productId) {
+  const groups   = document.querySelectorAll('.adm-color-group-card');
+  const uploads  = [];
+
+  groups.forEach(card => {
+    const groupId   = card.id;
+    const colorName = card.dataset.color;
+    const hex       = card.dataset.hex;
+    const colorKey  = hex + '-' + colorName;
+    const fileInput = document.getElementById(groupId + '-img');
+
+    if (!fileInput || !fileInput.files || fileInput.files.length === 0) return;
+
+    const file = fileInput.files[0];
+    const form = new FormData();
+    form.append('productId', productId);
+    form.append('color',     colorKey);
+    form.append('image',     file);
+
+    uploads.push(
+        new Promise((resolve, reject) => {
+          let req = window.XMLHttpRequest
+              ? new XMLHttpRequest()
+              : new ActiveXObject('Microsoft.XMLHTTP');
+          req.onreadystatechange = function () {
+            if (req.readyState === 4) {
+              req.status === 200 ? resolve(JSON.parse(req.responseText)) : reject(req);
+            }
+          };
+          req.open('POST', CTX + '/admin/product-color-image', true);
+          req.send(form);
+        })
+    );
+  });
+
+  return Promise.all(uploads);
 }
 /* ── Init: load products on page load ───────────────────────── */
 loadProducts();

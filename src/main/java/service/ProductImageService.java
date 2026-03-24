@@ -1,12 +1,15 @@
 package service;
 
+import entity.Product;
 import entity.ProductImage;
 import repository.ProductImageRepository;
+import util.ImagePathUtil;
+import util.ImageProcessor;
 
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.*;
 
 public class ProductImageService {
 
@@ -47,5 +50,40 @@ public class ProductImageService {
 
     public void deleteByProductId(int productId) {
         imageRepo.deleteByProductId(productId);
+    }
+
+    public String saveColorImage(Product product, String encodedColor,
+                                 InputStream inputStream, String webappRoot)
+            throws IOException {
+
+        String uuid    = UUID.randomUUID().toString().replace("-", "").substring(0, 8);
+        String basePath = ImagePathUtil.base(product.getId(), encodedColor, uuid);
+        String absDir   = ImagePathUtil.absoluteDir(webappRoot, product.getId(), encodedColor);
+
+        // Process and write image files
+        ImageProcessor.process(inputStream, new File(absDir), uuid);
+
+        // Delete old image for this color if exists
+        imageRepo.findByProductIdAndColor(product.getId(), encodedColor)
+                .stream()
+                .findFirst()
+                .ifPresent(existing -> {
+                    ImageProcessor.deleteAll(existing.getImageUrl(), webappRoot);
+                    imageRepo.delete(existing);
+                });
+
+        // Save new ProductImage entity
+        ProductImage productImage = new ProductImage();
+        productImage.setProduct(product);
+        productImage.setColor(encodedColor);
+        productImage.setImageUrl(basePath);
+        imageRepo.save(productImage);
+
+        return basePath;
+    }
+
+
+    public List<ProductImage> findByProductIdAndColor(int productId, String color) {
+        return imageRepo.findByProductIdAndColor(productId, color);
     }
 }

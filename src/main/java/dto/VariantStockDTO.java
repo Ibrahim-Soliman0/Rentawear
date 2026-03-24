@@ -3,5 +3,6 @@ package dto;
 public record VariantStockDTO(
         int variantId,
         String size,
-        int quantity
+        int quantity,
+        String imageUrl
 ) {}

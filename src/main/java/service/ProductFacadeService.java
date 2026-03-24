@@ -6,7 +6,13 @@ import entity.ProductImage;
 import entity.ProductVariant;
 import mapper.ProductMapper;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.math.BigDecimal;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -116,7 +122,35 @@ public class ProductFacadeService {
     public AdminProductDetailDTO getAdminDetail(int productId) {
         Product              product  = productService.getById(productId);
         List<ProductVariant> variants = variantService.getByProductId(productId);
-        return mapper.toAdminDetailDTO(product, variants);
+
+        // Build stockByColor with image URLs manually
+        Map<String, List<VariantStockDTO>> stockByColor = new LinkedHashMap<>();
+        for (ProductVariant v : variants) {
+            String colorKey = v.getColor();
+
+            // Fetch color image once per color key
+            stockByColor.computeIfAbsent(colorKey, k -> {
+                return new ArrayList<>();
+            });
+
+            // Get image URL for this color
+            ProductImage colorImage = imageService.findByProductIdAndColor(productId, colorKey)
+                    .stream()
+                    .findFirst()
+                    .orElse(null);
+            String imageUrl = colorImage != null ? colorImage.getImageUrl() : null;
+
+            stockByColor.get(colorKey).add(
+                    new VariantStockDTO(v.getId(), v.getSize(), v.getQuantity(), imageUrl)
+            );
+        }
+
+        return new AdminProductDetailDTO(
+                mapper.toCoreDTO(product),
+                product.getDescription(),
+                isNew(product),
+                stockByColor
+        );
     }
 
     // Colour deletion
@@ -230,5 +264,19 @@ public class ProductFacadeService {
             categoryService.getById(dto.categoryId())
                     .ifPresent(product::setCategory);
         }
+    }
+
+    public Product getProductById(int id) {
+        return productService.getById(id);
+    }
+
+    public String saveColorImage(Product product, String encodedColor,
+                                 InputStream inputStream, String webappRoot) throws IOException {
+        return imageService.saveColorImage(product, encodedColor, inputStream, webappRoot);
+    }
+
+    boolean isNew(Product product) {
+        return product.getCreatedAt()
+                .isAfter(Instant.now().minus(30, ChronoUnit.DAYS));
     }
 }

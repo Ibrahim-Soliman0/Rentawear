@@ -1439,3 +1439,48 @@
   .adm-table th,
   .adm-table td { padding: 0.75rem 0.85rem; }
 }
+/* ── Color image upload row ─────────────────────────────────── */
+.adm-color-image-row {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  padding: 0.75rem 0.85rem;
+  border-bottom: 1px solid var(--adm-stone);
+  background: var(--adm-warm-white);
+}
+.adm-color-image-preview-wrap {
+  flex-shrink: 0;
+}
+.adm-color-img-preview {
+  width: 52px;
+  height: 66px;
+  object-fit: cover;
+  border-radius: var(--adm-radius);
+  border: 1px solid var(--adm-stone);
+  display: block;
+}
+.adm-color-img-placeholder {
+  width: 52px;
+  height: 66px;
+  border-radius: var(--adm-radius);
+  border: 1.5px dashed var(--adm-stone);
+  background: var(--adm-cream);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--adm-muted);
+  font-size: 1.2rem;
+}
+.adm-color-image-upload {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+.adm-btn--sm {
+  padding: 0.35rem 0.75rem;
+  font-size: 0.75rem;
+}
+.adm-color-img-filename {
+  font-size: 0.72rem;
+  color: var(--adm-muted);
+}
