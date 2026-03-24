@@ -244,7 +244,7 @@ function renderEmpty() {
                 </svg>
             </div>
             <p class="co-empty-label">Your cart is empty</p>
-            <a href="${window.CTX ?? ''}/explore" class="co-empty-link">Continue browsing →</a>
+            <a href="${window.CTX ?? ''}/home" class="co-empty-link">Continue browsing →</a>
         </div>`;
     list.appendChild(li);
     const pricing = dom.pricing();
@@ -435,6 +435,8 @@ async function loadUserSession() {
         const user = await res.json();
         renderAddress(user);
         renderPaymentCards(user);
+
+        window.RW_USER = user.userJson;
 
         // Credit limit check — read the total that renderPricing() already wrote
         const totalInput = dom.totalAmountInput();
