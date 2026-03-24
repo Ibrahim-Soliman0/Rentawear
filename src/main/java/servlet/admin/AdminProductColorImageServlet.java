@@ -72,6 +72,30 @@ public class AdminProductColorImageServlet extends HttpServlet {
 
         JsonUtil.writeJson(resp, new ColorImageResponse(color, basePath));
     }
+    @Override
+    protected void doDelete(HttpServletRequest req, HttpServletResponse resp)
+            throws IOException {
 
+        String productIdRaw = req.getParameter("productId");
+        String color        = req.getParameter("color");
+
+        if (productIdRaw == null || color == null || color.isBlank()) {
+            resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "Missing productId or color");
+            return;
+        }
+
+        int productId;
+        try {
+            productId = Integer.parseInt(productIdRaw);
+        } catch (NumberFormatException e) {
+            resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "Invalid productId");
+            return;
+        }
+
+        String webappRoot = getServletContext().getRealPath("/");
+        facade.deleteColorImage(productId, color, webappRoot);
+
+        resp.setStatus(HttpServletResponse.SC_OK);
+    }
     record ColorImageResponse(String color, String imageUrl) {}
 }

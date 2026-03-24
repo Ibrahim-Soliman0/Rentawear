@@ -86,4 +86,14 @@ public class ProductImageService {
     public List<ProductImage> findByProductIdAndColor(int productId, String color) {
         return imageRepo.findByProductIdAndColor(productId, color);
     }
+
+    public void deleteColorImage(int productId, String color, String webappRoot) {
+        imageRepo.findByProductIdAndColor(productId, color)
+                .stream()
+                .findFirst()
+                .ifPresent(existing -> {
+                    ImageProcessor.deleteAll(existing.getImageUrl(), webappRoot);
+                    imageRepo.delete(existing);
+                });
+    }
 }
