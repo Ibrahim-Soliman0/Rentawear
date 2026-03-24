@@ -5,6 +5,7 @@ target/
 .kotlin
 src/main/resources/.env
 .smarttomcat
+**/*.log
 
 ### IntelliJ IDEA ###
 .idea/*
