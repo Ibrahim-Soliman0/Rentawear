@@ -410,7 +410,20 @@ function addColorGroup(colorName, hex, existingVariants, existingImageUrl) {
 }
 
 function removeColorGroup(groupId) {
-  document.getElementById(groupId)?.remove();
+  const card      = document.getElementById(groupId);
+  const colorName = card?.dataset.color;
+  const hex       = card?.dataset.hex;
+  const colorKey  = hex + '-' + colorName;
+
+  if (currentEditProductId && colorName && hex) {
+    let req = window.XMLHttpRequest ? new XMLHttpRequest() : new ActiveXObject('Microsoft.XMLHTTP');
+    req.open('DELETE', CTX + '/admin/product-color-image'
+        + '?productId=' + currentEditProductId
+        + '&color='     + encodeURIComponent(colorKey), true);
+    req.send();
+  }
+
+  card?.remove();
   if (document.getElementById('variantColorGroups').children.length === 0) {
     document.getElementById('variantsEmptyHint').style.display = 'block';
   }
@@ -594,7 +607,7 @@ document.getElementById('saveProductBtn')?.addEventListener('click', () => {
                   document.getElementById('productImage').value = res.imageUrl;
                 }
               })
-              .then(() => uploadColorImages(productId)) // ✅ NEW STEP
+              .then(() => uploadColorImages(productId))
               .then(() => {
                 if (!isNew) {
                   closeModal('productModalOverlay');

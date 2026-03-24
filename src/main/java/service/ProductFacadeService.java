@@ -285,4 +285,9 @@ public class ProductFacadeService {
         return product.getCreatedAt()
                 .isAfter(Instant.now().minus(30, ChronoUnit.DAYS));
     }
+
+    // Deletes all images for a colour.
+    public void deleteColorImage(int productId, String color,String webappRoot) {
+        imageService.deleteColorImage(productId, color, webappRoot);
+    }
 }
