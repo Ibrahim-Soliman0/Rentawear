@@ -264,9 +264,11 @@
           </div>
 
           <div class="adm-form-group">
-            <label class="adm-form-label">Image URL</label>
-            <input type="text" id="productImage" name="productImage"
-                   class="adm-form-input" placeholder="https://..."/>
+            <label class="adm-form-label">Upload Image</label>
+            <input type="file" id="productImageFile" name="productImageFile"
+                   class="adm-form-input" accept="image/*"/>
+            <div class="adm-form-hint">JPG/PNG up to 5MB. Upload replaces the current image.</div>
+            <input type="hidden" id="productImage" name="productImage"/>
           </div>
 
           <div class="adm-form-group">
