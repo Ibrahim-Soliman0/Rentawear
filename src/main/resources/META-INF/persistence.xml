@@ -17,8 +17,6 @@
             <!-- SQL dialect -->
             <property name="hibernate.dialect" value="org.hibernate.dialect.MySQLDialect"/>
 
-            <property name="hibernate.show_sql" value="true"/>
-
             <!-- Pretty print the SQL in the log file and console -->
             <property name="hibernate.format_sql" value="true"/>
 
@@ -26,7 +24,7 @@
 <!--            <property name="hibernate.generate_statistics" value="true"/>-->
 
             <!-- Setting threshold value for slow queries -->
-            <property name="hibernate.session.events.log.LOG_QUERIES_SLOWER_THAN_MS" value="1" />
+            <property name="hibernate.session.events.log.LOG_QUERIES_SLOWER_THAN_MS" value="20" />
 
             <!-- HikariCP specific properties -->
             <property name="hibernate.hikari.minimumIdle" value="5"/>
