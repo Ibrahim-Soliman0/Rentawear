@@ -45,10 +45,9 @@ public class ProductSearchServlet extends HttpServlet {
         ProductFilterDTO filter = FilterBuilder.fromRequest(req);
 
         if (!filter.isSearch()) {
-            JsonUtil.writeJson(resp, new ProductSearchResult(List.of(), 0, 0, filter.pageSize()));
+            JsonUtil.writeJson(resp, new ProductSearchResult(List.of(), 0, null, 0, filter.pageSize()));
             return;
         }
-
         ProductSearchResult result = facade.searchProducts(filter);
         JsonUtil.writeJson(resp, result);
     }

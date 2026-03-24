@@ -68,10 +68,10 @@
       <div class="adm-admin-avatar">
         <i class="bi bi-person-fill"></i>
       </div>
-      <div class="adm-admin-info">
-        <span class="adm-admin-name">${sessionScope.user.name}</span>
-        <span class="adm-admin-role">Superuser</span>
-      </div>
+<%--      <div class="adm-admin-info">--%>
+<%--        <span class="adm-admin-name">${sessionScope.user.name}</span>--%>
+<%--        <span class="adm-admin-role">Superuser</span>--%>
+<%--      </div>--%>
       <a href="${pageContext.request.contextPath}/logout" class="adm-logout-btn" title="Sign out">
         <i class="bi bi-box-arrow-right"></i>
       </a>

@@ -56,7 +56,10 @@ public class ProductFacadeService {
     public ProductListResult getProducts(ProductFilterDTO filter) {
         List<Product> products = fetchProducts(filter);
         long          total    = countProducts(filter);
-        PriceRangeDTO range    = productService.getMinMaxPrice(filter);
+//        PriceRangeDTO range    = productService.getMinMaxPrice(filter);
+        PriceRangeDTO range = filter.isInterestBased()
+                ? productService.getMinMaxPriceForInterests(filter)
+                : productService.getMinMaxPrice(filter);
 
         // Batch image fetch -> single query for the whole page
         List<Integer> ids = products.stream()
@@ -81,13 +84,15 @@ public class ProductFacadeService {
     public ProductSearchResult searchProducts(ProductFilterDTO filter) {
         List<Product> products = productService.searchFiltered(filter);
         long          total    = productService.countSearchFiltered(filter);
+        PriceRangeDTO range    = productService.getMinMaxPrice(filter);
 
         List<ProductSearchDTO> results = products.stream()
                 .map(mapper::toSearchDTO)
                 .collect(Collectors.toList());
 
-        return new ProductSearchResult(results, total, filter.page(), filter.pageSize());
+        return new ProductSearchResult(results, total, range, filter.page(), filter.pageSize());
     }
+
 
 
     // Fetches product + all variants + all images — three queries, always.
@@ -185,14 +190,15 @@ public class ProductFacadeService {
 
     private List<Product> fetchProducts(ProductFilterDTO f) {
         if (f.isSearch())        return productService.searchFiltered(f);
-        if (f.isNewOnly())       return productService.findNew(f.pageSize());
+        if (f.isNewOnly())       return productService.findNew(f);            // ← passes full filter
         if (f.isInterestBased()) return productService.findByInterests(f);
         return productService.findFiltered(f);
     }
 
+
     private long countProducts(ProductFilterDTO f) {
         if (f.isSearch())        return productService.countSearchFiltered(f);
-        if (f.isNewOnly())       return productService.countNew();
+        if (f.isNewOnly())       return productService.countNew(f);           // ← passes full filter
         if (f.isInterestBased()) return productService.countByInterests(f);
         return productService.countFiltered(f);
     }

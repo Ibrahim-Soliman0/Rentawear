@@ -8,23 +8,18 @@
          CardFactory.searchResult(product) → search modal result row
          CardFactory.cartItem(item)        → cart drawer item
 
-       DTO shapes expected:
-         grid/searchResult: ProductCardDTO  { core: { id, name, brand, pricePerDay,
-                                             imageUrl, gender, categoryId },
-                                             isNew, soldOut, swatches,
-                                             primaryImageByColor }
-         cartItem:          flat object     { id, name, brand, pricePerDay,
-                                             imageUrl, dates, qty }
+       Navigation (PDP):
+         grid() wraps the card in <a href="/product/{id}">.
+         QV button uses e.preventDefault() (NOT stopPropagation) so anchor
+         navigation is blocked while the click still bubbles to the
+         document-level delegated listener in quick-view.js.
+         Swatch row does the same.
 
-       imgUrl(base, size) is exposed on window for use by quick-view.js.
-       Always use this — never append size suffix manually.
+       imgUrl(base, size) is exposed on window for product.js and quick-view.js.
     */
 
     // ── Image URL helper ──────────────────────────────────────────────────────
-    // base: stored in imageUrl fields, e.g. /assets/img/products/42/navy/abc123
-    //       (no size suffix, no extension)
-    // size: "sm" (400px) | "md" (800px) | "lg" (1400px)
-    // Falls back to placeholder when base is empty or already has an extension.
+    // Returns null for placeholder/already-extended paths — callers must guard.
     function imgUrl(base, size) {
         if (!base || base.includes('placeholder') || base.endsWith('.jpg') || base.endsWith('.png')) {
             return null;
@@ -36,8 +31,6 @@
     const CardFactory = (function () {
 
         // ── Normalise ─────────────────────────────────────────────────────────
-        // ProductCardDTO nests core fields. Cart items are flat.
-        // core || raw handles both without breaking cart rendering.
         function _normalise(raw) {
             const core = raw.core || raw;
             return {
@@ -55,17 +48,14 @@
                 dates:               raw.dates      ?? null,
                 qty:                 Number(raw.qty  ?? 1),
                 size:                raw.size        ?? null,
-                color:               raw.color       ?? null,   // machine key  e.g. "#FF0000-Red"
-                colorName:           raw.colorName   ?? null,   // display name e.g. "Red"
+                color:               raw.color       ?? null,
+                colorName:           raw.colorName   ?? null,
                 variantId:           raw.variantId   ?? null,
-                inventoryQty:        raw.inventoryQty ?? null,  // max allowed qty for + cap
+                inventoryQty:        raw.inventoryQty ?? null,
             };
         }
 
         // ── Date range formatter ──────────────────────────────────────────────
-        // Accepts ISO range: "2026-03-19/2026-03-26"
-        // Produces: "19 Mar – 26 Mar 2026" (same year) or "19 Dec 2025 – 3 Jan 2026"
-        // Falls back to the raw string if unparseable.
         function _formatDates(raw) {
             if (!raw) return '';
             const parts = String(raw).split('/');
@@ -84,10 +74,6 @@
         }
 
         // ── Badge node ────────────────────────────────────────────────────────
-        // Returns the correct badge for the card's state:
-        //   soldOut → charcoal "Sold Out" badge (top-right)
-        //   isNew   → teal "New" badge (top-left, standard position)
-        //   neither → null
         function _badgeNode(p) {
             if (p.soldOut) {
                 const span = document.createElement('span');
@@ -104,9 +90,7 @@
             return null;
         }
 
-        // ── Product image with srcset ─────────────────────────────────────────
-        // Returns a placeholder icon div when no real image is available.
-        // Never makes a network request for placeholder paths.
+        // ── Placeholder icon ──────────────────────────────────────────────────
         function _makePlaceholderIcon() {
             const icon = document.createElement('div');
             icon.className = 'product-img-placeholder';
@@ -116,6 +100,7 @@
             return icon;
         }
 
+        // ── Product image with srcset ─────────────────────────────────────────
         function _productImgNode(base, name) {
             const div = document.createElement('div');
             div.className = 'product-img-inner';
@@ -133,7 +118,7 @@
             img.alt      = name ? String(name) : '';
             img.loading  = 'lazy';
             img.decoding = 'async';
-            img.onerror  = function() {
+            img.onerror  = function () {
                 div.replaceChild(_makePlaceholderIcon(), img);
             };
 
@@ -142,9 +127,8 @@
         }
 
         // ── Swatch row ────────────────────────────────────────────────────────
-        // Clicking a swatch swaps the card image via primaryImageByColor map
-        // and updates the QV dataset.image so quick-view opens the right image.
-        // Returns null when the product has no swatches (single-colour products).
+        // e.preventDefault() inside click: blocks anchor navigation without
+        // breaking the QV document-level delegated listener.
         function _swatchRowNode(p, qvBtn, el) {
             if (!p.swatches || !p.swatches.length) return null;
 
@@ -161,20 +145,27 @@
                 wrap.appendChild(span);
             });
 
-            // Wire image swap only when the map is populated
             if (Object.keys(p.primaryImageByColor).length) {
                 wrap.addEventListener('click', e => {
                     const sw = e.target.closest('.swatch[data-color]');
                     if (!sw) return;
+
+                    /* Block anchor navigation — event still bubbles for QV */
+                    e.preventDefault();
+
                     const base = p.primaryImageByColor[sw.dataset.color];
                     if (!base) return;
 
                     const img = el.querySelector('.product-img-inner img');
                     if (img) {
-                        img.src    = imgUrl(base, 'md');
-                        img.srcset = `${imgUrl(base,'sm')} 400w, ${imgUrl(base,'md')} 800w, ${imgUrl(base,'lg')} 1400w`;
+                        const sm = imgUrl(base, 'sm');
+                        const md = imgUrl(base, 'md');
+                        const lg = imgUrl(base, 'lg');
+                        if (md) {
+                            img.src    = md;
+                            img.srcset = `${sm} 400w, ${md} 800w, ${lg} 1400w`;
+                        }
                     }
-                    // Keep QV in sync so it opens with the selected colour image
                     if (qvBtn) qvBtn.dataset.image = base;
 
                     wrap.querySelectorAll('.swatch')
@@ -186,8 +177,6 @@
         }
 
         // ── Skeleton ──────────────────────────────────────────────────────────
-        // Shown while the section fetch is in-flight.
-        // Matches grid() DOM structure so CSS sizing is identical.
         function skeleton() {
             const el = document.createElement('div');
             el.className = 'product-card product-skel';
@@ -216,43 +205,52 @@
         }
 
         // ── Grid card ─────────────────────────────────────────────────────────
-        // Used by: home page strips, catalog grid.
+        // Outer element changed from <div> to <a> for PDP navigation.
         //
-        // QV dataset carries the minimum needed for the instant open (Phase 1).
-        // Full detail (description, swatches, sizes, images) is fetched async
-        // from /products/{id} by quick-view.js once the overlay is visible.
+        // QV BUTTON INTERACTION:
+        //   The QV listener in quick-view.js is document-level delegation:
+        //     document.addEventListener('click', e => { e.target.closest('[data-qv]')... })
+        //   If we call stopPropagation() here, the event never reaches the
+        //   document listener → QV breaks.
+        //   If we call preventDefault() only, anchor navigation is cancelled
+        //   AND the event still bubbles to document → QV works correctly.
+        //
+        // SWATCH ROW: same principle applied inside _swatchRowNode().
         function grid(rawProduct) {
-            const el = document.createElement('div');
-            el.className = 'product-card';
-
             const p = _normalise(rawProduct);
 
-            // ── Resolve the correct initial image ─────────────────────────────
-            // Swatch[0] is rendered as active, so the card image must match it.
-            // primaryImageByColor keys are the raw color strings (e.g. "#FF0000-Red"),
-            // identical to swatch.color — both are built from the same product_images
-            // rows in the mapper. We fall back to p.imageUrl only when no images exist.
+            /* Outer element is a navigating anchor */
+            const el = document.createElement('a');
+            el.className = 'product-card';
+            el.href      = `${CTX}/product/${encodeURIComponent(p.id)}`;
+            el.setAttribute('aria-label', `View ${p.name}`);
+
             const firstSwatchColor = p.swatches[0]?.color ?? null;
             const initialImageUrl  =
                 (firstSwatchColor != null && p.primaryImageByColor[firstSwatchColor] != null)
                     ? p.primaryImageByColor[firstSwatchColor]
                     : p.imageUrl;
 
-            // Image wrap
             const imgWrap = document.createElement('div');
             imgWrap.className = 'product-img-wrap';
             imgWrap.appendChild(_productImgNode(initialImageUrl, p.name));
 
-            // Badge (sold-out or new — mutually exclusive, sold-out wins)
             const badge = _badgeNode(p);
             if (badge) imgWrap.appendChild(badge);
 
-            // Quick-view button (always present)
+            /* Quick-view button
+               preventDefault() → anchor does not navigate
+               No stopPropagation() → event bubbles to document QV handler */
             const qvBtn = document.createElement('button');
             qvBtn.className = 'product-qv';
             qvBtn.type      = 'button';
             qvBtn.setAttribute('aria-label', `Quick view ${p.name}`);
-            const qvSvg  = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+            qvBtn.addEventListener('click', e => {
+                e.preventDefault();
+                /* Event continues bubbling to document where quick-view.js picks it up */
+            });
+
+            const qvSvg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
             qvSvg.setAttribute('viewBox', '0 0 14 14');
             qvSvg.setAttribute('aria-hidden', 'true');
             const circ = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
@@ -266,21 +264,19 @@
 
             imgWrap.appendChild(qvBtn);
 
-            // Swatch row — pass qvBtn and el so swatches can keep both in sync
             const swatchNode = _swatchRowNode(p, qvBtn, el);
 
-            // Footer
             const footer = document.createElement('div');
             footer.className = 'product-footer';
             const info = document.createElement('div');
             info.className = 'product-info';
 
             const brandP = document.createElement('p');
-            brandP.className = 'product-brand';
+            brandP.className   = 'product-brand';
             brandP.textContent = p.brand;
 
             const nameP = document.createElement('p');
-            nameP.className = 'product-name';
+            nameP.className   = 'product-name';
             nameP.textContent = p.name;
 
             const priceP = document.createElement('p');
@@ -301,34 +297,28 @@
             info.appendChild(priceP);
             footer.appendChild(info);
 
-            // Assemble card
             el.appendChild(imgWrap);
             if (swatchNode) el.appendChild(swatchNode);
             el.appendChild(footer);
 
-            // QV dataset — minimum for instant open; full detail loaded async.
-            // dataset.image uses the same resolved URL as the card so the QV
-            // panel opens with the correct colour image before async detail loads.
             qvBtn.dataset.qv    = '';
             qvBtn.dataset.id    = String(p.id);
             qvBtn.dataset.name  = p.name;
             qvBtn.dataset.brand = p.brand;
             qvBtn.dataset.price = String(p.pricePerDay);
-            qvBtn.dataset.image = initialImageUrl;
+            qvBtn.dataset.image = initialImageUrl || '';
 
             return el;
         }
 
         // ── Search result row ─────────────────────────────────────────────────
-        // Used by: search modal results list.
-        // ProductSearchDTO only has core — no swatches or price range needed.
-        // Image: _sm — smallest surface, smallest file.
+        // href updated: /products/{id} (JSON) → /product/{id} (HTML PDP).
         function searchResult(raw) {
             const p = _normalise(raw);
 
             const a = document.createElement('a');
             a.className = 'search-result-item';
-            a.href      = `${CTX}/products/${encodeURIComponent(p.id)}`;
+            a.href      = `${CTX}/product/${encodeURIComponent(p.id)}`;
 
             const thumb = document.createElement('div');
             thumb.className = 'search-result-thumb';
@@ -339,7 +329,7 @@
                 img.alt      = p.name || '';
                 img.loading  = 'lazy';
                 img.decoding = 'async';
-                img.onerror  = function() { thumb.replaceChild(_makePlaceholderIcon(), img); };
+                img.onerror  = function () { thumb.replaceChild(_makePlaceholderIcon(), img); };
                 thumb.appendChild(img);
             } else {
                 thumb.appendChild(_makePlaceholderIcon());
@@ -349,15 +339,15 @@
             info.className = 'search-result-info';
 
             const brand = document.createElement('p');
-            brand.className  = 'search-result-brand';
+            brand.className   = 'search-result-brand';
             brand.textContent = p.brand;
 
             const name = document.createElement('p');
-            name.className  = 'search-result-name';
+            name.className   = 'search-result-name';
             name.textContent = p.name;
 
             const price = document.createElement('p');
-            price.className  = 'search-result-price';
+            price.className   = 'search-result-price';
             price.textContent = `From £${p.pricePerDay.toFixed(0)}/day`;
 
             info.appendChild(brand);
@@ -369,11 +359,7 @@
         }
 
         // ── Cart drawer item ──────────────────────────────────────────────────
-        // All interactive elements carry data-key (variantKey = "id:size:color")
-        // so cart.js can target the exact variant even when multiple variants of
-        // the same product are in the cart simultaneously.
-        // data-inv on the inc button carries the inventory cap so cart.js can
-        // disable it when qty reaches the stock limit.
+        // Unchanged from uploaded version.
         function cartItem(raw) {
             const it  = _normalise(raw);
             const key = `${it.id}:${it.size || ''}:${it.color || ''}`;
@@ -392,7 +378,7 @@
                 img.alt      = it.name || '';
                 img.loading  = 'lazy';
                 img.decoding = 'async';
-                img.onerror  = function() { imgWrap.replaceChild(_makePlaceholderIcon(), img); };
+                img.onerror  = function () { imgWrap.replaceChild(_makePlaceholderIcon(), img); };
                 imgWrap.appendChild(img);
             } else {
                 imgWrap.appendChild(_makePlaceholderIcon());
@@ -411,12 +397,11 @@
             name.textContent = it.name;
             info.appendChild(name);
 
-            // Size · Color line
             const sizePart  = it.size      ? `Size ${it.size}` : '';
             const colorPart = it.colorName
                 ? it.colorName
                 : it.color
-                    ? it.color.replace(/^#[0-9a-fA-F]+-/, '') // strip hex prefix if no display name
+                    ? it.color.replace(/^#[0-9a-fA-F]+-/, '')
                     : '';
             if (sizePart || colorPart) {
                 const variant = document.createElement('p');
@@ -467,9 +452,9 @@
             inc.type           = 'button';
             inc.setAttribute('aria-label', 'Increase quantity');
             inc.textContent    = '+';
-            // Store inventory cap so cart.js can disable when qty reaches limit
             if (it.inventoryQty != null) inc.dataset.inv = String(it.inventoryQty);
             if (it.inventoryQty != null && it.qty >= it.inventoryQty) inc.disabled = true;
+
             qtyControls.appendChild(dec);
             qtyControls.appendChild(num);
             qtyControls.appendChild(inc);

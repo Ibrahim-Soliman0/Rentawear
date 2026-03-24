@@ -1,0 +1,622 @@
+/* ============================================================
+   product.css — Product Detail Page (PDP)
+   Depends on: styles.css custom properties
+   ============================================================ */
+
+/* ── Page wrapper ─────────────────────────────────────────── */
+
+.pdp-wrap {
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 28px 40px 80px;
+}
+@media (max-width: 768px) { .pdp-wrap { padding: 16px 16px 60px; } }
+
+/* ── Breadcrumb ───────────────────────────────────────────── */
+
+.pdp-breadcrumb {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 4px;
+    font-size: 0.75rem;
+    color: var(--rw-muted);
+    margin-bottom: 28px;
+}
+.pdp-breadcrumb a       { color: var(--rw-muted); transition: color 0.15s; }
+.pdp-breadcrumb a:hover { color: var(--rw-teal); }
+.pdp-bc-sep     { color: var(--rw-stone); }
+.pdp-bc-current { color: var(--rw-charcoal); font-weight: 500; }
+#pdpBcMid       { display: contents; }
+
+/* ── Two-column layout ────────────────────────────────────── */
+
+.pdp-layout {
+    display: grid;
+    grid-template-columns: 56% 44%;
+    gap: 48px;
+    align-items: start;
+}
+@media (max-width: 900px) {
+    .pdp-layout { grid-template-columns: 1fr; gap: 24px; }
+}
+
+/* ── Gallery ──────────────────────────────────────────────── */
+
+.pdp-gallery {
+    position: sticky;
+    top: calc(var(--rw-nav-h) + 24px);
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+@media (max-width: 900px) { .pdp-gallery { position: static; } }
+
+.pdp-main-img-wrap {
+    position: relative;
+    background: var(--rw-cream);
+    border-radius: var(--rw-radius);
+    overflow: hidden;
+    aspect-ratio: 3 / 4;
+    cursor: zoom-in;
+}
+
+.pdp-main-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center top;
+    display: block;
+    transition: opacity 0.25s ease;
+}
+.pdp-main-img.is-loading { opacity: 0; }
+
+/* ── Placeholder — shown when no image available ─────────── */
+
+.pdp-img-placeholder {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--rw-stone);
+    color: var(--rw-muted);
+    font-size: 3.5rem;
+}
+
+/* ── Badge ────────────────────────────────────────────────── */
+
+.pdp-badge {
+    position: absolute;
+    top: 14px;
+    left: 14px;
+    font-size: 0.62rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    padding: 4px 10px;
+    border-radius: 2px;
+    font-weight: 500;
+}
+.pdp-badge--new { background: var(--rw-teal); color: #fff; }
+
+/* ── Zoom button ──────────────────────────────────────────── */
+
+.pdp-zoom-btn {
+    position: absolute;
+    bottom: 14px;
+    right: 14px;
+    width: 36px;
+    height: 36px;
+    background: rgba(253,252,250,0.9);
+    backdrop-filter: blur(6px);
+    border: none;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--rw-charcoal);
+    cursor: pointer;
+    transition: background 0.2s, color 0.2s;
+    box-shadow: var(--rw-shadow);
+}
+.pdp-zoom-btn:hover { background: var(--rw-ink); color: #fff; }
+
+/* ── Thumbnail strip ──────────────────────────────────────── */
+
+.pdp-thumbs {
+    display: flex;
+    gap: 8px;
+    overflow-x: auto;
+    scrollbar-width: none;
+    padding-bottom: 2px;
+}
+.pdp-thumbs::-webkit-scrollbar { display: none; }
+
+.pdp-thumb {
+    width: 68px;
+    height: 86px;
+    flex-shrink: 0;
+    border-radius: var(--rw-radius);
+    overflow: hidden;
+    border: 2px solid transparent;
+    cursor: pointer;
+    transition: border-color 0.15s;
+    background: var(--rw-cream);
+    padding: 0;
+}
+.pdp-thumb img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center top;
+    display: block;
+}
+.pdp-thumb:hover  { border-color: var(--rw-stone); }
+.pdp-thumb.active { border-color: var(--rw-teal); }
+
+/* Thumbnail placeholder — when no image for a slot */
+.pdp-thumb-placeholder {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--rw-stone);
+    color: var(--rw-muted);
+    font-size: 1.25rem;
+}
+
+/* ── Details panel ────────────────────────────────────────── */
+
+.pdp-details {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+}
+
+.pdp-brand {
+    font-size: 0.68rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--rw-teal);
+    margin: 0 0 6px;
+    font-weight: 500;
+}
+.pdp-name {
+    font-family: var(--rw-font-display);
+    font-size: clamp(1.6rem, 2.8vw, 2.2rem);
+    font-weight: 300;
+    color: var(--rw-ink);
+    line-height: 1.2;
+    margin: 0 0 12px;
+}
+.pdp-price {
+    display: flex;
+    align-items: baseline;
+    gap: 4px;
+    margin: 0 0 20px;
+}
+.pdp-price-val  { font-size: 1.3rem; font-weight: 500; color: var(--rw-teal); }
+.pdp-price-unit { font-size: 0.85rem; color: var(--rw-muted); }
+
+.pdp-divider {
+    height: 1px;
+    background: var(--rw-stone);
+    margin: 16px 0;
+}
+
+/* ── Section blocks ───────────────────────────────────────── */
+
+.pdp-section { margin-bottom: 18px; }
+
+.pdp-label-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 10px;
+}
+.pdp-label {
+    font-size: 0.68rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--rw-muted);
+}
+.pdp-label-val {
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: var(--rw-charcoal);
+    letter-spacing: 0.02em;
+}
+
+/* ── Sold-out colour banner ───────────────────────────────── */
+
+.pdp-soldout-banner {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    background: #FEF3CD;
+    border: 1px solid #F0C040;
+    border-radius: var(--rw-radius);
+    padding: 12px 14px;
+    margin-bottom: 16px;
+    font-size: 0.82rem;
+    color: #7A5C00;
+    line-height: 1.5;
+}
+.pdp-soldout-banner i {
+    font-size: 1rem;
+    flex-shrink: 0;
+    margin-top: 2px;
+}
+.pdp-soldout-banner strong {
+    display: block;
+    font-weight: 600;
+    margin-bottom: 2px;
+}
+.pdp-soldout-banner span {
+    color: #A07800;
+    font-size: 0.77rem;
+}
+
+/* ── Colour swatches ──────────────────────────────────────── */
+
+.pdp-colors {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+.pdp-color-swatch {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    border: 2px solid rgba(255,255,255,0.9);
+    box-shadow: 0 0 0 1.5px rgba(0,0,0,0.14);
+    cursor: pointer;
+    transition: transform 0.15s, box-shadow 0.15s;
+    position: relative;
+}
+.pdp-color-swatch:hover  { transform: scale(1.15); box-shadow: 0 0 0 2.5px var(--rw-teal); }
+.pdp-color-swatch.active { box-shadow: 0 0 0 2.5px var(--rw-teal); transform: scale(1.1); }
+.pdp-color-swatch.active::after {
+    content: '';
+    position: absolute;
+    inset: 4px;
+    border-radius: 50%;
+    border: 1.5px solid rgba(255,255,255,0.7);
+}
+
+/* ── Size buttons ─────────────────────────────────────────── */
+
+.pdp-sizes {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+.pdp-size-btn {
+    min-width: 52px;
+    height: 44px;
+    padding: 0 12px;
+    border: 1.5px solid var(--rw-stone);
+    border-radius: var(--rw-radius);
+    font-size: 0.8rem;
+    color: var(--rw-charcoal);
+    background: var(--rw-warm-white);
+    cursor: pointer;
+    transition: border-color 0.15s, background 0.15s, color 0.15s;
+    font-family: var(--rw-font-body);
+    letter-spacing: 0.03em;
+}
+.pdp-size-btn:hover    { border-color: var(--rw-charcoal); }
+.pdp-size-btn.active   { border-color: var(--rw-ink); background: var(--rw-ink); color: #fff; }
+.pdp-size-btn.sold-out { opacity: 0.32; cursor: not-allowed; text-decoration: line-through; }
+
+.pdp-size-guide {
+    margin-left: auto;
+    font-size: 0.7rem;
+    color: var(--rw-teal);
+    border-bottom: 1px solid currentColor;
+    padding-bottom: 1px;
+    cursor: pointer;
+    transition: color 0.15s;
+}
+.pdp-size-guide:hover { color: var(--rw-teal-dark); }
+
+/* ── Date section disabled state ──────────────────────────── */
+
+#pdpDatesSection.is-disabled {
+    opacity: 0.45;
+    pointer-events: none;
+}
+
+/* ── Date picker hint ─────────────────────────────────────── */
+
+.pdp-date-hint {
+    font-size: 0.72rem;
+    color: var(--rw-muted);
+    margin: -4px 0 10px;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+.pdp-date-hint i { font-size: 0.78rem; color: var(--rw-teal); flex-shrink: 0; }
+
+/* ── Date pickers ─────────────────────────────────────────── */
+
+.pdp-date-inputs {
+    display: flex;
+    align-items: flex-end;
+    gap: 10px;
+}
+.pdp-date-field {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+.pdp-date-label {
+    font-size: 0.68rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--rw-muted);
+    font-weight: 500;
+}
+.pdp-date-input {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1.5px solid var(--rw-stone);
+    border-radius: var(--rw-radius);
+    font-size: 0.85rem;
+    color: var(--rw-ink);
+    background: var(--rw-warm-white);
+    cursor: pointer;
+    font-family: var(--rw-font-body);
+    transition: border-color 0.15s;
+    box-sizing: border-box;
+}
+.pdp-date-input:focus  { outline: none; border-color: var(--rw-teal); }
+.pdp-date-input:disabled { cursor: not-allowed; background: var(--rw-cream); }
+
+.pdp-date-field.is-error .pdp-date-input {
+    border-color: var(--rw-danger);
+    background: #fff5f5;
+}
+.pdp-date-sep {
+    color: var(--rw-muted);
+    font-size: 0.9rem;
+    padding-bottom: 10px;
+    flex-shrink: 0;
+}
+.pdp-date-summary {
+    font-size: 0.78rem;
+    color: var(--rw-teal);
+    font-weight: 500;
+    margin-left: auto;
+}
+
+/* ── Nudge message ────────────────────────────────────────── */
+
+.pdp-nudge {
+    font-size: 0.75rem;
+    color: var(--rw-danger);
+    margin: -4px 0 12px;
+    min-height: 1em;
+    display: none;
+}
+.pdp-nudge.show { display: block; }
+
+/* ── Add to Bag ───────────────────────────────────────────── */
+
+.pdp-atb {
+    width: 100%;
+    background: var(--rw-ink);
+    color: #fff;
+    border: none;
+    border-radius: 2px;
+    padding: 16px 24px;
+    font-size: 0.78rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    font-weight: 500;
+    font-family: var(--rw-font-body);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    cursor: pointer;
+    transition: background 0.25s, transform 0.2s;
+    margin-bottom: 10px;
+}
+.pdp-atb:hover:not(:disabled) {
+    background: var(--rw-teal);
+    transform: translateY(-1px);
+}
+.pdp-atb:disabled {
+    background: var(--rw-stone);
+    color: var(--rw-muted);
+    cursor: not-allowed;
+    transform: none;
+}
+.pdp-atb svg {
+    width: 16px; height: 16px;
+    stroke: currentColor; fill: none;
+    stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round;
+}
+
+/* ── Wishlist ─────────────────────────────────────────────── */
+
+.pdp-wishlist {
+    width: 100%;
+    background: transparent;
+    color: var(--rw-charcoal);
+    border: 1.5px solid var(--rw-stone);
+    border-radius: 2px;
+    padding: 13px 24px;
+    font-size: 0.75rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    font-family: var(--rw-font-body);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    cursor: pointer;
+    transition: border-color 0.2s, color 0.2s;
+}
+.pdp-wishlist:hover  { border-color: var(--rw-charcoal); color: var(--rw-ink); }
+.pdp-wishlist.active { border-color: var(--rw-danger); color: var(--rw-danger); }
+.pdp-wishlist svg {
+    width: 15px; height: 15px;
+    stroke: currentColor; fill: none;
+    stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round;
+}
+.pdp-wishlist.active svg { fill: var(--rw-danger); }
+
+/* ── Description accordion ────────────────────────────────── */
+
+.pdp-accordion { margin-bottom: 4px; }
+
+.pdp-acc-trigger {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 0;
+    font-size: 0.75rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--rw-charcoal);
+    cursor: pointer;
+    background: none;
+    border: none;
+    font-family: var(--rw-font-body);
+}
+.pdp-acc-trigger svg {
+    width: 14px; height: 14px;
+    stroke: currentColor; fill: none;
+    stroke-width: 2; stroke-linecap: round; stroke-linejoin: round;
+    transition: transform 0.2s;
+    flex-shrink: 0;
+}
+.pdp-accordion.open .pdp-acc-trigger svg { transform: rotate(180deg); }
+
+.pdp-acc-body {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.3s var(--rw-ease-out);
+}
+.pdp-accordion.open .pdp-acc-body { max-height: 400px; }
+.pdp-acc-body-inner {
+    padding: 0 0 16px;
+    font-size: 0.85rem;
+    color: var(--rw-muted);
+    line-height: 1.75;
+}
+
+/* ── Trust row ────────────────────────────────────────────── */
+
+.pdp-trust-row {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 4px;
+}
+.pdp-trust-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 0.78rem;
+    color: var(--rw-muted);
+}
+.pdp-trust-item svg { flex-shrink: 0; }
+
+/* ── Related products ─────────────────────────────────────── */
+
+.pdp-related { margin-top: 72px; }
+.pdp-related-hd { margin-bottom: 32px; }
+
+/* ── Lightbox ─────────────────────────────────────────────── */
+
+.pdp-lightbox {
+    position: fixed;
+    inset: 0;
+    z-index: 900;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.25s ease;
+}
+.pdp-lightbox.open {
+    opacity: 1;
+    pointer-events: auto;
+}
+.pdp-lightbox-backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(10,8,6,0.88);
+    cursor: pointer;
+}
+.pdp-lightbox-img {
+    position: relative;
+    z-index: 1;
+    max-width: 90vw;
+    max-height: 90vh;
+    object-fit: contain;
+    border-radius: var(--rw-radius);
+    box-shadow: 0 32px 80px rgba(0,0,0,0.4);
+    transform: scale(0.96);
+    transition: transform 0.25s var(--rw-ease-out);
+}
+.pdp-lightbox.open .pdp-lightbox-img { transform: scale(1); }
+
+.pdp-lightbox-close {
+    position: absolute;
+    top: 20px; right: 20px;
+    z-index: 2;
+    width: 40px; height: 40px;
+    background: rgba(255,255,255,0.12);
+    border: none;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+.pdp-lightbox-close:hover { background: rgba(255,255,255,0.24); }
+
+.pdp-lightbox-nav {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 2;
+    width: 44px; height: 44px;
+    background: rgba(255,255,255,0.1);
+    border: none;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+.pdp-lightbox-nav:hover { background: rgba(255,255,255,0.22); }
+.pdp-lightbox-prev { left: 20px; }
+.pdp-lightbox-next { right: 20px; }
+
+/* ── Flatpickr z-index override ───────────────────────────── */
+.flatpickr-calendar { z-index: 99999 !important; }
+
+/* ── Mobile ───────────────────────────────────────────────── */
+
+@media (max-width: 600px) {
+    .pdp-date-inputs { flex-wrap: wrap; }
+    .pdp-date-field  { min-width: calc(50% - 20px); }
+    .pdp-date-sep    { align-self: center; padding-bottom: 0; }
+    .pdp-related     { margin-top: 48px; }
+    .pdp-lightbox-nav { display: none; }
+}
