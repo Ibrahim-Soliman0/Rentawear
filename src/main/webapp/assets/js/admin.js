@@ -803,7 +803,7 @@ function renderOrdersTable(orders) {
         </td>
         <td style="font-size:0.82rem;">${createdAt}</td>
         <td>$${Number(o.totalAmount).toFixed(2)}</td>
-        <td>${getOrderBadge(o.status)}</td>
+        <td>${renderOrderStatusSelect(o)}</td>
       </tr>
       <tr class="adm-order-detail-row" id="order-detail-${o.id}" style="display:none;">
         <td colspan="6">
@@ -842,18 +842,130 @@ function toggleOrderItems(btn) {
     });
   }
 }
-function getOrderBadge(status) {
+
+const ORDER_STATUSES = ['ORDERED', 'CONFIRMED', 'SHIPPED', 'DELIVERED', 'RETURNED', 'CANCELLED'];
+
+function getOrderStatusClass(status) {
   const map = {
-    'ORDERED':   'adm-badge--warning',
-    'DELIVERED': 'adm-badge--success',
-    'SHIPPED':   'adm-badge--warning',
-    'CONFIRMED': 'adm-badge--neutral',
-    'CANCELLED': 'adm-badge--danger',
+    'ORDERED':   'adm-status--warning',
+    'CONFIRMED': 'adm-status--neutral',
+    'SHIPPED':   'adm-status--warning',
+    'DELIVERED': 'adm-status--success',
+    'RETURNED':  'adm-status--neutral',
+    'CANCELLED': 'adm-status--danger',
   };
+  return map[status] || 'adm-status--neutral';
+}
 
-  const cls = map[status] || 'adm-badge--neutral';
+function renderOrderStatusSelect(order) {
+  const current = order.status || 'ORDERED';
+  return `
+    <div class="adm-status-dd ${getOrderStatusClass(current)}"
+         data-order-id="${order.id}"
+         data-current-status="${current}">
+      <button type="button" class="adm-status-trigger"
+              onclick="toggleStatusMenu(this)">
+        <span class="adm-status-value">${current}</span>
+        <i class="bi bi-chevron-down"></i>
+      </button>
+    </div>`;
+}
 
-  return `<span class="adm-badge ${cls}">${status}</span>`;
+let floatingStatusMenu = null;
+let activeStatusWrap = null;
+
+function ensureStatusMenu() {
+  if (floatingStatusMenu) return floatingStatusMenu;
+  const menu = document.createElement('div');
+  menu.className = 'adm-status-menu';
+  document.body.appendChild(menu);
+  floatingStatusMenu = menu;
+  return menu;
+}
+
+function closeAllStatusMenus(exceptWrap = null) {
+  if (!floatingStatusMenu) return;
+  if (exceptWrap && activeStatusWrap === exceptWrap) return;
+  floatingStatusMenu.classList.remove('open');
+  activeStatusWrap = null;
+}
+
+document.addEventListener('click', (e) => {
+  const inWrap = e.target.closest('.adm-status-dd');
+  const inMenu = e.target.closest('.adm-status-menu');
+  if (!inWrap && !inMenu) closeAllStatusMenus();
+});
+window.addEventListener('scroll', () => closeAllStatusMenus(), true);
+window.addEventListener('resize', () => closeAllStatusMenus());
+
+function toggleStatusMenu(triggerBtn) {
+  if (triggerBtn.disabled) return;
+  const wrap = triggerBtn.closest('.adm-status-dd');
+  const menu = ensureStatusMenu();
+  const isOpen = menu.classList.contains('open') && activeStatusWrap === wrap;
+  if (isOpen) {
+    closeAllStatusMenus();
+    return;
+  }
+
+  activeStatusWrap = wrap;
+  const current = wrap.dataset.currentStatus || 'ORDERED';
+  menu.innerHTML = ORDER_STATUSES.map(s => `
+    <button type="button" class="adm-status-option ${s === current ? 'active' : ''}"
+            data-value="${s}" onclick="selectOrderStatus(this)">
+      ${s}
+    </button>
+  `).join('');
+
+  const rect = triggerBtn.getBoundingClientRect();
+  const menuWidth = 140;
+  menu.style.minWidth = menuWidth + 'px';
+  menu.style.maxWidth = menuWidth + 'px';
+  menu.style.left = Math.min(rect.left, window.innerWidth - menuWidth - 8) + 'px';
+  menu.style.top = (rect.bottom + 6) + 'px';
+  menu.classList.add('open');
+}
+
+function setStatusTrigger(wrap, status) {
+  wrap.dataset.currentStatus = status;
+  wrap.className = `adm-status-dd ${getOrderStatusClass(status)}`;
+  const valueEl = wrap.querySelector('.adm-status-value');
+  if (valueEl) valueEl.textContent = status;
+}
+
+function selectOrderStatus(optionBtn) {
+  if (!activeStatusWrap) return;
+  const wrap = activeStatusWrap;
+  const orderId = wrap.dataset.orderId;
+  const prevStatus = wrap.dataset.currentStatus || optionBtn.dataset.value;
+  const nextStatus = optionBtn.dataset.value;
+
+  if (!orderId || prevStatus === nextStatus) {
+    closeAllStatusMenus();
+    return;
+  }
+
+  const trigger = wrap.querySelector('.adm-status-trigger');
+  trigger.disabled = true;
+  wrap.classList.add('adm-status--loading');
+
+  const payload = JSON.stringify({ status: nextStatus });
+  let req = window.XMLHttpRequest ? new XMLHttpRequest() : new ActiveXObject('Microsoft.XMLHTTP');
+  req.onreadystatechange = function () {
+    if (req.readyState === 4) {
+      trigger.disabled = false;
+      wrap.classList.remove('adm-status--loading');
+      if (req.status === 200) {
+        setStatusTrigger(wrap, nextStatus);
+      } else {
+        setStatusTrigger(wrap, prevStatus);
+      }
+      closeAllStatusMenus();
+    }
+  };
+  req.open('PUT', CTX + '/admin/orders/' + orderId + '/status', true);
+  req.setRequestHeader('Content-Type', 'application/json');
+  req.send(payload);
 }
 
 /* ── Utilities ──────────────────────────────────────────────── */
