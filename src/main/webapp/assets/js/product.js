@@ -476,8 +476,8 @@
         const swatch  = swatches.find(s => s.color === activeColor);
 
         try {
-            Cart.add({
-                id:           String(core.id),
+            window.Cart.add({
+                id:           activeVariantId,
                 name:         core.name,
                 brand:        core.brand,
                 imageUrl:     activeImageBase || core.imageUrl,
@@ -489,6 +489,8 @@
                 inventoryQty: activeInventoryQty,
                 qty:          1,
                 days,
+                startDate:    isoDate(startDate),
+                endDate:      isoDate(endDate),
                 dates: `${isoDate(startDate)}/${isoDate(endDate)}`,
             });
 
