@@ -252,6 +252,7 @@ document.getElementById('openAddProductModal')?.addEventListener('click', () => 
   document.getElementById('productForm').reset();
   const imageFileInput = document.getElementById('productImageFile');
   if (imageFileInput) imageFileInput.value = '';
+  document.getElementById('productImage').value = '';
   document.getElementById('variantColorGroups').innerHTML = '';
   document.getElementById('variantsEmptyHint').style.display = 'block';
   clearAllProductErrors();
