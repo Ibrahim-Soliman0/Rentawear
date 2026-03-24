@@ -152,4 +152,14 @@ public class OrderService extends BaseService<Order> {
 
         return order.getId();
     }
+
+    public boolean updateOrderStatus(Integer orderId, OrderStatus status) {
+        Order order = orderRepository.findById(orderId);
+        if (order == null) {
+            return false;
+        }
+        order.setStatus(status);
+        save(order);
+        return true;
+    }
 }
