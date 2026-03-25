@@ -253,6 +253,11 @@ class CartServer {
      * Returns: { success, message? }
      */
     async removeItem(item) {
+
+        if (item.cartItemId == null) {
+            throw new Error('[CartServer] removeItem — missing cartItemId');
+        }
+
         const body = new URLSearchParams({
             cartItemId: item.cartItemId,
         });
@@ -481,7 +486,7 @@ class Cart {
         }
 
         // Optimistic update
-        existing ? existing.qty++ : this._items.push({...item, qty: 1});
+        existing ? existing.qty++ : this._items.push({...item, qty: 1, cartItemId: null});
         this._commitLocal();
 
         // Server sync
@@ -491,7 +496,9 @@ class Cart {
                 // Store the cartItemId the server just created so future
                 // remove / update-qty calls can use it immediately.
                 const stored = this._findByKey(key);
-                if (stored && result.cartItemId) stored.cartItemId = result.cartItemId;
+                if (stored && result.cartItemId) {
+                    stored.cartItemId = result.cartItemId;
+                }
                 this._commitLocal();
             } else {
                 this._toast.show(result.message ?? 'Could not add item. Please try again.');
@@ -506,6 +513,11 @@ class Cart {
     async remove(key) {
         const item = this._findByKey(key);
         if (!item) return;
+
+        if (item.cartItemId == null) {
+            console.warn('[CartServer] removeItem — missing cartItemId');
+            return;
+        }
 
         const snapshot = [...this._items];
 
