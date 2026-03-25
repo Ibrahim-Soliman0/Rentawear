@@ -98,9 +98,14 @@
 
       <div class="adm-section-header">
         <h2 class="adm-section-title">Inventory Management</h2>
-        <button class="adm-btn adm-btn--primary" id="openAddProductModal">
-          <i class="bi bi-plus-lg"></i> Add New Product
-        </button>
+        <div style="display:flex;gap:0.5rem;flex-wrap:wrap;">
+          <button class="adm-btn adm-btn--ghost" id="openAddCategoryModal">
+            <i class="bi bi-tag-fill"></i> Add Category
+          </button>
+          <button class="adm-btn adm-btn--primary" id="openAddProductModal">
+            <i class="bi bi-plus-lg"></i> Add New Product
+          </button>
+        </div>
       </div>
 
       <div class="adm-card">
@@ -353,7 +358,63 @@
     </div>
   </div>
 </div>
+<!-- ══ ADD CATEGORY MODAL ══════════════════════════════════ -->
+<div class="adm-modal-overlay" id="categoryModalOverlay">
+  <div class="adm-modal adm-modal--sm">
+    <div class="adm-modal-header">
+      <h3 class="adm-modal-title">Add New Category</h3>
+      <button class="adm-modal-close" id="closeCategoryModal">
+        <i class="bi bi-x-lg"></i>
+      </button>
+    </div>
+    <div class="adm-modal-body">
+      <form id="categoryForm" novalidate>
 
+        <div class="adm-form-group">
+          <label class="adm-form-label">Category Name</label>
+          <input type="text" id="categoryName" class="adm-form-input"
+                 placeholder="e.g. Evening Wear" maxlength="100" required/>
+          <div class="adm-field-error" id="categoryNameError"></div>
+        </div>
+
+        <div class="adm-form-group">
+          <label class="adm-form-label">Gender</label>
+          <div class="adm-select-wrap">
+            <select id="categoryGender" class="adm-form-input adm-form-select" required>
+              <option value="" disabled selected>Select gender</option>
+              <option value="MALE">Male</option>
+              <option value="FEMALE">Female</option>
+            </select>
+            <i class="bi bi-chevron-down adm-select-chevron"></i>
+          </div>
+          <div class="adm-field-error" id="categoryGenderError"></div>
+        </div>
+
+        <div class="adm-form-group">
+          <label class="adm-form-label">
+            Description
+            <span style="font-size:0.72rem;color:var(--adm-muted);font-weight:400;">
+              optional
+            </span>
+          </label>
+          <textarea id="categoryDescription" class="adm-form-input adm-form-textarea"
+                    placeholder="Short description of this category..."
+                    rows="3" maxlength="255"></textarea>
+        </div>
+
+      </form>
+    </div>
+    <div class="adm-modal-footer">
+      <button class="adm-btn adm-btn--ghost" id="cancelCategoryModal">Cancel</button>
+      <button class="adm-btn adm-btn--primary" id="saveCategoryBtn">
+        <span class="adm-btn-text">Add Category</span>
+        <span class="adm-btn-spinner d-none">
+          <span class="spinner-border spinner-border-sm"></span>
+        </span>
+      </button>
+    </div>
+  </div>
+</div>
 <!-- Sidebar overlay (mobile) -->
 <div class="adm-sidebar-overlay" id="sidebarOverlay"></div>
 

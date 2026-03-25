@@ -1582,3 +1582,32 @@
   font-size: 0.72rem;
   color: var(--adm-muted);
 }
+/* ── Toast notification ─────────────────────────────────────── */
+.adm-toast {
+  position: fixed;
+  bottom: 1.5rem;
+  left: 50%;
+  transform: translateX(-50%) translateY(20px);
+  background: var(--adm-ink);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.7rem 1.25rem;
+  border-radius: 99px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  box-shadow: 0 4px 20px rgba(0,0,0,.2);
+  z-index: 9999;
+  opacity: 0;
+  transition: opacity 0.25s ease, transform 0.25s ease;
+  white-space: nowrap;
+  pointer-events: none;
+}
+.adm-toast.visible {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+.adm-toast--success i { color: #2ecc71; }
+.adm-toast--error   i { color: #e74c3c; }
+.adm-toast--warning i { color: #f39c12; }
