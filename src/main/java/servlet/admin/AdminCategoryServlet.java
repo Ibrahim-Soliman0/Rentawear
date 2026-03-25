@@ -2,6 +2,7 @@ package servlet.admin;
 
 import dto.CategoryDTO;
 import dto.SaveCategoryDTO;
+import entity.enums.Gender;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
