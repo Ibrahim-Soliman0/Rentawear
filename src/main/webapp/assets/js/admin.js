@@ -1018,7 +1018,7 @@ document.getElementById('saveCategoryBtn')?.addEventListener('click', () => {
         const newCategory = JSON.parse(req.responseText);
         closeModal('categoryModalOverlay');
         addCategoryToDropdown(newCategory);
-        showToast('Category "' + escHtml(newCategory.name) + '" added successfully.', 'success');
+        showToast('Category "' + newCategory.name + '" added successfully.', 'success');
       } else {
         alert('Failed to add category. Please try again.');
       }

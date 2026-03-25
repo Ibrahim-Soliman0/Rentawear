@@ -3,7 +3,6 @@ package mapper;
 import dto.CategoryDTO;
 import dto.SaveCategoryDTO;
 import entity.Category;
-import entity.enums.Gender;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
