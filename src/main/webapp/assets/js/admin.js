@@ -969,6 +969,83 @@ function selectOrderStatus(optionBtn) {
   req.send(payload);
 }
 
+/* ══════════════════════════════════════════════════════════════
+   CATEGORIES
+══════════════════════════════════════════════════════════════ */
+
+document.getElementById('openAddCategoryModal')?.addEventListener('click', () => {
+  document.getElementById('categoryForm').reset();
+  clearFieldError('categoryName',   'categoryNameError');
+  clearFieldError('categoryGender', 'categoryGenderError');
+  openModal('categoryModalOverlay');
+});
+
+document.getElementById('closeCategoryModal')?.addEventListener('click',  () => closeModal('categoryModalOverlay'));
+document.getElementById('cancelCategoryModal')?.addEventListener('click', () => closeModal('categoryModalOverlay'));
+
+document.getElementById('saveCategoryBtn')?.addEventListener('click', () => {
+  // Validate
+  let valid = true;
+  const name   = document.getElementById('categoryName').value.trim();
+  const gender = document.getElementById('categoryGender').value;
+
+  clearFieldError('categoryName',   'categoryNameError');
+  clearFieldError('categoryGender', 'categoryGenderError');
+
+  if (!name)   { showFieldError('categoryName',   'categoryNameError',   'Category name is required.'); valid = false; }
+  if (!gender) { showFieldError('categoryGender', 'categoryGenderError', 'Please select a gender.');    valid = false; }
+  if (!valid) return;
+
+  const btn = document.getElementById('saveCategoryBtn');
+  btn.disabled = true;
+  btn.querySelector('.adm-btn-text').classList.add('d-none');
+  btn.querySelector('.adm-btn-spinner').classList.remove('d-none');
+
+  const payload = JSON.stringify({
+    name:        name,
+    description: document.getElementById('categoryDescription').value.trim(),
+    gender:      gender
+  });
+
+  let req = window.XMLHttpRequest ? new XMLHttpRequest() : new ActiveXObject('Microsoft.XMLHTTP');
+  req.onreadystatechange = function () {
+    if (req.readyState === 4) {
+      btn.disabled = false;
+      btn.querySelector('.adm-btn-text').classList.remove('d-none');
+      btn.querySelector('.adm-btn-spinner').classList.add('d-none');
+
+      if (req.status === 200) {
+        const newCategory = JSON.parse(req.responseText);
+        closeModal('categoryModalOverlay');
+        addCategoryToDropdown(newCategory);
+        showToast('Category "' + escHtml(newCategory.name) + '" added successfully.', 'success');
+      } else {
+        alert('Failed to add category. Please try again.');
+      }
+    }
+  };
+  req.open('POST', CTX + '/admin/categories', true);
+  req.setRequestHeader('Content-Type', 'application/json');
+  req.send(payload);
+});
+
+function addCategoryToDropdown(category) {
+  const select = document.getElementById('productCategory');
+  if (!select) return;
+
+  // Check if already exists
+  const exists = Array.from(select.options)
+      .some(opt => opt.value === String(category.id));
+  if (exists) return;
+
+  const option = document.createElement('option');
+  option.value       = category.id;
+  option.textContent = category.name;
+  select.appendChild(option);
+
+  // Auto-select the new category
+  select.value = category.id;
+}
 /* ── Utilities ──────────────────────────────────────────────── */
 function escHtml(str) {
   return String(str || '')
@@ -1228,6 +1305,27 @@ function uploadColorImages(productId) {
   });
 
   return Promise.all(uploads);
+}
+function showToast(message, type) {
+  // Remove existing toast
+  document.getElementById('admToast')?.remove();
+
+  const toast = document.createElement('div');
+  toast.id        = 'admToast';
+  toast.className = `adm-toast adm-toast--${type}`;
+  toast.innerHTML = `
+    <i class="bi bi-${type === 'success' ? 'check-circle-fill' : type === 'error' ? 'exclamation-circle-fill' : 'exclamation-triangle-fill'}"></i>
+    <span>${escHtml(message)}</span>`;
+  document.body.appendChild(toast);
+
+  // Trigger animation
+  requestAnimationFrame(() => toast.classList.add('visible'));
+
+  // Auto remove after 3 seconds
+  setTimeout(() => {
+    toast.classList.remove('visible');
+    setTimeout(() => toast.remove(), 300);
+  }, 3000);
 }
 /* ── Init: load products on page load ───────────────────────── */
 loadProducts();
