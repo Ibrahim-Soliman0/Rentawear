@@ -656,12 +656,15 @@ document.getElementById('confirmDeleteBtn')?.addEventListener('click', () => {
 
   let req = window.XMLHttpRequest ? new XMLHttpRequest() : new ActiveXObject('Microsoft.XMLHTTP');
   req.onreadystatechange = function () {
-    if (req.readyState === 4 && req.status === 200) {
+    if (req.readyState !== 4) {
+      return;
+    }
+
+    if (req.status === 200) {
       closeModal('deleteModalOverlay');
       loadProducts();
       showToast('Product deleted successfully!', 'success');
-    }
-    else{
+    } else {
       showToast('Failed to delete product!', 'error');
     }
   };
