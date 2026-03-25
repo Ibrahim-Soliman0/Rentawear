@@ -31,7 +31,7 @@ public class CategoryService extends BaseService<Category> {
 
     public CategoryDTO saveCategory(SaveCategoryDTO dto) {
         Category category = categoryMapper.toEntity(dto);
-        Category saved    = (Category) repository.save(category);
+        Category saved    = repository.save(category);
         return categoryMapper.toDTO(saved);
     }
 }
