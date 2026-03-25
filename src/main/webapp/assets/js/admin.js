@@ -610,10 +610,13 @@ document.getElementById('saveProductBtn')?.addEventListener('click', () => {
               })
               .then(() => uploadColorImages(productId))
               .then(() => {
-                if (!isNew) {
+                if (isNew) {
+                  showToast('Product created successfully!', 'success');
+                } else {
+                  showToast('Product updated successfully!', 'success');
                   closeModal('productModalOverlay');
-                  loadProducts(currentPage);
                 }
+                loadProducts(currentPage);
                 setSaveButtonLoading(false);
               })
               .catch(() => {
@@ -653,9 +656,16 @@ document.getElementById('confirmDeleteBtn')?.addEventListener('click', () => {
 
   let req = window.XMLHttpRequest ? new XMLHttpRequest() : new ActiveXObject('Microsoft.XMLHTTP');
   req.onreadystatechange = function () {
-    if (req.readyState === 4 && req.status === 200) {
+    if (req.readyState !== 4) {
+      return;
+    }
+
+    if (req.status === 200) {
       closeModal('deleteModalOverlay');
       loadProducts();
+      showToast('Product deleted successfully!', 'success');
+    } else {
+      showToast('Failed to delete product!', 'error');
     }
   };
   req.open('DELETE', CTX + '/admin/products/' + deleteProductId, true);
@@ -958,8 +968,10 @@ function selectOrderStatus(optionBtn) {
       wrap.classList.remove('adm-status--loading');
       if (req.status === 200) {
         setStatusTrigger(wrap, nextStatus);
+        showToast('Order status updated successfully!', 'success');
       } else {
         setStatusTrigger(wrap, prevStatus);
+        showToast('Failed to update order status.', 'error');
       }
       closeAllStatusMenus();
     }
