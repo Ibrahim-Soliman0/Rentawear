@@ -472,7 +472,12 @@
         }
 
         const days    = Math.round((endDate - startDate) / 86400000);
-        const isoDate = d => d.toISOString().slice(0, 10);
+        const isoDate = (d) => {
+            const year  = d.getFullYear();
+            const month = String(d.getMonth() + 1).padStart(2, '0');
+            const day   = String(d.getDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`;
+        };
         const swatch  = swatches.find(s => s.color === activeColor);
 
         try {

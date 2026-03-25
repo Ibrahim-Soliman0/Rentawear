@@ -53,7 +53,7 @@ function coImgUrl(base, size) {
 // "2024-11-12" → "12 Nov 2024"
 function formatDateFull(iso) {
     if (!iso) return '—';
-    const d = new Date(iso + 'T00:00:00');
+    const d = new Date(iso + 'T00:00:00Z');
     if (isNaN(d)) return iso;
     const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
     return `${d.getUTCDate()} ${months[d.getUTCMonth()]} ${d.getUTCFullYear()}`;
@@ -62,8 +62,8 @@ function formatDateFull(iso) {
 // "2024-11-12", "2024-11-16" → "12 Nov → 16 Nov 2024"
 function formatDateRange(startIso, endIso) {
     if (!startIso || !endIso) return '';
-    const a = new Date(startIso + 'T00:00:00');
-    const b = new Date(endIso + 'T00:00:00');
+    const a = new Date(startIso + 'T00:00:00Z');
+    const b = new Date(endIso + 'T00:00:00Z');
     if (isNaN(a) || isNaN(b)) return `${startIso} → ${endIso}`;
     const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
     const fmtA = `${a.getUTCDate()} ${months[a.getUTCMonth()]}`;
@@ -281,7 +281,7 @@ function buildSummaryRow(item) {
             <div class="co-item-brand">${item.brand ?? ''}</div>
             <div class="co-item-name">${item.name ?? ''}</div>
             ${variantLabel ? `<div class="co-item-meta">${variantLabel}</div>` : ''}
-            ${dateRange ? `<div class="co-item-meta co-item-dates">📅 ${dateRange}</div>` : ''}
+            ${dateRange ? `<div class="co-item-meta co-item-dates">${dateRange}</div>` : ''}
             ${(item.qty ?? 1) > 1 ? `<div class="co-item-meta">Qty: ${item.qty}</div>` : ''}
         </div>
         <div class="co-item-price">${fmt(lineTotal)}</div>`;
