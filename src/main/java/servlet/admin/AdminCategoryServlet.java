@@ -2,10 +2,6 @@ package servlet.admin;
 
 import dto.CategoryDTO;
 import dto.SaveCategoryDTO;
-import entity.Category;
-import entity.enums.Gender;
-import jakarta.json.Json;
-import jakarta.json.JsonObjectBuilder;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -15,9 +11,6 @@ import service.CategoryService;
 import util.JsonUtil;
 
 import java.io.IOException;
-import java.io.PrintWriter;
-import java.util.HashMap;
-import java.util.Map;
 
 @WebServlet("/admin/categories")
 public class AdminCategoryServlet extends HttpServlet {
