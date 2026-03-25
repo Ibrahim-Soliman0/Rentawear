@@ -56,15 +56,17 @@ public class ProductFacadeService {
     public ProductListResult getProducts(ProductFilterDTO filter) {
         List<Product> products = fetchProducts(filter);
         long          total    = countProducts(filter);
-//        PriceRangeDTO range    = productService.getMinMaxPrice(filter);
-        PriceRangeDTO range = filter.isInterestBased()
+        PriceRangeDTO range    = filter.isInterestBased()
                 ? productService.getMinMaxPriceForInterests(filter)
                 : productService.getMinMaxPrice(filter);
 
-        // Batch image fetch -> single query for the whole page
         List<Integer> ids = products.stream()
                 .map(Product::getId)
                 .collect(Collectors.toList());
+
+        // Batch-fetch both variants AND images — still only 2 extra queries
+        Map<Integer, List<ProductVariant>> variantsByProductId =
+                variantService.getByProductIds(ids);
 
         Map<Integer, List<ProductImage>> imagesByProductId =
                 imageService.getPrimaryPerColorForProducts(ids);
@@ -72,13 +74,13 @@ public class ProductFacadeService {
         List<ProductCardDTO> cards = products.stream()
                 .map(p -> mapper.toCardDTO(
                         p,
+                        variantsByProductId.getOrDefault(p.getId(), List.of()),
                         imagesByProductId.getOrDefault(p.getId(), List.of())
                 ))
                 .collect(Collectors.toList());
 
         return new ProductListResult(cards, total, range, filter.page(), filter.pageSize());
     }
-
     // Returns ProductSearchDTO ->  no swatches or price range needed in the modal.
 
     public ProductSearchResult searchProducts(ProductFilterDTO filter) {
