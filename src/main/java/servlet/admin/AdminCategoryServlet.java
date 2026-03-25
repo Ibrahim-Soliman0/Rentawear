@@ -32,6 +32,13 @@ public class AdminCategoryServlet extends HttpServlet {
             return;
         }
 
+        // Validate gender value to avoid IllegalArgumentException from Gender.valueOf(...) downstream
+        try {
+            Gender.valueOf(dto.gender().trim().toUpperCase());
+        } catch (IllegalArgumentException ex) {
+            resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "Invalid gender value.");
+            return;
+        }
         CategoryDTO saved = categoryService.saveCategory(dto);
         JsonUtil.writeJson(resp, saved);
     }
