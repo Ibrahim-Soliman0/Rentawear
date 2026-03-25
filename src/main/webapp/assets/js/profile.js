@@ -581,6 +581,21 @@ function renderPastOrders(orders) {
     container.innerHTML = orders.map(o => buildOrderCard(o)).join('');
 }
 
+function resolveProductImage(base) {
+    if (!base) return null;
+
+    const hasExtension = /\.(jpg|jpeg|png|webp)$/i.test(base);
+    const isAbsolute   = /^https?:\/\//i.test(base);
+
+    if (isAbsolute) return base;
+    if (base.startsWith(CTX)) return base;
+    if (base.startsWith('/assets/')) {
+        return hasExtension ? CTX + base : `${CTX}${base}_sm.jpg`;
+    }
+
+    return hasExtension ? base : `${CTX}${base}_sm.jpg`;
+}
+
 /* ── Build one order card ── */
 function buildOrderCard(order) {
     const isCancelled = order.status === 'CANCELLED';
@@ -598,7 +613,7 @@ function buildOrderCard(order) {
     const itemsHtml = (order.items || []).map(item => `
         <div class="account-rental-card">
             <div class="account-rental-img">
-                <img src="${escHtml(item.imageUrl || '')}"
+                <img src="${resolveProductImage(item.imageUrl)}"
                      alt="${escHtml(item.productName)}"
                      onerror="this.src='https://placehold.co/80x110/EDE9E3/9E9189?text=Item'"/>
             </div>
