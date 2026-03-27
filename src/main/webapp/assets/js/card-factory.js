@@ -101,35 +101,62 @@
         }
 
         // ── Product image with srcset ─────────────────────────────────────────
+        // Both <img> and placeholder always exist in the DOM, toggled via
+        // display:none. onerror hides the img and shows the placeholder without
+        // destroying either element, so subsequent swatch clicks can recover.
         function _productImgNode(base, name) {
             const div = document.createElement('div');
             div.className = 'product-img-inner';
 
-            const src = imgUrl(base, 'md');
-            if (!src) {
-                div.appendChild(_makePlaceholderIcon());
-                return div;
-            }
-
             const img = document.createElement('img');
-            img.src      = src;
-            img.srcset   = `${imgUrl(base,'sm')} 400w, ${imgUrl(base,'md')} 800w, ${imgUrl(base,'lg')} 1400w`;
-            img.sizes    = '(max-width:480px) 100vw, (max-width:900px) 50vw, 33vw';
             img.alt      = name ? String(name) : '';
             img.loading  = 'lazy';
             img.decoding = 'async';
-            img.onerror  = function () {
-                div.replaceChild(_makePlaceholderIcon(), img);
+
+            const placeholder = _makePlaceholderIcon();
+
+            const src = imgUrl(base, 'md');
+            if (src) {
+                img.src    = src;
+                img.srcset = `${imgUrl(base,'sm')} 400w, ${imgUrl(base,'md')} 800w, ${imgUrl(base,'lg')} 1400w`;
+                img.sizes  = '(max-width:480px) 100vw, (max-width:900px) 50vw, 33vw';
+                img.style.display        = '';
+                placeholder.style.display = 'none';
+            } else {
+                // No valid src, show placeholder, leave img hidden with no src
+                img.style.display        = 'none';
+                placeholder.style.display = '';
+            }
+
+            // onerror: hide broken img, reveal placeholder — does NOT destroy the element.
+            // The img stays in the DOM so later valid swatch clicks can set a new src and show it.
+            img.onerror = function () {
+                img.style.display        = 'none';
+                placeholder.style.display = '';
             };
 
             div.appendChild(img);
+            div.appendChild(placeholder);
             return div;
         }
 
         // ── Swatch row ────────────────────────────────────────────────────────
-        // e.preventDefault() inside click: blocks anchor navigation without
-        // breaking the QV document-level delegated listener.
-        function _swatchRowNode(p, qvBtn, el) {
+        // Three changes from the original:
+        //   1. Guard A removed — listener always attached regardless of whether
+        //      any colour has an image, so swatch clicks never propagate to the
+        //      anchor and navigate to PDP unintentionally.
+        //   2. e.preventDefault() fires for every real swatch click, always
+        //      before any return — anchor navigation is always blocked.
+        //   3. Active-class update is unconditional, it no longer exits early
+        //      if the clicked colour has no image.
+        //   When a colour has an image: img shows, placeholder hides, src/srcset
+        //   updated, qvBtn.dataset.image set.
+        //   When a colour has no image: img hides, placeholder shows, qvBtn
+        //   dataset cleared — card never gets stuck.
+        //
+        // initialActiveColor is passed in from grid() so the correct swatch
+        // starts active (the one that owns the initial displayed image).
+        function _swatchRowNode(p, qvBtn, el, initialActiveColor) {
             if (!p.swatches || !p.swatches.length) return null;
 
             const wrap = document.createElement('div');
@@ -137,7 +164,12 @@
 
             p.swatches.slice(0, 5).forEach((s, i) => {
                 const span = document.createElement('span');
-                span.className        = 'swatch' + (i === 0 ? ' active' : '');
+                // Active: prefer the colour that owns the initial image;
+                // fall back to position 0 when no colour has any image.
+                const isActive = initialActiveColor
+                    ? s.color === initialActiveColor
+                    : i === 0;
+                span.className        = 'swatch' + (isActive ? ' active' : '');
                 span.style.background = esc(s.hex || '#ccc');
                 span.title            = s.name || '';
                 if (s.color) span.dataset.color = s.color;
@@ -145,33 +177,42 @@
                 wrap.appendChild(span);
             });
 
-            if (Object.keys(p.primaryImageByColor).length) {
-                wrap.addEventListener('click', e => {
-                    const sw = e.target.closest('.swatch[data-color]');
-                    if (!sw) return;
+            // Listener always attached, Guard A removed.
+            wrap.addEventListener('click', e => {
+                const sw = e.target.closest('.swatch[data-color]');
+                // Click on gap between chips — don't interfere with bubbling.
+                if (!sw) return;
 
-                    /* Block anchor navigation — event still bubbles for QV */
-                    e.preventDefault();
+                // Always block anchor navigation for real swatch clicks.
+                e.preventDefault();
 
-                    const base = p.primaryImageByColor[sw.dataset.color];
-                    if (!base) return;
+                // Always update active class — independent of whether the colour has an image.
+                wrap.querySelectorAll('.swatch')
+                    .forEach(s => s.classList.toggle('active', s === sw));
 
-                    const img = el.querySelector('.product-img-inner img');
-                    if (img) {
-                        const sm = imgUrl(base, 'sm');
-                        const md = imgUrl(base, 'md');
-                        const lg = imgUrl(base, 'lg');
-                        if (md) {
-                            img.src    = md;
-                            img.srcset = `${sm} 400w, ${md} 800w, ${lg} 1400w`;
-                        }
+                const base        = p.primaryImageByColor[sw.dataset.color];
+                const imgEl       = el.querySelector('.product-img-inner img');
+                const placeholder = el.querySelector('.product-img-inner .product-img-placeholder');
+
+                if (base) {
+                    // Colour has an image, swap and reveal.
+                    const sm = imgUrl(base, 'sm');
+                    const md = imgUrl(base, 'md');
+                    const lg = imgUrl(base, 'lg');
+                    if (md && imgEl) {
+                        imgEl.src           = md;
+                        imgEl.srcset        = `${sm} 400w, ${md} 800w, ${lg} 1400w`;
+                        imgEl.style.display = '';
+                        if (placeholder) placeholder.style.display = 'none';
                     }
                     if (qvBtn) qvBtn.dataset.image = base;
-
-                    wrap.querySelectorAll('.swatch')
-                        .forEach(s => s.classList.toggle('active', s === sw));
-                });
-            }
+                } else {
+                    // Colour has no image, show placeholder, clear QV image.
+                    if (imgEl)       imgEl.style.display        = 'none';
+                    if (placeholder) placeholder.style.display  = '';
+                    if (qvBtn)       qvBtn.dataset.image         = '';
+                }
+            });
 
             return wrap;
         }
@@ -216,6 +257,14 @@
         //   AND the event still bubbles to document → QV works correctly.
         //
         // SWATCH ROW: same principle applied inside _swatchRowNode().
+        //
+        // Initial image and initial active swatch are both derived
+        // from the first entry of primaryImageByColor, not from swatches[0] or
+        // the stale p.imageUrl entity field. This guarantees:
+        //   - The displayed image always matches the visually active swatch.
+        //   - Products where the first variant has no image still show the
+        //     first available image from any other colour.
+        //   - qvBtn.dataset.image is consistent with what the card shows.
         function grid(rawProduct) {
             const p = _normalise(rawProduct);
 
@@ -225,11 +274,30 @@
             el.href      = `${CTX}/product/${encodeURIComponent(p.id)}`;
             el.setAttribute('aria-label', `View ${p.name}`);
 
-            const firstSwatchColor = p.swatches[0]?.color ?? null;
-            const initialImageUrl  =
-                (firstSwatchColor != null && p.primaryImageByColor[firstSwatchColor] != null)
-                    ? p.primaryImageByColor[firstSwatchColor]
-                    : p.imageUrl;
+            let initialColor = null;
+            let initialImageUrl = null;
+
+            if (p.swatches && p.swatches.length) {
+                // Find the first swatch that has an image in primaryImageByColor
+                for (let i = 0; i < p.swatches.length; i++) {
+                    const color = p.swatches[i].color;
+                    const base = p.primaryImageByColor[color];
+                    if (base) {
+                        initialColor = color;
+                        initialImageUrl = base;
+                        break;
+                    }
+                }
+                // Fallback: if no swatch has an image, use the first swatch (show placeholder)
+                if (!initialColor && p.swatches[0]) {
+                    initialColor = p.swatches[0].color;
+                    initialImageUrl = null;
+                }
+            } else {
+                // No swatches at all – fallback to first key in primaryImageByColor
+                initialColor = Object.keys(p.primaryImageByColor)[0] ?? null;
+                initialImageUrl = initialColor ? p.primaryImageByColor[initialColor] : null;
+            }
 
             const imgWrap = document.createElement('div');
             imgWrap.className = 'product-img-wrap';
@@ -264,7 +332,8 @@
 
             imgWrap.appendChild(qvBtn);
 
-            const swatchNode = _swatchRowNode(p, qvBtn, el);
+            // Pass initialColor so the correct swatch starts active.
+            const swatchNode = _swatchRowNode(p, qvBtn, el, initialColor);
 
             const footer = document.createElement('div');
             footer.className = 'product-footer';
@@ -281,16 +350,16 @@
 
             const priceP = document.createElement('p');
             priceP.className = 'product-price';
-            if (p.soldOut) {
-                priceP.textContent = 'Sold out';
-                priceP.style.color = 'var(--rw-muted)';
-            } else {
+            // if (p.soldOut) {
+            //     priceP.textContent = 'Sold out';
+            //     priceP.style.color = 'var(--rw-muted)';
+            // } else {
                 const strong = document.createElement('strong');
                 strong.textContent = `£${p.pricePerDay.toFixed(0)}`;
                 priceP.appendChild(document.createTextNode('From '));
                 priceP.appendChild(strong);
                 priceP.appendChild(document.createTextNode('/day'));
-            }
+            // }
 
             info.appendChild(brandP);
             info.appendChild(nameP);
@@ -359,7 +428,6 @@
         }
 
         // ── Cart drawer item ──────────────────────────────────────────────────
-        // Unchanged from uploaded version.
         function cartItem(raw) {
             const it  = _normalise(raw);
             const key = `${it.id}:${it.size || ''}:${it.color || ''}`;
