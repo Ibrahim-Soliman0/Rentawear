@@ -3,12 +3,12 @@ target/
 !**/src/main/**/target/
 !**/src/test/**/target/
 .kotlin
+src/main/resources/.env
+.smarttomcat
+**/*.log
 
 ### IntelliJ IDEA ###
-.idea/modules.xml
-.idea/jarRepositories.xml
-.idea/compiler.xml
-.idea/libraries/
+.idea/*
 *.iws
 *.iml
 *.ipr
@@ -37,3 +37,6 @@ build/
 
 ### Mac OS ###
 .DS_Store
+/src/main/webapp/assets/img/occasions/
+/src/main/webapp/assets/img/occasions/
+/src/main/webapp/assets/img/products/*

@@ -1,0 +1,1150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rentawear — JS Test Harness</title>
+    <!-- Fonts loaded from CDN — works online; falls back to system serif/sans offline -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500&family=Cormorant+Garamond:ital,wght@0,300;1,300&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        :root {
+            --pass: #1a7a4a;
+            --pass-bg: #edfaf3;
+            --pass-border: #a8dfc0;
+            --fail: #c0392b;
+            --fail-bg: #fdf0ee;
+            --fail-border: #f5b7b1;
+            --warn: #8a6010;
+            --warn-bg: #fef9ec;
+            --warn-border: #f5dfa0;
+            --ink: #1A1512;
+            --teal: #00A898;
+            --stone: #EDE9E3;
+            --muted: #9E9189;
+            --sidebar: 240px;
+        }
+
+        body {
+            font-family: 'DM Sans', sans-serif;
+            background: #F4F2EF;
+            color: var(--ink);
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* ── Sidebar ── */
+        .sidebar {
+            width: var(--sidebar);
+            background: #1A1512;
+            position: fixed;
+            top: 0; left: 0; bottom: 0;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            z-index: 100;
+        }
+        .sidebar-brand {
+            padding: 20px 16px 14px;
+            border-bottom: 1px solid rgba(255,255,255,0.07);
+        }
+        .sidebar-brand h1 {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 1.2rem;
+            font-weight: 300;
+            color: #fff;
+        }
+        .sidebar-brand h1 em { color: var(--teal); font-style: normal; }
+        .sidebar-brand p { font-size: 0.62rem; letter-spacing: 0.15em; text-transform: uppercase; color: rgba(255,255,255,0.3); margin-top: 2px; }
+
+        .suite-nav { padding: 10px 0; flex: 1; }
+        .suite-nav a {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 9px 16px;
+            font-size: 0.8rem;
+            color: rgba(255,255,255,0.5);
+            text-decoration: none;
+            transition: all 0.15s;
+            border-left: 2px solid transparent;
+        }
+        .suite-nav a:hover { color: rgba(255,255,255,0.85); background: rgba(255,255,255,0.04); }
+        .suite-nav a.active { color: var(--teal); border-left-color: var(--teal); background: rgba(0,168,152,0.07); }
+        .suite-nav .nav-count {
+            font-size: 0.62rem;
+            padding: 1px 6px;
+            border-radius: 99px;
+            background: rgba(255,255,255,0.08);
+            color: rgba(255,255,255,0.35);
+        }
+        .suite-nav .nav-count.all-pass { background: rgba(0,168,152,0.2); color: var(--teal); }
+        .suite-nav .nav-count.has-fail { background: rgba(192,57,43,0.2); color: #e07060; }
+
+        .sidebar-summary {
+            padding: 14px 16px;
+            border-top: 1px solid rgba(255,255,255,0.07);
+            font-size: 0.75rem;
+            color: rgba(255,255,255,0.3);
+        }
+        #globalSummary { font-size: 0.85rem; font-weight: 500; }
+        .s-pass { color: #4CAF82; }
+        .s-fail { color: #e07060; }
+
+        /* ── Main ── */
+        main {
+            margin-left: var(--sidebar);
+            flex: 1;
+            padding: 40px 48px;
+            max-width: calc(100% - var(--sidebar));
+        }
+
+        .run-bar {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 32px;
+        }
+        .run-bar h2 {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 1.8rem;
+            font-weight: 300;
+            flex: 1;
+        }
+        .btn-run {
+            background: var(--teal);
+            color: #fff;
+            border: none;
+            padding: 10px 24px;
+            font-size: 0.78rem;
+            font-weight: 500;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            border-radius: 3px;
+            cursor: pointer;
+            font-family: 'DM Sans', sans-serif;
+            transition: background 0.2s;
+        }
+        .btn-run:hover { background: #007A6E; }
+        .btn-run:disabled { background: var(--muted); cursor: not-allowed; }
+
+        /* ── Suite blocks ── */
+        .suite {
+            background: #fff;
+            border: 1px solid var(--stone);
+            border-radius: 6px;
+            overflow: hidden;
+            margin-bottom: 24px;
+        }
+        .suite-header {
+            padding: 14px 20px;
+            background: #F9F7F4;
+            border-bottom: 1px solid var(--stone);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            cursor: pointer;
+            user-select: none;
+        }
+        .suite-header-left { display: flex; align-items: center; gap: 10px; }
+        .suite-title { font-weight: 500; font-size: 0.9rem; }
+        .suite-file { font-size: 0.72rem; font-family: 'Courier New', monospace; color: var(--muted); }
+        .suite-badge {
+            font-size: 0.65rem;
+            font-weight: 600;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            padding: 3px 10px;
+            border-radius: 99px;
+        }
+        .suite-badge.pending { background: var(--stone); color: var(--muted); }
+        .suite-badge.running { background: #FFF8E0; color: #8a6010; }
+        .suite-badge.pass    { background: var(--pass-bg); color: var(--pass); }
+        .suite-badge.fail    { background: var(--fail-bg); color: var(--fail); }
+
+        .suite-body { padding: 0; }
+
+        /* ── Individual test rows ── */
+        .test-row {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            padding: 12px 20px;
+            border-bottom: 1px solid #F4F2EF;
+            font-size: 0.83rem;
+            transition: background 0.15s;
+        }
+        .test-row:last-child { border-bottom: none; }
+        .test-row:hover { background: #FDFCFA; }
+
+        .test-icon {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.7rem;
+            font-weight: 700;
+            flex-shrink: 0;
+            margin-top: 1px;
+        }
+        .test-icon.pending { background: var(--stone); color: var(--muted); }
+        .test-icon.pass    { background: var(--pass-bg); color: var(--pass); border: 1px solid var(--pass-border); }
+        .test-icon.fail    { background: var(--fail-bg); color: var(--fail); border: 1px solid var(--fail-border); }
+        .test-icon.warn    { background: var(--warn-bg); color: var(--warn); border: 1px solid var(--warn-border); }
+
+        .test-content { flex: 1; min-width: 0; }
+        .test-name { color: var(--ink); font-weight: 400; }
+        .test-detail {
+            font-size: 0.75rem;
+            color: var(--muted);
+            margin-top: 3px;
+            font-family: 'Courier New', monospace;
+            word-break: break-all;
+        }
+        .test-detail.error { color: var(--fail); }
+        .test-detail.success { color: var(--pass); }
+        .test-ms { font-size: 0.68rem; color: var(--muted); flex-shrink: 0; margin-top: 3px; }
+
+        /* ── DOM preview panel ── */
+        .preview-panel {
+            border-top: 1px solid var(--stone);
+            padding: 16px 20px;
+            background: #FAFAF8;
+        }
+        .preview-label {
+            font-size: 0.62rem;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            color: var(--muted);
+            margin-bottom: 10px;
+        }
+        .preview-inner {
+            background: #fff;
+            border: 1px solid var(--stone);
+            border-radius: 4px;
+            padding: 16px;
+            overflow-x: auto;
+        }
+
+        /* ── Minimal card styles for preview (inline so no external CSS needed) ── */
+        .product-card { position: relative; cursor: pointer; max-width: 200px; }
+        .product-img-wrap { position: relative; overflow: hidden; border-radius: 4px; aspect-ratio: 3/4; margin-bottom: 10px; background: #EDE9E3; }
+        .product-img-bg { width: 100%; height: 100%; background-size: cover; background-position: center; background-color: #C8B4A8; }
+        .product-badge { position: absolute; top: 8px; left: 8px; background: #1A1512; color: #fff; font-size: 0.6rem; letter-spacing: 0.1em; text-transform: uppercase; padding: 3px 8px; border-radius: 2px; }
+        .product-badge.new { background: #00A898; }
+        .product-wishlist { position: absolute; top: 8px; right: 8px; width: 28px; height: 28px; background: rgba(255,255,255,0.9); border-radius: 50%; display: flex; align-items: center; justify-content: center; border: none; cursor: pointer; }
+        .product-wishlist svg { width: 13px; height: 13px; }
+        .product-wishlist.active { color: #C0392B; }
+        .product-qv { position: absolute; bottom: 0; left: 0; right: 0; background: rgba(26,21,18,0.88); color: #fff; text-align: center; font-size: 0.7rem; letter-spacing: 0.1em; text-transform: uppercase; padding: 10px; display: flex; align-items: center; justify-content: center; gap: 6px; cursor: pointer; border: none; transform: translateY(100%); transition: transform 0.3s; }
+        .product-card:hover .product-qv { transform: translateY(0); }
+        .product-footer { padding: 0 2px; }
+        .product-brand { font-size: 0.65rem; letter-spacing: 0.1em; text-transform: uppercase; color: #9E9189; margin-bottom: 3px; }
+        .product-name { font-family: 'Cormorant Garamond', serif; font-size: 1rem; font-weight: 300; color: #1A1512; margin-bottom: 4px; }
+        .product-price { font-size: 0.82rem; color: #2A2520; }
+        .product-price strong { color: #00A898; }
+        .rw-size-chips { display: flex; gap: 4px; flex-wrap: wrap; margin-top: 6px; }
+        .rw-size-chip { font-size: 0.62rem; border: 1px solid #EDE9E3; border-radius: 3px; padding: 2px 6px; color: #2A2520; }
+        .rw-size-chip.unavailable { opacity: 0.35; text-decoration: line-through; }
+        .product-skel .product-img-bg { background: #EDE9E3; }
+        .rw-skel-line { height: 10px; border-radius: 3px; background: linear-gradient(90deg,#EDE9E3 25%,#F9F7F4 50%,#EDE9E3 75%); background-size: 200% 100%; animation: shimmer 1.4s ease infinite; margin-bottom: 6px; }
+        .rw-skel-line--brand { width: 40%; height: 8px; }
+        .rw-skel-line--name  { width: 75%; }
+        .rw-skel-line--price { width: 35%; height: 8px; }
+        @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+
+        .search-result-item { display: grid; grid-template-columns: 52px 1fr; gap: 12px; align-items: center; padding: 10px; border-bottom: 1px solid #F4F2EF; text-decoration: none; border-radius: 4px; }
+        .search-result-item:hover { background: #F9F7F4; }
+        .search-result-thumb { width: 52px; height: 66px; border-radius: 4px; background-size: cover; background-position: center; background-color: #EDE9E3; }
+        .search-result-info { min-width: 0; }
+        .search-result-brand { font-size: 0.62rem; letter-spacing: 0.1em; text-transform: uppercase; color: #9E9189; margin-bottom: 2px; }
+        .search-result-name { font-family: 'Cormorant Garamond', serif; font-size: 0.95rem; font-weight: 300; color: #1A1512; }
+        .search-result-price { font-size: 0.78rem; color: #00A898; margin-top: 2px; }
+        .search-result-price span { color: #9E9189; }
+
+        .cart-item { display: grid; grid-template-columns: 72px 1fr auto; gap: 12px; align-items: start; padding: 14px; border-bottom: 1px solid #EDE9E3; }
+        .cart-item-img { width: 72px; height: 90px; border-radius: 4px; background-size: cover; background-position: center; background-color: #EDE9E3; }
+        .cart-item-brand { font-size: 0.62rem; letter-spacing: 0.1em; text-transform: uppercase; color: #9E9189; margin-bottom: 3px; }
+        .cart-item-name { font-family: 'Cormorant Garamond', serif; font-size: 0.95rem; font-weight: 300; color: #1A1512; margin-bottom: 4px; }
+        .cart-item-dates { font-size: 0.72rem; color: #9E9189; margin-bottom: 3px; }
+        .cart-item-price { font-size: 0.82rem; color: #00A898; font-weight: 500; }
+        .cart-item-qty { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; }
+        .qty-controls { display: flex; align-items: center; border: 1px solid #EDE9E3; border-radius: 3px; overflow: hidden; }
+        .qty-btn { width: 26px; height: 26px; display: flex; align-items: center; justify-content: center; background: none; border: none; cursor: pointer; font-size: 0.9rem; color: #2A2520; }
+        .qty-btn:hover { background: #EDE9E3; }
+        .qty-num { width: 26px; text-align: center; font-size: 0.8rem; font-weight: 500; border-left: 1px solid #EDE9E3; border-right: 1px solid #EDE9E3; line-height: 26px; }
+        .cart-remove { background: none; border: none; cursor: pointer; font-size: 0.68rem; color: #9E9189; text-transform: uppercase; letter-spacing: 0.06em; font-family: 'DM Sans', sans-serif; }
+        .cart-remove:hover { color: #C0392B; }
+
+        .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0,0,0,0); }
+
+        /* product-info wrapper (needed for layout consistency) */
+        .product-info { width: 100%; }
+
+        /* ── render grid for card previews ── */
+        .card-row { display: flex; gap: 16px; flex-wrap: wrap; align-items: flex-start; }
+    </style>
+</head>
+<body>
+
+<!-- ── Sidebar ── -->
+<aside class="sidebar">
+    <div class="sidebar-brand">
+        <h1>renta<em>wear</em></h1>
+        <p>Test Harness</p>
+    </div>
+    <nav class="suite-nav" id="suiteNav">
+        <a href="#suite-cardfactory">CardFactory <span class="nav-count" id="nc-cardfactory">—</span></a>
+        <a href="#suite-search">search.js <span class="nav-count" id="nc-search">—</span></a>
+        <a href="#suite-cart">cart.js <span class="nav-count" id="nc-cart">—</span></a>
+    </nav>
+    <div class="sidebar-summary">
+        <div id="globalSummary">Not run</div>
+        <div style="margin-top:4px;font-size:0.7rem">Click Run All Tests</div>
+    </div>
+</aside>
+
+<!-- ── Main ── -->
+<main>
+    <div class="run-bar">
+        <h2>Unit Test Harness</h2>
+        <button class="btn-run" id="btnRunAll" onclick="runAll()">▶ Run All Tests</button>
+    </div>
+
+    <!-- ══ CardFactory Suite ══ -->
+    <div class="suite" id="suite-cardfactory">
+        <div class="suite-header" onclick="toggleSuite(this)">
+            <div class="suite-header-left">
+                <span class="suite-title">CardFactory</span>
+                <span class="suite-file">card-factory.js</span>
+            </div>
+            <span class="suite-badge pending" id="badge-cardfactory">Pending</span>
+        </div>
+        <div class="suite-body" id="body-cardfactory"></div>
+    </div>
+
+    <!-- ══ Search Suite ══ -->
+    <div class="suite" id="suite-search">
+        <div class="suite-header" onclick="toggleSuite(this)">
+            <div class="suite-header-left">
+                <span class="suite-title">search.js logic</span>
+                <span class="suite-file">search.js</span>
+            </div>
+            <span class="suite-badge pending" id="badge-search">Pending</span>
+        </div>
+        <div class="suite-body" id="body-search"></div>
+    </div>
+
+    <!-- ══ Cart Suite ══ -->
+    <div class="suite" id="suite-cart">
+        <div class="suite-header" onclick="toggleSuite(this)">
+            <div class="suite-header-left">
+                <span class="suite-title">Cart state + rendering</span>
+                <span class="suite-file">cart.js</span>
+            </div>
+            <span class="suite-badge pending" id="badge-cart">Pending</span>
+        </div>
+        <div class="suite-body" id="body-cart"></div>
+    </div>
+
+    <!-- ══ Hidden DOM fixtures for cart.js ══ -->
+    <div style="display:none">
+        <span id="cartBadge"></span>
+        <span id="cartCountLabel"></span>
+        <div id="cartItems"></div>
+        <div id="cartEmpty"></div>
+        <span id="cartSubtotal"></span>
+        <span id="cartTotal"></span>
+    </div>
+</main>
+
+<!-- ══════════════════════════════════════════════════════
+     MOCKS — replicate utils.js (CTX + esc)
+═══════════════════════════════════════════════════════ -->
+<script>
+    /* utils.js mock */
+    window.CTX = '/app';
+    window.esc = function(str) {
+        if (str == null) return '';
+        return String(str)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;');
+    };
+</script>
+
+<!-- ══ Load the real source files ══ -->
+<script src="card-factory.js"></script>
+<script src="cart.js"></script>
+<!-- search.js binds on DOMContentLoaded DOM elements — loaded inline below -->
+
+<!-- ══════════════════════════════════════════════════════
+     TEST FRAMEWORK (micro — no dependencies)
+═══════════════════════════════════════════════════════ -->
+<script>
+    /* ── Tiny assertion library ── */
+    const assert = {
+        equal(a, b, msg) {
+            if (a !== b) throw new Error(`${msg || 'equal'}: expected ${JSON.stringify(b)}, got ${JSON.stringify(a)}`);
+        },
+        notEqual(a, b, msg) {
+            if (a === b) throw new Error(`${msg || 'notEqual'}: values should differ, both are ${JSON.stringify(a)}`);
+        },
+        ok(v, msg) {
+            if (!v) throw new Error(`${msg || 'ok'}: expected truthy, got ${JSON.stringify(v)}`);
+        },
+        notOk(v, msg) {
+            if (v) throw new Error(`${msg || 'notOk'}: expected falsy, got ${JSON.stringify(v)}`);
+        },
+        includes(str, sub, msg) {
+            if (!String(str).includes(sub)) throw new Error(`${msg || 'includes'}: "${sub}" not found in "${str}"`);
+        },
+        notIncludes(str, sub, msg) {
+            if (String(str).includes(sub)) throw new Error(`${msg || 'notIncludes'}: "${sub}" unexpectedly found in "${str}"`);
+        },
+        instanceOf(val, cls, msg) {
+            if (!(val instanceof cls)) throw new Error(`${msg || 'instanceOf'}: expected instance of ${cls.name}`);
+        },
+    };
+
+    /* ── Suite runner ── */
+    const suites = {};
+
+    function suite(id, label, tests) {
+        suites[id] = { label, tests, results: [] };
+    }
+
+    async function runSuite(id) {
+        const s = suites[id];
+        const body = document.getElementById(`body-${id}`);
+        const badge = document.getElementById(`badge-${id}`);
+        const nc = document.getElementById(`nc-${id}`);
+        badge.className = 'suite-badge running';
+        badge.textContent = 'Running…';
+        body.innerHTML = '';
+        s.results = [];
+
+        for (const [name, fn, previewFn] of s.tests) {
+            const t0 = performance.now();
+            let status = 'pass', detail = '', detailClass = 'success';
+            let previewEl = null;
+            try {
+                const ret = fn();
+                if (ret instanceof Promise) await ret;
+                detail = 'Passed';
+                if (previewFn) {
+                    try { previewEl = previewFn(ret); } catch(e) { /* preview optional */ }
+                }
+            } catch(e) {
+                status = 'fail';
+                detail = e.message;
+                detailClass = 'error';
+            }
+            const ms = (performance.now() - t0).toFixed(1);
+            s.results.push({ name, status });
+
+            const icon = { pass: '✓', fail: '✗', warn: '!' }[status];
+            const row = document.createElement('div');
+            row.className = 'test-row';
+            row.innerHTML = `
+      <div class="test-icon ${status}">${icon}</div>
+      <div class="test-content">
+        <div class="test-name">${name}</div>
+        <div class="test-detail ${detailClass}">${detail}</div>
+      </div>
+      <div class="test-ms">${ms}ms</div>`;
+            body.appendChild(row);
+
+            if (previewEl) {
+                const panel = document.createElement('div');
+                panel.className = 'preview-panel';
+                panel.innerHTML = '<div class="preview-label">DOM Output Preview</div>';
+                const inner = document.createElement('div');
+                inner.className = 'preview-inner card-row';
+                inner.appendChild(previewEl);
+                panel.appendChild(inner);
+                body.appendChild(panel);
+            }
+        }
+
+        const pass = s.results.filter(r => r.status === 'pass').length;
+        const fail = s.results.filter(r => r.status === 'fail').length;
+        badge.className = `suite-badge ${fail > 0 ? 'fail' : 'pass'}`;
+        badge.textContent = `${pass}/${s.results.length} passed`;
+        nc.textContent = `${pass}/${s.results.length}`;
+        nc.className = `nav-count ${fail > 0 ? 'has-fail' : 'all-pass'}`;
+    }
+
+    async function runAll() {
+        const btn = document.getElementById('btnRunAll');
+        btn.disabled = true;
+        btn.textContent = 'Running…';
+        for (const id of Object.keys(suites)) await runSuite(id);
+        btn.disabled = false;
+        btn.textContent = '↺ Run Again';
+        // global summary
+        let totalPass = 0, totalFail = 0;
+        Object.values(suites).forEach(s => {
+            totalPass += s.results.filter(r => r.status === 'pass').length;
+            totalFail += s.results.filter(r => r.status === 'fail').length;
+        });
+        const el = document.getElementById('globalSummary');
+        el.innerHTML = `<span class="s-pass">${totalPass} passed</span> / <span class="s-fail">${totalFail} failed</span>`;
+    }
+
+    function toggleSuite(header) {
+        const body = header.nextElementSibling;
+        body.style.display = body.style.display === 'none' ? '' : 'none';
+    }
+</script>
+
+<!-- ══════════════════════════════════════════════════════
+     TEST DEFINITIONS
+═══════════════════════════════════════════════════════ -->
+<script>
+    /* ── Shared fixtures ── */
+    const FULL_PRODUCT = {
+        id: 42,
+        name: 'Silk Wrap Midi',
+        brand: 'Zimmermann',
+        pricePerDay: 45,
+        imageUrl: '/assets/img/silk-wrap.jpg',
+        isNew: true,
+        isPopular: false,
+        sizes: ['XS','S','M','L','XL'],
+        availableSizes: ['XS','S','M'],
+    };
+
+    const PARTIAL_PRODUCT = {
+        id: '7',
+        name: 'Basic Dress',
+        brand: '',
+        pricePerDay: 0,
+    };
+
+    const XSS_PRODUCT = {
+        id: 99,
+        name: '\x3cscript\x3ealert("xss")\x3c/script\x3e',
+        brand: '" onmouseover="alert(1)',
+        pricePerDay: 30,
+        imageUrl: '/img/test.jpg',
+        isNew: false, isPopular: false,
+        sizes: [], availableSizes: [],
+    };
+
+    const CART_ITEM = {
+        id: '42',
+        name: 'Silk Wrap Midi',
+        brand: 'Zimmermann',
+        imageUrl: '/assets/img/silk-wrap.jpg',
+        pricePerDay: 45,
+        size: 'S',
+        days: 4,
+        qty: 1,
+    };
+
+    /* ══════════════════════════════════════════════
+       SUITE 1 — CardFactory
+    ══════════════════════════════════════════════ */
+    suite('cardfactory', 'CardFactory', [
+
+        /* skeleton() */
+        ['skeleton() returns a DOM element',
+            () => {
+                const el = CardFactory.skeleton();
+                assert.instanceOf(el, HTMLElement, 'should be HTMLElement');
+            },
+            (ret) => CardFactory.skeleton()
+        ],
+
+        ['skeleton() has correct CSS classes',
+            () => {
+                const el = CardFactory.skeleton();
+                assert.ok(el.classList.contains('product-card'), 'missing .product-card');
+                assert.ok(el.classList.contains('product-skel'), 'missing .product-skel');
+            }
+        ],
+
+        ['skeleton() has .product-info wrapper inside .product-footer',
+            () => {
+                const el = CardFactory.skeleton();
+                const footer = el.querySelector('.product-footer');
+                assert.ok(footer, 'missing .product-footer');
+                const info = footer.querySelector('.product-info');
+                assert.ok(info, 'missing .product-info inside .product-footer — skeleton layout will shift');
+            }
+        ],
+
+        ['skeleton() has all three shimmer lines',
+            () => {
+                const el = CardFactory.skeleton();
+                assert.ok(el.querySelector('.rw-skel-line--brand'), 'missing .rw-skel-line--brand');
+                assert.ok(el.querySelector('.rw-skel-line--name'),  'missing .rw-skel-line--name');
+                assert.ok(el.querySelector('.rw-skel-line--price'), 'missing .rw-skel-line--price');
+            }
+        ],
+
+        ['skeleton() sets aria-hidden="true"',
+            () => {
+                const el = CardFactory.skeleton();
+                assert.equal(el.getAttribute('aria-hidden'), 'true');
+            }
+        ],
+
+        /* grid() */
+        ['grid() returns an HTMLElement',
+            () => {
+                const el = CardFactory.grid(FULL_PRODUCT);
+                assert.instanceOf(el, HTMLElement);
+            },
+            () => CardFactory.grid(FULL_PRODUCT)
+        ],
+
+        ['grid() renders product name and brand',
+            () => {
+                const el = CardFactory.grid(FULL_PRODUCT);
+                assert.ok(el.querySelector('.product-name').textContent.includes('Silk Wrap Midi'));
+                assert.ok(el.querySelector('.product-brand').textContent.includes('Zimmermann'));
+            }
+        ],
+
+        ['grid() renders price with /day suffix',
+            () => {
+                const el = CardFactory.grid(FULL_PRODUCT);
+                const priceEl = el.querySelector('.product-price');
+                assert.ok(priceEl, 'missing .product-price');
+                assert.includes(priceEl.textContent, '45');
+                assert.includes(priceEl.innerHTML, '/day');
+            }
+        ],
+
+        ['grid() renders .product-badge.new when isNew=true',
+            () => {
+                const el = CardFactory.grid(FULL_PRODUCT);
+                const badge = el.querySelector('.product-badge.new');
+                assert.ok(badge, 'missing .product-badge.new when isNew=true');
+            }
+        ],
+
+        ['grid() does NOT render .product-badge when isNew=false and isPopular=false',
+            () => {
+                const el = CardFactory.grid({ ...FULL_PRODUCT, isNew: false, isPopular: false });
+                const badge = el.querySelector('.product-badge');
+                assert.notOk(badge, 'badge should not render when isNew=false and isPopular=false');
+            }
+        ],
+
+        ['grid() renders size chips for available sizes',
+            () => {
+                const el = CardFactory.grid(FULL_PRODUCT);
+                const chips = el.querySelectorAll('.rw-size-chip');
+                assert.ok(chips.length > 0, 'no size chips rendered');
+                // XS, S, M should be available; L, XL should be unavailable
+                const unavail = el.querySelectorAll('.rw-size-chip.unavailable');
+                assert.equal(unavail.length, 2, 'L and XL should be .unavailable');
+            }
+        ],
+
+        ['grid() renders "Unavailable" chip when availableSizes is empty',
+            () => {
+                const el = CardFactory.grid({ ...FULL_PRODUCT, availableSizes: [] });
+                const chip = el.querySelector('.rw-size-chip.unavailable');
+                assert.ok(chip, 'missing unavailable chip');
+                assert.includes(chip.textContent, 'Unavailable');
+            }
+        ],
+
+        ['grid() renders no size chips when sizes=[]',
+            () => {
+                const el = CardFactory.grid({ ...FULL_PRODUCT, sizes: [], availableSizes: [] });
+                const chips = el.querySelectorAll('.rw-size-chip');
+                assert.equal(chips.length, 0, 'should render no chips when sizes array is empty');
+            }
+        ],
+
+        ['grid() renders wishlist button with aria-label',
+            () => {
+                const el = CardFactory.grid(FULL_PRODUCT);
+                const btn = el.querySelector('.product-wishlist');
+                assert.ok(btn, 'missing .product-wishlist button');
+                assert.ok(btn.getAttribute('aria-label'), 'wishlist button missing aria-label');
+            }
+        ],
+
+        ['grid() wishlist button toggles .active on click',
+            () => {
+                const el = CardFactory.grid(FULL_PRODUCT);
+                const btn = el.querySelector('.product-wishlist');
+                assert.notOk(btn.classList.contains('active'), 'should start inactive');
+                btn.click();
+                assert.ok(btn.classList.contains('active'), 'should be active after first click');
+                btn.click();
+                assert.notOk(btn.classList.contains('active'), 'should be inactive after second click');
+            }
+        ],
+
+        ['grid() renders data-qv attributes on quick-view button',
+            () => {
+                const el = CardFactory.grid(FULL_PRODUCT);
+                const qv = el.querySelector('[data-qv]');
+                assert.ok(qv, 'missing [data-qv] button');
+                assert.equal(qv.dataset.id, '42');
+                assert.equal(qv.dataset.name, 'Silk Wrap Midi');
+                assert.equal(qv.dataset.brand, 'Zimmermann');
+                assert.equal(qv.dataset.price, '45');
+            }
+        ],
+
+        ['grid() escapes XSS in name and brand',
+            () => {
+                const el = CardFactory.grid(XSS_PRODUCT);
+                const html = el.innerHTML;
+                assert.notIncludes(html, '\x3cscript\x3e', 'script tag not escaped');
+                assert.notIncludes(html, 'onmouseover', 'event handler not escaped');
+            }
+        ],
+
+        ['grid() handles partial product (missing optional fields)',
+            () => {
+                const el = CardFactory.grid(PARTIAL_PRODUCT);
+                assert.instanceOf(el, HTMLElement);
+                assert.ok(el.querySelector('.product-name'), 'missing .product-name');
+            }
+        ],
+
+        ['grid() uses CTX placeholder when imageUrl is missing',
+            () => {
+                const el = CardFactory.grid({ ...FULL_PRODUCT, imageUrl: undefined });
+                const bg = el.querySelector('.product-img-bg');
+                assert.includes(bg.style.backgroundImage, '/app/assets/img/placeholder.jpg');
+            }
+        ],
+
+        /* searchResult() */
+        ['searchResult() returns an <a> element',
+            () => {
+                const el = CardFactory.searchResult(FULL_PRODUCT);
+                assert.instanceOf(el, HTMLAnchorElement);
+            },
+            () => CardFactory.searchResult(FULL_PRODUCT)
+        ],
+
+        ['searchResult() href contains product id',
+            () => {
+                const el = CardFactory.searchResult(FULL_PRODUCT);
+                assert.includes(el.href, '42');
+            }
+        ],
+
+        ['searchResult() has .search-result-item class',
+            () => {
+                const el = CardFactory.searchResult(FULL_PRODUCT);
+                assert.ok(el.classList.contains('search-result-item'), 'missing .search-result-item');
+            }
+        ],
+
+        ['searchResult() uses .search-result-thumb div (not <img>)',
+            () => {
+                const el = CardFactory.searchResult(FULL_PRODUCT);
+                const thumb = el.querySelector('.search-result-thumb');
+                assert.ok(thumb, 'missing .search-result-thumb — CSS will not style image');
+                const img = el.querySelector('img');
+                assert.notOk(img, '<img> found — should use background-image div instead');
+            }
+        ],
+
+        ['searchResult() uses correct inner class names matching styles.css',
+            () => {
+                const el = CardFactory.searchResult(FULL_PRODUCT);
+                assert.ok(el.querySelector('.search-result-info'),  'missing .search-result-info');
+                assert.ok(el.querySelector('.search-result-brand'), 'missing .search-result-brand');
+                assert.ok(el.querySelector('.search-result-name'),  'missing .search-result-name');
+                assert.ok(el.querySelector('.search-result-price'), 'missing .search-result-price');
+            }
+        ],
+
+        ['searchResult() renders /day in price',
+            () => {
+                const el = CardFactory.searchResult(FULL_PRODUCT);
+                const price = el.querySelector('.search-result-price');
+                assert.ok(price, 'missing .search-result-price');
+                assert.includes(price.textContent, '/day');
+            }
+        ],
+
+        ['searchResult() escapes XSS',
+            () => {
+                const el = CardFactory.searchResult(XSS_PRODUCT);
+                assert.notIncludes(el.innerHTML, '<script>');
+                assert.notIncludes(el.innerHTML, 'onmouseover');
+            }
+        ],
+
+        /* cartItem() */
+        ['cartItem() returns an HTMLElement with .cart-item class',
+            () => {
+                const el = CardFactory.cartItem(CART_ITEM);
+                assert.ok(el.classList.contains('cart-item'), 'missing .cart-item');
+            },
+            () => CardFactory.cartItem(CART_ITEM)
+        ],
+
+        ['cartItem() has data-cart-item attribute',
+            () => {
+                const el = CardFactory.cartItem(CART_ITEM);
+                assert.ok(el.hasAttribute('data-cart-item'), 'missing data-cart-item');
+                assert.equal(el.dataset.id, '42');
+            }
+        ],
+
+        ['cartItem() renders brand, name, size, days',
+            () => {
+                const el = CardFactory.cartItem(CART_ITEM);
+                assert.includes(el.querySelector('.cart-item-brand').textContent, 'Zimmermann');
+                assert.includes(el.querySelector('.cart-item-name').textContent, 'Silk Wrap Midi');
+                const dates = el.querySelector('.cart-item-dates').textContent;
+                assert.includes(dates, 'S');
+                assert.includes(dates, '4 days');
+            }
+        ],
+
+        ['cartItem() price shows /day rate (not booking total)',
+            () => {
+                const el = CardFactory.cartItem(CART_ITEM);
+                const priceEl = el.querySelector('.cart-item-price');
+                assert.ok(priceEl, 'missing .cart-item-price');
+                // Should show 45.00, NOT 45*4=180
+                assert.includes(priceEl.textContent, '45.00');
+                assert.notIncludes(priceEl.textContent, '180');
+                assert.includes(priceEl.innerHTML, '/day');
+            }
+        ],
+
+        ['cartItem() qty controls have correct data-action attributes',
+            () => {
+                const el = CardFactory.cartItem(CART_ITEM);
+                const inc = el.querySelector('[data-action="inc"]');
+                const dec = el.querySelector('[data-action="dec"]');
+                assert.ok(inc, 'missing [data-action="inc"]');
+                assert.ok(dec, 'missing [data-action="dec"]');
+                assert.equal(inc.dataset.id, '42');
+                assert.equal(dec.dataset.id, '42');
+            }
+        ],
+
+        ['cartItem() remove button has correct data-id',
+            () => {
+                const el = CardFactory.cartItem(CART_ITEM);
+                const rm = el.querySelector('.cart-remove');
+                assert.ok(rm, 'missing .cart-remove');
+                assert.equal(rm.dataset.id, '42');
+            }
+        ],
+
+        ['cartItem() handles plural/singular days label',
+            () => {
+                const one  = CardFactory.cartItem({ ...CART_ITEM, days: 1 });
+                const many = CardFactory.cartItem({ ...CART_ITEM, days: 3 });
+                assert.includes(one.querySelector('.cart-item-dates').textContent, '1 day');
+                assert.notIncludes(one.querySelector('.cart-item-dates').textContent, 'days');
+                assert.includes(many.querySelector('.cart-item-dates').textContent, '3 days');
+            }
+        ],
+    ]);
+
+
+    /* ══════════════════════════════════════════════
+       SUITE 2 — search.js (logic only — no server)
+       search.js binds to DOM on load; we test the
+       helper behaviours we can reach without a
+       real Servlet.
+    ══════════════════════════════════════════════ */
+    suite('search', 'search.js', [
+
+        ['DOM fixture: #searchModal exists',
+            () => {
+                const el = document.getElementById('searchModal');
+                assert.ok(el, '#searchModal not found — search.js will return early without it');
+            }
+        ],
+
+        ['DOM fixture: #searchInput exists',
+            () => {
+                assert.ok(document.getElementById('searchInput'), '#searchInput not found');
+            }
+        ],
+
+        ['DOM fixture: #searchResults exists',
+            () => {
+                assert.ok(document.getElementById('searchResults'), '#searchResults not found');
+            }
+        ],
+
+        ['Opening modal adds .open class',
+            () => {
+                const modal = document.getElementById('searchModal');
+                const toggle = document.getElementById('searchToggle');
+                assert.ok(modal && toggle, 'fixture elements missing');
+                toggle.click();
+                assert.ok(modal.classList.contains('open'), '.open not added on toggle click');
+            }
+        ],
+
+        ['Cancel button removes .open class',
+            () => {
+                const modal  = document.getElementById('searchModal');
+                const cancel = document.getElementById('searchCancel');
+                modal.classList.add('open');
+                cancel.click();
+                assert.notOk(modal.classList.contains('open'), '.open not removed on cancel click');
+            }
+        ],
+
+        ['Escape key closes open modal',
+            () => {
+                const modal = document.getElementById('searchModal');
+                modal.classList.add('open');
+                document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+                assert.notOk(modal.classList.contains('open'), '.open not removed on Escape');
+            }
+        ],
+
+        ['Clear button shows when input has value, hides when empty',
+            () => {
+                const input   = document.getElementById('searchInput');
+                const clearBtn = document.getElementById('searchClear');
+                input.value = 'dress';
+                input.dispatchEvent(new Event('input'));
+                assert.ok(clearBtn.classList.contains('show'), '.show not added when input has value');
+                clearBtn.click();
+                assert.notOk(clearBtn.classList.contains('show'), '.show not removed after clear');
+                assert.equal(input.value, '', 'input not cleared');
+            }
+        ],
+
+        ['Filter pill click marks exactly one pill .active',
+            () => {
+                const pills = document.querySelectorAll('.filter-pill[data-cat]');
+                assert.ok(pills.length >= 2, 'need at least 2 filter pills for this test');
+                pills[1].click();
+                const activePills = document.querySelectorAll('.filter-pill[data-cat].active');
+                assert.equal(activePills.length, 1, `expected 1 active pill, found ${activePills.length}`);
+                assert.ok(pills[1].classList.contains('active'), 'clicked pill not marked active');
+            }
+        ],
+
+        ['Trending pill fills input and shows clear button',
+            () => {
+                const pill = document.querySelector('.search-trending-pill[data-query]');
+                assert.ok(pill, 'no .search-trending-pill[data-query] found');
+                const input    = document.getElementById('searchInput');
+                const clearBtn = document.getElementById('searchClear');
+                pill.click();
+                assert.equal(input.value, pill.dataset.query, 'input value not set to trending query');
+                assert.ok(clearBtn.classList.contains('show'), '.show not added after trending click');
+            }
+        ],
+
+        ['aria-hidden is toggled on modal open/close',
+            () => {
+                const modal  = document.getElementById('searchModal');
+                const toggle = document.getElementById('searchToggle');
+                toggle.click();
+                assert.equal(modal.getAttribute('aria-hidden'), 'false', 'aria-hidden should be false when open');
+                document.getElementById('searchCancel').click();
+                assert.equal(modal.getAttribute('aria-hidden'), 'true', 'aria-hidden should be true when closed');
+            }
+        ],
+    ]);
+
+
+    /* ══════════════════════════════════════════════
+       SUITE 3 — Cart state + rendering
+    ══════════════════════════════════════════════ */
+    suite('cart', 'Cart', [
+
+        ['Cart.getItems() returns an array',
+            () => {
+                const items = Cart.getItems();
+                assert.ok(Array.isArray(items), 'getItems() should return an array');
+            }
+        ],
+
+        ['Cart.add() adds a new item',
+            () => {
+                // reset by removing all items first
+                Cart.getItems().forEach(i => {
+                    // simulate remove via data-id on remove buttons
+                    const btn = document.querySelector(`.cart-remove[data-id="${i.id}"]`);
+                    if (btn) btn.click();
+                });
+                Cart.add({ ...CART_ITEM, id: 'test-1' });
+                const items = Cart.getItems();
+                assert.ok(items.some(i => i.id === 'test-1'), 'item not found after add()');
+            }
+        ],
+
+        ['Cart.add() with duplicate id+size increments qty instead of adding new row',
+            () => {
+                Cart.add({ ...CART_ITEM, id: 'test-dup', size: 'M', qty: 1 });
+                Cart.add({ ...CART_ITEM, id: 'test-dup', size: 'M', qty: 1 });
+                const items = Cart.getItems().filter(i => i.id === 'test-dup');
+                assert.equal(items.length, 1, 'should be exactly 1 item in cart (not 2)');
+                assert.equal(items[0].qty, 2, 'qty should be 2 after two adds');
+            }
+        ],
+
+        ['Cart.add() treats same id but different size as separate item',
+            () => {
+                Cart.add({ ...CART_ITEM, id: 'test-size', size: 'S', qty: 1 });
+                Cart.add({ ...CART_ITEM, id: 'test-size', size: 'M', qty: 1 });
+                const items = Cart.getItems().filter(i => i.id === 'test-size');
+                assert.equal(items.length, 2, 'different sizes should create separate cart rows');
+            }
+        ],
+
+        ['Cart renders badge with correct count',
+            () => {
+                const badge = document.getElementById('cartBadge');
+                const before = Cart.getItems().reduce((s, i) => s + i.qty, 0);
+                Cart.add({ ...CART_ITEM, id: 'badge-test' });
+                const expected = before + 1;
+                assert.equal(badge.textContent, String(expected), `badge shows ${badge.textContent}, expected ${expected}`);
+                assert.ok(badge.classList.contains('visible'), 'badge .visible not set');
+            }
+        ],
+
+        ['Cart renders count label correctly (n items)',
+            () => {
+                const label = document.getElementById('cartCountLabel');
+                Cart.add({ ...CART_ITEM, id: 'label-test' });
+                assert.ok(label.textContent.includes('item'), `count label "${label.textContent}" missing "item"`);
+            }
+        ],
+
+        ['Cart renders cart-item DOM nodes',
+            () => {
+                Cart.add({ ...CART_ITEM, id: 'dom-test' });
+                const wrap = document.getElementById('cartItems');
+                const nodes = wrap.querySelectorAll('[data-cart-item]');
+                assert.ok(nodes.length > 0, 'no [data-cart-item] nodes in #cartItems');
+            }
+        ],
+
+        ['Increment button (data-action=inc) increases qty — ID type coercion',
+            () => {
+                Cart.add({ ...CART_ITEM, id: 'inc-test', size: 'XS' });
+                const items = Cart.getItems();
+                const item = items.find(i => i.id === 'inc-test');
+                assert.ok(item, 'item not found — add() failed');
+                const initialQty = item.qty;
+                const incBtn = document.querySelector('[data-action="inc"][data-id="inc-test"]');
+                assert.ok(incBtn, '[data-action="inc"][data-id="inc-test"] button not found in DOM');
+                incBtn.click();
+                const updated = Cart.getItems().find(i => i.id === 'inc-test');
+                assert.equal(updated.qty, initialQty + 1, `qty should be ${initialQty + 1}, got ${updated?.qty}`);
+            }
+        ],
+
+        ['Decrement button (data-action=dec) decreases qty',
+            () => {
+                Cart.add({ ...CART_ITEM, id: 'dec-test', size: 'XS' });
+                Cart.add({ ...CART_ITEM, id: 'dec-test', size: 'XS' }); // qty=2
+                const decBtn = document.querySelector('[data-action="dec"][data-id="dec-test"]');
+                assert.ok(decBtn, '[data-action="dec"] button not found');
+                decBtn.click();
+                const updated = Cart.getItems().find(i => i.id === 'dec-test');
+                assert.ok(updated, 'item removed prematurely');
+                assert.equal(updated.qty, 1, `expected qty 1, got ${updated?.qty}`);
+            }
+        ],
+
+        ['Decrement to 0 removes the item',
+            () => {
+                Cart.add({ ...CART_ITEM, id: 'zero-test', size: 'XS' }); // qty=1
+                const decBtn = document.querySelector('[data-action="dec"][data-id="zero-test"]');
+                assert.ok(decBtn, '[data-action="dec"] button not found');
+                decBtn.click(); // qty → 0 → removed
+                const item = Cart.getItems().find(i => i.id === 'zero-test');
+                assert.notOk(item, 'item should be removed when qty reaches 0');
+            }
+        ],
+
+        ['Remove button removes the item from cart',
+            () => {
+                Cart.add({ ...CART_ITEM, id: 'rm-test', size: 'S' });
+                const rmBtn = document.querySelector('.cart-remove[data-id="rm-test"]');
+                assert.ok(rmBtn, '.cart-remove[data-id="rm-test"] not found in DOM');
+                rmBtn.click();
+                const item = Cart.getItems().find(i => i.id === 'rm-test');
+                assert.notOk(item, 'item should be gone after Remove click');
+            }
+        ],
+
+        ['Cart subtotal updates correctly',
+            () => {
+                // clear cart first
+                Cart.getItems().forEach(i => {
+                    const btn = document.querySelector(`.cart-remove[data-id="${i.id}"]`);
+                    if (btn) btn.click();
+                });
+                Cart.add({ ...CART_ITEM, id: 'sub-a', pricePerDay: 45, days: 4, qty: 1 });
+                Cart.add({ ...CART_ITEM, id: 'sub-b', pricePerDay: 30, days: 2, qty: 1 });
+                const subtotalEl = document.getElementById('cartSubtotal');
+                // 45*4 + 30*2 = 180 + 60 = 240
+                assert.includes(subtotalEl.textContent, '240.00', `subtotal shows "${subtotalEl.textContent}", expected $240.00`);
+            }
+        ],
+
+        ['Empty cart shows #cartEmpty and hides #cartItems',
+            () => {
+                // Remove everything
+                const toRemove = Cart.getItems().map(i => i.id);
+                toRemove.forEach(id => {
+                    const btn = document.querySelector(`.cart-remove[data-id="${id}"]`);
+                    if (btn) btn.click();
+                });
+                const empty = document.getElementById('cartEmpty');
+                const wrap  = document.getElementById('cartItems');
+                assert.notEqual(empty.style.display, 'none', '#cartEmpty should be visible when cart is empty');
+                assert.equal(wrap.style.display, 'none', '#cartItems should be hidden when cart is empty');
+            }
+        ],
+    ]);
+</script>
+
+<!-- ══ Search fixture DOM (needed for search.js to bind) ══ -->
+<div style="display:none">
+    <button id="searchToggle" aria-label="Open search">Search</button>
+    <div id="searchModal" aria-hidden="true">
+        <div id="searchBackdrop"></div>
+        <div>
+            <div>
+                <input id="searchInput" type="text" placeholder="Search…">
+                <button id="searchClear">×</button>
+            </div>
+            <button id="searchCancel">Cancel</button>
+        </div>
+        <div>
+            <button class="filter-pill active" data-cat="all">All</button>
+            <button class="filter-pill" data-cat="dresses">Dresses</button>
+            <button class="filter-pill" data-cat="jumpsuits">Jumpsuits</button>
+        </div>
+        <div id="searchTrending">
+            <button class="search-trending-pill" data-query="Wedding Guest">Wedding Guest</button>
+            <button class="search-trending-pill" data-query="Black Tie">Black Tie</button>
+        </div>
+        <div id="searchResults" style="display:none"></div>
+    </div>
+</div>
+
+<!-- ══ Load search.js after its fixture DOM exists ══ -->
+<script src="search.js"></script>
+
+</body>
+</html>

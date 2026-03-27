@@ -1,0 +1,1802 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rentawear — Component Style Guide</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        /* ── Guide Shell ─────────────────────────────────── */
+        *, *::before, *::after { box-sizing: border-box; }
+
+        :root {
+            --guide-sidebar: 260px;
+            --guide-bg: #F4F2EF;
+            --guide-border: #E0DBD4;
+            --guide-label: #8A8078;
+            --guide-code-bg: #1E1B18;
+        }
+
+        body {
+            margin: 0;
+            font-family: 'DM Sans', sans-serif;
+            background: var(--guide-bg);
+            display: flex;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* Sidebar */
+        .guide-sidebar {
+            width: var(--guide-sidebar);
+            background: #1A1512;
+            position: fixed;
+            top: 0; left: 0; bottom: 0;
+            overflow-y: auto;
+            z-index: 9000;
+            display: flex;
+            flex-direction: column;
+            scrollbar-width: thin;
+            scrollbar-color: #3A3028 transparent;
+        }
+        .guide-sidebar::-webkit-scrollbar { width: 4px; }
+        .guide-sidebar::-webkit-scrollbar-thumb { background: #3A3028; }
+
+        .guide-sidebar-brand {
+            padding: 24px 20px 16px;
+            border-bottom: 1px solid rgba(255,255,255,0.07);
+            flex-shrink: 0;
+        }
+        .guide-sidebar-brand h1 {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 1.4rem;
+            font-weight: 300;
+            color: #fff;
+            margin: 0 0 2px;
+        }
+        .guide-sidebar-brand h1 em { color: #00A898; font-style: normal; }
+        .guide-sidebar-brand p {
+            font-size: 0.65rem;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            color: rgba(255,255,255,0.35);
+            margin: 0;
+        }
+
+        .guide-nav { padding: 12px 0; flex: 1; }
+        .guide-nav-group { margin-bottom: 4px; }
+        .guide-nav-group-label {
+            font-size: 0.58rem;
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+            color: rgba(255,255,255,0.25);
+            padding: 12px 20px 6px;
+            display: block;
+        }
+        .guide-nav a {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px 20px;
+            font-size: 0.82rem;
+            color: rgba(255,255,255,0.5);
+            text-decoration: none;
+            transition: color 0.15s, background 0.15s;
+            border-left: 2px solid transparent;
+        }
+        .guide-nav a:hover { color: rgba(255,255,255,0.85); background: rgba(255,255,255,0.04); }
+        .guide-nav a.active { color: #00A898; border-left-color: #00A898; background: rgba(0,168,152,0.08); }
+        .guide-nav a .nav-num {
+            font-size: 0.6rem;
+            color: rgba(255,255,255,0.2);
+            font-family: 'Cormorant Garamond', serif;
+            min-width: 16px;
+        }
+
+        /* Main content */
+        .guide-main {
+            margin-left: var(--guide-sidebar);
+            flex: 1;
+            min-height: 100vh;
+        }
+
+        /* Section wrappers */
+        .guide-section {
+            border-bottom: 1px solid var(--guide-border);
+            padding: 60px 56px;
+        }
+        .guide-section:last-child { border-bottom: none; }
+
+        .guide-section-header {
+            margin-bottom: 40px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid var(--guide-border);
+            display: flex;
+            align-items: flex-end;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+        .guide-section-num {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 0.75rem;
+            color: #00A898;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            display: block;
+            margin-bottom: 4px;
+        }
+        .guide-section-title {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 2rem;
+            font-weight: 300;
+            color: #1A1512;
+            margin: 0;
+        }
+        .guide-section-desc {
+            font-size: 0.88rem;
+            color: #6A6058;
+            line-height: 1.6;
+            max-width: 600px;
+            margin: 10px 0 0;
+        }
+
+        /* Preview frame */
+        .guide-preview {
+            background: #fff;
+            border: 1px solid var(--guide-border);
+            border-radius: 6px;
+            overflow: hidden;
+            margin-bottom: 24px;
+            position: relative;
+        }
+        .guide-preview-label {
+            font-size: 0.62rem;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            color: var(--guide-label);
+            padding: 8px 14px;
+            background: var(--guide-bg);
+            border-bottom: 1px solid var(--guide-border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .guide-preview-label .state-pill {
+            background: rgba(0,168,152,0.1);
+            color: #00A898;
+            border-radius: 99px;
+            padding: 2px 8px;
+            font-size: 0.58rem;
+            font-weight: 600;
+            letter-spacing: 0.1em;
+        }
+        .guide-preview-body {
+            padding: 40px;
+            background: var(--preview-bg, #FDFCFA);
+        }
+        .guide-preview-body--dark { --preview-bg: #2A2520; }
+        .guide-preview-body--cream { --preview-bg: #F9F7F4; }
+        .guide-preview-body--stone { --preview-bg: #EDE9E3; }
+        .guide-preview-body--tight { padding: 0; }
+
+        /* Code snippet */
+        .guide-code {
+            background: var(--guide-code-bg);
+            border-radius: 6px;
+            overflow: hidden;
+            margin-top: 16px;
+        }
+        .guide-code-header {
+            padding: 10px 16px;
+            background: rgba(255,255,255,0.05);
+            font-size: 0.65rem;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            color: rgba(255,255,255,0.3);
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .guide-code-header::before {
+            content: '';
+            width: 8px; height: 8px; border-radius: 50%;
+            background: #00A898; opacity: 0.6;
+        }
+        .guide-code pre {
+            margin: 0;
+            padding: 20px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.78rem;
+            line-height: 1.7;
+            color: #C8C0B8;
+            overflow-x: auto;
+            tab-size: 2;
+        }
+        .guide-code .kw  { color: #00A898; }
+        .guide-code .cl  { color: #E8D8A0; }
+        .guide-code .at  { color: #A8C8E0; }
+        .guide-code .st  { color: #C8A880; }
+        .guide-code .cm  { color: #605850; font-style: italic; }
+
+        /* Prop table */
+        .guide-prop-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.82rem;
+            margin-top: 16px;
+        }
+        .guide-prop-table th {
+            background: #1A1512;
+            color: rgba(255,255,255,0.7);
+            font-size: 0.62rem;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            font-weight: 500;
+            padding: 10px 14px;
+            text-align: left;
+        }
+        .guide-prop-table td {
+            padding: 10px 14px;
+            border-bottom: 1px solid var(--guide-border);
+            vertical-align: top;
+            color: #3A3530;
+        }
+        .guide-prop-table tr:last-child td { border-bottom: none; }
+        .guide-prop-table tr:nth-child(even) td { background: rgba(0,0,0,0.02); }
+        .guide-prop-table td:first-child {
+            font-family: 'Courier New', monospace;
+            font-size: 0.76rem;
+            color: #00796E;
+            white-space: nowrap;
+        }
+        .guide-prop-table td:nth-child(2) {
+            color: #8A8078;
+            font-size: 0.78rem;
+        }
+
+        /* Colour grid */
+        .colour-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 0; border-radius: 6px; overflow: hidden; }
+        .colour-swatch {
+            aspect-ratio: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-end;
+            padding: 8px;
+            cursor: pointer;
+            transition: transform 0.15s;
+            position: relative;
+        }
+        .colour-swatch:hover { transform: scale(1.04); z-index: 2; }
+        .colour-swatch-name  { font-size: 0.6rem; font-weight: 600; letter-spacing: 0.06em; text-align: center; }
+        .colour-swatch-hex   { font-family: 'Courier New', monospace; font-size: 0.55rem; opacity: 0.7; }
+
+        /* Sub-section header */
+        .guide-sub { font-size: 1.05rem; font-weight: 500; color: #1A1512; margin: 32px 0 12px; padding-top: 32px; border-top: 1px solid var(--guide-border); }
+        .guide-sub:first-of-type { border-top: none; margin-top: 0; }
+
+        /* Variant row */
+        .variant-row { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
+        .variant-stack { display: flex; flex-direction: column; gap: 12px; }
+        .variant-label {
+            font-size: 0.62rem;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            color: var(--guide-label);
+            margin-bottom: 6px;
+        }
+
+        /* State badge in table */
+        .badge-state { display: inline-block; font-size: 0.6rem; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; padding: 2px 7px; border-radius: 3px; vertical-align: middle; }
+        .badge-state--modifier { background: #E8F0F8; color: #2060A0; }
+        .badge-state--state    { background: #E8F8F0; color: #1A7040; }
+        .badge-state--js       { background: #FFF8E0; color: #8A6010; }
+
+        /* Guide hero / banner at top */
+        .guide-hero {
+            background: linear-gradient(135deg, #1A1512 0%, #2A2520 100%);
+            padding: 80px 56px 60px;
+            position: relative;
+            overflow: hidden;
+        }
+        .guide-hero::before {
+            content: '';
+            position: absolute;
+            top: -60px; right: -60px;
+            width: 400px; height: 400px;
+            background: radial-gradient(circle, rgba(0,168,152,0.15) 0%, transparent 70%);
+            pointer-events: none;
+        }
+        .guide-hero-eyebrow {
+            font-size: 0.65rem;
+            letter-spacing: 0.25em;
+            text-transform: uppercase;
+            color: #00A898;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .guide-hero-eyebrow::before { content: ''; width: 28px; height: 1px; background: #00A898; }
+        .guide-hero h1 {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: clamp(2.5rem, 5vw, 4rem);
+            font-weight: 300;
+            color: #fff;
+            margin: 0 0 16px;
+            line-height: 1.1;
+        }
+        .guide-hero h1 em { color: #00A898; font-style: italic; }
+        .guide-hero p {
+            color: rgba(255,255,255,0.45);
+            font-size: 0.9rem;
+            max-width: 500px;
+            line-height: 1.7;
+            margin: 0 0 32px;
+        }
+        .guide-hero-stats {
+            display: flex;
+            gap: 40px;
+        }
+        .guide-stat-num {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 2rem;
+            font-weight: 300;
+            color: #fff;
+            line-height: 1;
+        }
+        .guide-stat-lbl {
+            font-size: 0.65rem;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            color: rgba(255,255,255,0.3);
+            margin-top: 4px;
+        }
+
+        /* ── Isolated component overrides for guide context ─ */
+        .in-guide .rw-nav { position: relative; top: auto; border-radius: 4px; }
+        .in-guide .ann-bar { border-radius: 4px 4px 0 0; }
+
+        /* Pill tag for section content */
+        .tag-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 0.65rem;
+            font-weight: 600;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            padding: 4px 10px;
+            border-radius: 99px;
+            border: 1px solid;
+        }
+        .tag-pill--teal { color: #00A898; border-color: rgba(0,168,152,0.3); background: rgba(0,168,152,0.06); }
+        .tag-pill--gold { color: #A07A30; border-color: rgba(201,169,110,0.4); background: rgba(201,169,110,0.08); }
+        .tag-pill--dark { color: rgba(255,255,255,0.6); border-color: rgba(255,255,255,0.15); background: rgba(255,255,255,0.04); }
+
+        /* interactive JS tabs for states */
+        .guide-tabs { display: flex; gap: 0; margin-bottom: 0; border-bottom: 1px solid var(--guide-border); }
+        .guide-tab {
+            padding: 8px 16px;
+            font-size: 0.72rem;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            color: var(--guide-label);
+            border: none; border-bottom: 2px solid transparent;
+            background: none;
+            cursor: pointer;
+            font-family: 'DM Sans', sans-serif;
+            transition: color 0.15s;
+            margin-bottom: -1px;
+        }
+        .guide-tab.active { color: #00A898; border-bottom-color: #00A898; }
+
+        /* placeholder images for product thumbs in the guide */
+        .pg-1  { background: linear-gradient(160deg,#C8B4A8,#907060); }
+        .pg-2  { background: linear-gradient(160deg,#2A3040,#506080); }
+        .pg-3  { background: linear-gradient(160deg,#8C6878,#C09090); }
+        .pg-4  { background: linear-gradient(160deg,#6A7860,#90A080); }
+        .pg-5  { background: linear-gradient(160deg,#C4A860,#8A7040); }
+        .pg-6  { background: linear-gradient(160deg,#405060,#708090); }
+        .pg-7  { background: linear-gradient(160deg,#8C5060,#C08070); }
+        .pg-8  { background: linear-gradient(160deg,#504060,#806890); }
+        .ed-c1 { background: linear-gradient(160deg,#C8B4A8,#907060); }
+        .ed-c2 { background: linear-gradient(160deg,#8C6878,#C09090); }
+        .ed-c3 { background: linear-gradient(160deg,#5A4048,#907070); }
+        .ed-c4 { background: linear-gradient(160deg,#8070A0,#C0A8C8); }
+        .ed-c5 { background: linear-gradient(160deg,#405060,#708090); }
+
+        /* ── rw-reveal demo */
+        .rw-reveal { opacity: 0; transform: translateY(24px); transition: opacity 0.55s ease, transform 0.55s ease; }
+        .rw-reveal.is-visible { opacity: 1; transform: translateY(0); }
+    </style>
+</head>
+<body>
+
+<!-- ══════════════════════════════════════════════════
+     SIDEBAR
+══════════════════════════════════════════════════ -->
+<aside class="guide-sidebar">
+    <div class="guide-sidebar-brand">
+        <h1>renta<em>wear</em></h1>
+        <p>Component Style Guide</p>
+    </div>
+    <nav class="guide-nav">
+        <div class="guide-nav-group">
+            <span class="guide-nav-group-label">Foundation</span>
+            <a href="#tokens"><span class="nav-num">01</span> Design Tokens</a>
+            <a href="#typography"><span class="nav-num">02</span> Typography</a>
+            <a href="#layout"><span class="nav-num">03</span> Layout</a>
+        </div>
+        <div class="guide-nav-group">
+            <span class="guide-nav-group-label">Navigation</span>
+            <a href="#announcement"><span class="nav-num">04</span> Announcement Bar</a>
+            <a href="#navbar"><span class="nav-num">05</span> Navigation</a>
+            <a href="#drawer"><span class="nav-num">06</span> Mobile Drawer</a>
+        </div>
+        <div class="guide-nav-group">
+            <span class="guide-nav-group-label">Overlays</span>
+            <a href="#cart"><span class="nav-num">07</span> Cart Drawer</a>
+            <a href="#search"><span class="nav-num">08</span> Search Modal</a>
+            <a href="#quickview"><span class="nav-num">09</span> Quick View</a>
+        </div>
+        <div class="guide-nav-group">
+            <span class="guide-nav-group-label">Sections</span>
+            <a href="#hero"><span class="nav-num">10</span> Hero</a>
+            <a href="#howitworks"><span class="nav-num">11</span> How It Works</a>
+            <a href="#editorial"><span class="nav-num">12</span> Editorial</a>
+            <a href="#occasions"><span class="nav-num">13</span> Occasion Grid</a>
+        </div>
+        <div class="guide-nav-group">
+            <span class="guide-nav-group-label">Products</span>
+            <a href="#productgrid"><span class="nav-num">14</span> Product Grid</a>
+            <a href="#swatches"><span class="nav-num">15</span> Swatches</a>
+            <a href="#pdp"><span class="nav-num">16</span> Product Detail</a>
+            <a href="#skeleton"><span class="nav-num">17</span> Skeletons</a>
+        </div>
+        <div class="guide-nav-group">
+            <span class="guide-nav-group-label">UI Elements</span>
+            <a href="#buttons"><span class="nav-num">18</span> Buttons</a>
+            <a href="#pills"><span class="nav-num">19</span> Filter Pills</a>
+            <a href="#trust"><span class="nav-num">20</span> Trust & Reviews</a>
+            <a href="#auth"><span class="nav-num">21</span> Auth Forms</a>
+            <a href="#personalised"><span class="nav-num">22</span> Personalised</a>
+            <a href="#footer"><span class="nav-num">23</span> Footer</a>
+        </div>
+    </nav>
+</aside>
+
+<!-- ══════════════════════════════════════════════════
+     MAIN
+══════════════════════════════════════════════════ -->
+<main class="guide-main">
+
+    <!-- Hero banner -->
+    <div class="guide-hero">
+        <div class="guide-hero-eyebrow">JSP · Servlet · Bootstrap · ORM</div>
+        <h1>Component <em>Style Guide</em></h1>
+        <p>Every CSS component from <code style="color:#C9A96E;font-size:0.85em">styles.css</code> rendered live. Click components to see interactive states. Code snippets show exact JSP markup.</p>
+        <div class="guide-hero-stats">
+            <div><div class="guide-stat-num">31</div><div class="guide-stat-lbl">CSS Sections</div></div>
+            <div><div class="guide-stat-num">200+</div><div class="guide-stat-lbl">Class names</div></div>
+            <div><div class="guide-stat-num">11</div><div class="guide-stat-lbl">CSS Variables</div></div>
+        </div>
+    </div>
+
+
+    <!-- ══ 1. DESIGN TOKENS ══════════════════════════ -->
+    <section id="tokens" class="guide-section">
+        <div class="guide-section-header">
+            <div>
+                <span class="guide-section-num">Section 01</span>
+                <h2 class="guide-section-title">Design Tokens</h2>
+                <p class="guide-section-desc">All brand colours and variables defined in <code>:root</code>. Reference with <code>var(--rw-*)</code> in your JSP inline styles or additional CSS.</p>
+            </div>
+        </div>
+
+        <p class="variant-label">Brand Colour Palette</p>
+        <div class="colour-grid" style="margin-bottom:24px">
+            <div class="colour-swatch" style="background:#F9F7F4"><span class="colour-swatch-name" style="color:#9E9189">cream</span><span class="colour-swatch-hex" style="color:#9E9189">#F9F7F4</span></div>
+            <div class="colour-swatch" style="background:#EDE9E3"><span class="colour-swatch-name" style="color:#9E9189">stone</span><span class="colour-swatch-hex" style="color:#9E9189">#EDE9E3</span></div>
+            <div class="colour-swatch" style="background:#9E9189"><span class="colour-swatch-name" style="color:#fff">muted</span><span class="colour-swatch-hex" style="color:#fff">#9E9189</span></div>
+            <div class="colour-swatch" style="background:#2A2520"><span class="colour-swatch-name" style="color:#fff">charcoal</span><span class="colour-swatch-hex" style="color:rgba(255,255,255,0.5)">#2A2520</span></div>
+            <div class="colour-swatch" style="background:#1A1512"><span class="colour-swatch-name" style="color:#fff">ink</span><span class="colour-swatch-hex" style="color:rgba(255,255,255,0.4)">#1A1512</span></div>
+            <div class="colour-swatch" style="background:#FDFCFA;border:1px solid #EDE9E3"><span class="colour-swatch-name" style="color:#9E9189">warm wht</span><span class="colour-swatch-hex" style="color:#9E9189">#FDFCFA</span></div>
+            <div class="colour-swatch" style="background:#00A898"><span class="colour-swatch-name" style="color:#fff">teal</span><span class="colour-swatch-hex" style="color:rgba(255,255,255,0.7)">#00A898</span></div>
+            <div class="colour-swatch" style="background:#007A6E"><span class="colour-swatch-name" style="color:#fff">teal-dark</span><span class="colour-swatch-hex" style="color:rgba(255,255,255,0.6)">#007A6E</span></div>
+            <div class="colour-swatch" style="background:#E6F7F5"><span class="colour-swatch-name" style="color:#00A898">teal-light</span><span class="colour-swatch-hex" style="color:#00A898">#E6F7F5</span></div>
+            <div class="colour-swatch" style="background:#C9A96E"><span class="colour-swatch-name" style="color:#fff">gold</span><span class="colour-swatch-hex" style="color:rgba(255,255,255,0.7)">#C9A96E</span></div>
+            <div class="colour-swatch" style="background:#C0392B"><span class="colour-swatch-name" style="color:#fff">danger</span><span class="colour-swatch-hex" style="color:rgba(255,255,255,0.7)">#C0392B</span></div>
+            <div class="colour-swatch" style="background:#EDE9E3;border:1px solid #ccc"></div>
+        </div>
+
+        <table class="guide-prop-table">
+            <thead><tr><th>Variable</th><th>Value</th><th>Usage</th></tr></thead>
+            <tbody>
+            <tr><td>--rw-font-display</td><td>Cormorant Garamond, Georgia</td><td>Headings, hero, product names, section titles</td></tr>
+            <tr><td>--rw-font-body</td><td>DM Sans, sans-serif</td><td>All UI text, labels, nav, body copy</td></tr>
+            <tr><td>--rw-nav-h</td><td>80px</td><td>Nav height — use in <code>calc(100vh - var(--rw-nav-h))</code></td></tr>
+            <tr><td>--rw-radius</td><td>4px</td><td>Default border-radius for cards, buttons, inputs</td></tr>
+            <tr><td>--rw-shadow</td><td>0 2px 12px rgba(0,0,0,.06)</td><td>Default card shadow</td></tr>
+            <tr><td>--rw-shadow-hover</td><td>0 6px 24px rgba(0,0,0,.1)</td><td>Elevated/hover card shadow</td></tr>
+            <tr><td>--rw-transition</td><td>all 0.25s ease</td><td>Standard transition for interactive elements</td></tr>
+            <tr><td>--rw-ease-out</td><td>cubic-bezier(0.16,1,0.3,1)</td><td>Spring easing for drawers and dropdowns</td></tr>
+            </tbody>
+        </table>
+    </section>
+
+
+    <!-- ══ 2. TYPOGRAPHY ═════════════════════════════ -->
+    <section id="typography" class="guide-section">
+        <div class="guide-section-header">
+            <div>
+                <span class="guide-section-num">Section 02</span>
+                <h2 class="guide-section-title">Typography</h2>
+            </div>
+        </div>
+
+        <div class="guide-preview">
+            <div class="guide-preview-label">Live preview</div>
+            <div class="guide-preview-body">
+                <p class="section-eyebrow">New Arrivals</p>
+                <h2 class="section-title">The Edit for <em>Summer</em></h2>
+                <p style="font-family:'DM Sans',sans-serif;font-size:0.95rem;color:#9E9189;margin-top:12px;line-height:1.7">Body copy — DM Sans regular, color: --rw-charcoal</p>
+                <a href="#" class="view-all" style="display:inline-block;margin-top:16px">View all styles</a>
+            </div>
+        </div>
+
+        <table class="guide-prop-table">
+            <thead><tr><th>Class</th><th>Font / Size</th><th>Notes</th></tr></thead>
+            <tbody>
+            <tr><td>h1–h6 (element)</td><td>Cormorant Garamond, 300</td><td>Applied globally by the base reset — no class needed</td></tr>
+            <tr><td>.section-eyebrow</td><td>DM Sans, 0.68rem, uppercase</td><td>Teal label displayed above section titles</td></tr>
+            <tr><td>.section-title</td><td>Cormorant Garamond, clamp(1.8–2.8rem)</td><td>Responsive display heading for section intros</td></tr>
+            <tr><td>.section-title em</td><td>italic</td><td>Decorative italic emphasis</td></tr>
+            <tr><td>.view-all / .rw-view-all</td><td>DM Sans, 0.75rem, uppercase</td><td>Muted teal underline link; hover turns teal</td></tr>
+            </tbody>
+        </table>
+    </section>
+
+
+    <!-- ══ 3. LAYOUT ══════════════════════════════════ -->
+    <section id="layout" class="guide-section">
+        <div class="guide-section-header">
+            <div>
+                <span class="guide-section-num">Section 03</span>
+                <h2 class="guide-section-title">Layout Primitives</h2>
+                <p class="guide-section-desc"><code>.section</code> and <code>.rw-section</code> are interchangeable. <code>.section-alt</code> adds a cream background.</p>
+            </div>
+        </div>
+
+        <div class="guide-preview">
+            <div class="guide-preview-label">Section + section-alt</div>
+            <div class="guide-preview-body guide-preview-body--tight">
+                <div style="background:#FDFCFA;padding:32px 40px;border-bottom:1px solid #EDE9E3">
+                    <div class="section-header">
+                        <div>
+                            <p class="section-eyebrow">Standard Section</p>
+                            <h3 class="section-title" style="font-size:1.4rem">White background</h3>
+                        </div>
+                        <a href="#" class="view-all">View all</a>
+                    </div>
+                </div>
+                <div style="background:#F9F7F4;padding:32px 40px">
+                    <div class="section-header">
+                        <div>
+                            <p class="section-eyebrow">Section Alt</p>
+                            <h3 class="section-title" style="font-size:1.4rem">Cream background</h3>
+                        </div>
+                        <a href="#" class="view-all">View all</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <table class="guide-prop-table">
+            <thead><tr><th>Class</th><th>Type</th><th>Description</th></tr></thead>
+            <tbody>
+            <tr><td>.rw-main</td><td>wrapper</td><td>Main content flex child — required for sticky footer layout</td></tr>
+            <tr><td>.section / .rw-section</td><td>section</td><td>Padding: 80px 40px (56px 20px on mobile)</td></tr>
+            <tr><td>.section-alt</td><td>modifier</td><td>Adds cream #F9F7F4 background</td></tr>
+            <tr><td>.section-inner</td><td>child</td><td>Max-width 1280px, auto margins — always use inside sections</td></tr>
+            <tr><td>.section-header / .rw-section-header</td><td>child</td><td>Flex row: title/eyebrow left, view-all link right</td></tr>
+            </tbody>
+        </table>
+    </section>
+
+
+    <!-- ══ 4. ANNOUNCEMENT BAR ════════════════════════ -->
+    <section id="announcement" class="guide-section">
+        <div class="guide-section-header">
+            <div>
+                <span class="guide-section-num">Section 04</span>
+                <h2 class="guide-section-title">Announcement Bar</h2>
+                <p class="guide-section-desc">Full-width charcoal strip above the navbar. Separator <code>&lt;span&gt;</code> elements get 70% opacity.</p>
+            </div>
+        </div>
+
+        <div class="guide-preview">
+            <div class="guide-preview-label">Live</div>
+            <div class="guide-preview-body guide-preview-body--tight">
+                <div class="ann-bar">
+                    FREE UK DELIVERY ON ORDERS OVER £50 <span>·</span> RENT. WEAR. RETURN. <span>·</span> <a href="#" style="color:rgba(255,255,255,0.7);text-decoration:underline">How it works</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="guide-code">
+            <div class="guide-code-header">HTML</div>
+            <pre><span class="kw">&lt;div</span> <span class="at">class</span>=<span class="st">"ann-bar"</span><span class="kw">&gt;</span>
+  FREE UK DELIVERY ON ORDERS OVER £50
+  <span class="kw">&lt;span&gt;</span>·<span class="kw">&lt;/span&gt;</span>
+  RENT. WEAR. RETURN.
+<span class="kw">&lt;/div&gt;</span></pre>
+        </div>
+    </section>
+
+
+    <!-- ══ 5. NAVIGATION ══════════════════════════════ -->
+    <section id="navbar" class="guide-section">
+        <div class="guide-section-header">
+            <div>
+                <span class="guide-section-num">Section 05</span>
+                <h2 class="guide-section-title">Navigation</h2>
+                <p class="guide-section-desc">Sticky frosted-glass navbar. Dropdowns open on click (add <code>.open</code> to the parent <code>&lt;li&gt;</code> via JS).</p>
+            </div>
+        </div>
+
+        <div class="guide-preview">
+            <div class="guide-preview-label">Full navbar — desktop view</div>
+            <div class="guide-preview-body guide-preview-body--tight in-guide" style="overflow:visible;position:relative;">
+                <nav class="rw-nav" style="position:relative;top:auto;">
+                    <div class="nav-inner" style="padding:0 24px">
+                        <div class="nav-left">
+                            <a class="rw-logo" href="#">renta<em>wear</em></a>
+                        </div>
+                        <div class="nav-center">
+                            <ul class="nav-links">
+                                <li class="open">
+                                    <button class="nav-link-btn active">Dresses <span class="rw-chevron">▾</span></button>
+                                    <div class="nav-dropdown" style="opacity:1;pointer-events:auto;transform:translateX(-50%) translateY(0)">
+                                        <a href="#">Maxi Dresses</a>
+                                        <a href="#">Midi Dresses</a>
+                                        <a href="#">Mini Dresses</a>
+                                        <hr>
+                                        <a href="#" class="dropdown-cta">View all dresses →</a>
+                                    </div>
+                                </li>
+                                <li><button class="nav-link-btn">Jumpsuits <span class="rw-chevron">▾</span></button></li>
+                                <li><button class="nav-link-btn">Occasionwear</button></li>
+                                <li><button class="nav-link-btn">Designers</button></li>
+                            </ul>
+                        </div>
+                        <div class="nav-right">
+                            <button class="nav-icon-btn"><i class="fa fa-search"></i></button>
+                            <button class="nav-icon-btn"><i class="fa fa-heart"></i></button>
+                            <button class="nav-icon-btn" style="position:relative">
+                                <i class="fa fa-bag-shopping"></i>
+                                <span class="cart-badge visible">3</span>
+                            </button>
+                            <button class="nav-icon-btn nav-desktop-only"><i class="fa fa-user"></i></button>
+                        </div>
+                    </div>
+                </nav>
+            </div>
+        </div>
+
+        <p class="guide-sub">Dropdown — Standard vs Wide (mega)</p>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+            <div class="guide-preview">
+                <div class="guide-preview-label">Standard dropdown</div>
+                <div class="guide-preview-body" style="min-height:200px;overflow:visible;position:relative;padding-top:60px">
+                    <div class="nav-dropdown" style="opacity:1;pointer-events:auto;transform:none;position:relative;left:auto;top:auto;display:block;min-width:180px">
+                        <a href="#">Maxi Dresses<span class="dropdown-item-sub">Floor length & flowing</span></a>
+                        <a href="#">Midi Dresses</a>
+                        <a href="#">Mini Dresses</a>
+                        <hr>
+                        <a href="#" class="dropdown-cta">View all →</a>
+                    </div>
+                </div>
+            </div>
+            <div class="guide-preview">
+                <div class="guide-preview-label">Cart badge states</div>
+                <div class="guide-preview-body" style="display:flex;gap:20px;align-items:center">
+                    <div style="text-align:center">
+                        <button class="nav-icon-btn" style="position:relative;margin:auto"><i class="fa fa-bag-shopping"></i></button>
+                        <p style="font-size:0.7rem;color:#9E9189;margin-top:6px">Hidden</p>
+                    </div>
+                    <div style="text-align:center">
+                        <button class="nav-icon-btn" style="position:relative;margin:auto"><i class="fa fa-bag-shopping"></i><span class="cart-badge visible">1</span></button>
+                        <p style="font-size:0.7rem;color:#9E9189;margin-top:6px">.visible</p>
+                    </div>
+                    <div style="text-align:center">
+                        <button class="nav-icon-btn" style="position:relative;margin:auto"><i class="fa fa-bag-shopping"></i><span class="cart-badge visible">12</span></button>
+                        <p style="font-size:0.7rem;color:#9E9189;margin-top:6px">Multi-digit</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+
+    <!-- ══ 6. MOBILE DRAWER ═══════════════════════════ -->
+    <section id="drawer" class="guide-section">
+        <div class="guide-section-header">
+            <div>
+                <span class="guide-section-num">Section 06</span>
+                <h2 class="guide-section-title">Mobile Drawer</h2>
+                <p class="guide-section-desc">Shown on screens ≤960px. Toggle by adding <code>.open</code> to <code>.rw-drawer</code>.</p>
+            </div>
+        </div>
+
+        <div class="guide-preview">
+            <div class="guide-preview-label">Drawer panel (open state) <span class="state-pill">JS: add .open</span></div>
+            <div class="guide-preview-body guide-preview-body--tight" style="display:flex;gap:0">
+                <div style="width:280px;background:#FDFCFA;border-right:1px solid #EDE9E3;flex-shrink:0">
+                    <div class="drawer-header" style="display:flex;align-items:center;justify-content:space-between;padding:20px 24px;border-bottom:1px solid #EDE9E3">
+                        <a class="rw-logo" style="font-size:1.3rem" href="#">renta<em>wear</em></a>
+                        <button class="cart-close" style="width:32px;height:32px"><svg viewBox="0 0 18 18"><path d="M2 2l14 14M16 2L2 16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button>
+                    </div>
+                    <ul style="list-style:none;padding:8px 0;margin:0">
+                        <li>
+                            <button class="drawer-item" style="width:100%;display:flex;align-items:center;justify-content:space-between;padding:14px 24px;background:none;border:none;font-family:'DM Sans',sans-serif;font-size:0.92rem;color:#2A2520;cursor:pointer">
+                                Dresses <span class="rw-chevron">▾</span>
+                            </button>
+                            <div class="drawer-sub open">
+                                <a href="#">Maxi Dresses</a>
+                                <a href="#">Midi Dresses</a>
+                                <a href="#">Mini Dresses</a>
+                            </div>
+                        </li>
+                        <li><button class="drawer-item" style="width:100%;display:flex;align-items:center;justify-content:space-between;padding:14px 24px;background:none;border:none;font-family:'DM Sans',sans-serif;font-size:0.92rem;color:#2A2520;cursor:pointer">Jumpsuits</button></li>
+                    </ul>
+                    <div class="drawer-divider"></div>
+                    <div class="drawer-footer">
+                        <a class="drawer-footer-item" href="#">
+                            <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                            My Account
+                        </a>
+                        <a class="drawer-footer-item" href="#">
+                            <svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+                            Wishlist
+                        </a>
+                    </div>
+                </div>
+                <div style="flex:1;background:rgba(26,21,18,0.25);display:flex;align-items:center;justify-content:center">
+                    <p style="color:rgba(255,255,255,0.6);font-size:0.8rem">← .drawer-backdrop</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+
+    <!-- ══ 7. CART DRAWER ════════════════════════════ -->
+    <section id="cart" class="guide-section">
+        <div class="guide-section-header">
+            <div>
+                <span class="guide-section-num">Section 07</span>
+                <h2 class="guide-section-title">Cart Drawer</h2>
+                <p class="guide-section-desc">Slides in from the right. Add <code>.open</code> to <code>.cart-drawer</code> to show.</p>
+            </div>
+        </div>
+
+        <div class="guide-preview">
+            <div class="guide-preview-label">Cart panel — with items</div>
+            <div class="guide-preview-body guide-preview-body--tight" style="display:flex;justify-content:flex-end">
+                <div class="cart-panel" style="position:relative;transform:none;width:min(380px,100%);max-height:560px;overflow:hidden;flex-direction:column;display:flex;">
+                    <div class="cart-header">
+                        <div class="cart-header-left">
+                            <h2 class="cart-title">Your Bag</h2>
+                            <span class="cart-count-label">2 items</span>
+                        </div>
+                        <button class="cart-close"><svg viewBox="0 0 18 18"><path d="M2 2l14 14M16 2L2 16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button>
+                    </div>
+                    <div class="cart-body" style="flex:1;overflow:hidden">
+                        <ul class="cart-items">
+                            <li class="cart-item">
+                                <div class="cart-item-img pg-3" style="border-radius:4px"></div>
+                                <div class="cart-item-info">
+                                    <span class="cart-item-brand">Zimmermann</span>
+                                    <p class="cart-item-name">Silk Wrap Midi</p>
+                                    <p class="cart-item-dates">12–15 Jul 2026</p>
+                                    <p class="cart-item-price">£45/day</p>
+                                </div>
+                                <div class="cart-item-qty">
+                                    <button class="cart-remove">Remove</button>
+                                    <div class="qty-controls">
+                                        <button class="qty-btn">−</button>
+                                        <span class="qty-num">1</span>
+                                        <button class="qty-btn">+</button>
+                                    </div>
+                                </div>
+                            </li>
+                            <li class="cart-item">
+                                <div class="cart-item-img pg-5" style="border-radius:4px"></div>
+                                <div class="cart-item-info">
+                                    <span class="cart-item-brand">Self Portrait</span>
+                                    <p class="cart-item-name">Floral Lace Mini</p>
+                                    <p class="cart-item-dates">12–15 Jul 2026</p>
+                                    <p class="cart-item-price">£55/day</p>
+                                </div>
+                                <div class="cart-item-qty">
+                                    <button class="cart-remove">Remove</button>
+                                    <div class="qty-controls">
+                                        <button class="qty-btn">−</button>
+                                        <span class="qty-num">1</span>
+                                        <button class="qty-btn">+</button>
+                                    </div>
+                                </div>
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="cart-footer">
+                        <div class="cart-summary-row"><span>Subtotal</span><span>£300</span></div>
+                        <div class="cart-summary-row total"><span>Total</span><span>£300</span></div>
+                        <button class="cart-cta">Proceed to Checkout</button>
+                        <a class="cart-continue" href="#">Continue shopping</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="guide-preview" style="margin-top:16px">
+            <div class="guide-preview-label">Empty state</div>
+            <div class="guide-preview-body" style="max-width:340px;margin:auto">
+                <div class="cart-empty" style="min-height:220px">
+                    <div class="cart-empty-icon"><i class="fa fa-bag-shopping" style="font-size:1.5rem;color:#9E9189"></i></div>
+                    <h3>Your bag is empty</h3>
+                    <p>Add something beautiful to get started.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+
+    <!-- ══ 8. SEARCH MODAL ════════════════════════════ -->
+    <section id="search" class="guide-section">
+        <div class="guide-section-header">
+            <div>
+                <span class="guide-section-num">Section 08</span>
+                <h2 class="guide-section-title">Search Modal</h2>
+            </div>
+        </div>
+
+        <div class="guide-preview">
+            <div class="guide-preview-label">Search panel (open state)</div>
+            <div class="guide-preview-body guide-preview-body--cream">
+                <div class="search-panel" style="position:relative;opacity:1;transform:none;left:auto;top:auto;width:100%;max-width:100%">
+                    <div class="search-input-row">
+                        <div class="search-field-wrap">
+                            <svg viewBox="0 0 16 16"><circle cx="7" cy="7" r="5" stroke-width="2"/><path d="M11 11l3 3" stroke-width="2" stroke-linecap="round"/></svg>
+                            <input class="search-input" type="text" value="silk midi" readonly>
+                            <button class="search-clear show"><svg viewBox="0 0 12 12"><path d="M1 1l10 10M11 1L1 11" stroke-width="2.5" stroke-linecap="round"/></svg></button>
+                        </div>
+                        <button class="search-cancel">Cancel</button>
+                    </div>
+                    <div class="search-filters">
+                        <span class="filter-label">Filter:</span>
+                        <button class="filter-pill active">All</button>
+                        <button class="filter-pill">Dresses</button>
+                        <button class="filter-pill">Jumpsuits</button>
+                        <button class="filter-pill">Under £30</button>
+                    </div>
+                    <div class="search-results-wrap">
+                        <div class="search-results-inner">
+                            <a href="#" class="search-result-item">
+                                <div class="search-result-thumb pg-3"></div>
+                                <div class="search-result-info">
+                                    <p class="search-result-brand">Zimmermann</p>
+                                    <p class="search-result-name">Silk Wrap Midi Dress</p>
+                                    <p class="search-result-price">From £45/day <span>RRP £620</span></p>
+                                </div>
+                            </a>
+                            <a href="#" class="search-result-item">
+                                <div class="search-result-thumb pg-1"></div>
+                                <div class="search-result-info">
+                                    <p class="search-result-brand">Self Portrait</p>
+                                    <p class="search-result-name">Pleated Silk Midi</p>
+                                    <p class="search-result-price">From £40/day <span>RRP £480</span></p>
+                                </div>
+                            </a>
+                        </div>
+                        <a href="#" class="search-view-all">View all 24 results for "silk midi"</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="guide-preview" style="margin-top:16px">
+            <div class="guide-preview-label">Trending searches (empty state)</div>
+            <div class="guide-preview-body guide-preview-body--cream">
+                <div class="search-trending">
+                    <p class="search-trending-label">Trending</p>
+                    <div class="search-trending-pills">
+                        <button class="search-trending-pill"><svg viewBox="0 0 14 14"><polyline points="2,10 5,5 8,8 12,2"/></svg>Wedding Guest</button>
+                        <button class="search-trending-pill"><svg viewBox="0 0 14 14"><polyline points="2,10 5,5 8,8 12,2"/></svg>Black Tie</button>
+                        <button class="search-trending-pill"><svg viewBox="0 0 14 14"><polyline points="2,10 5,5 8,8 12,2"/></svg>Zimmermann</button>
+                        <button class="search-trending-pill"><svg viewBox="0 0 14 14"><polyline points="2,10 5,5 8,8 12,2"/></svg>Midi Dresses</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+
+    <!-- ══ 9. QUICK VIEW ══════════════════════════════ -->
+    <section id="quickview" class="guide-section">
+        <div class="guide-section-header">
+            <div>
+                <span class="guide-section-num">Section 09</span>
+                <h2 class="guide-section-title">Quick View Overlay</h2>
+                <p class="guide-section-desc">Add <code>.open</code> to <code>.qv-overlay</code>. Content is loaded via AJAX from ProductDetailServlet.</p>
+            </div>
+        </div>
+
+        <div class="guide-preview">
+            <div class="guide-preview-label">Quick view modal</div>
+            <div class="guide-preview-body guide-preview-body--tight">
+                <div class="qv-modal" style="position:relative;transform:none;max-width:100%;max-height:600px;overflow:hidden;border-radius:0">
+                    <div class="qv-image-panel" style="min-height:400px;max-height:600px">
+                        <div class="qv-main-img pg-3" style="min-height:400px"></div>
+                        <div class="qv-thumbs">
+                            <div class="qv-thumb active"><div class="qv-thumb-bg pg-3"></div></div>
+                            <div class="qv-thumb"><div class="qv-thumb-bg pg-7"></div></div>
+                            <div class="qv-thumb"><div class="qv-thumb-bg pg-1"></div></div>
+                        </div>
+                        <span class="qv-badge new">New</span>
+                        <button class="qv-close"><svg viewBox="0 0 14 14"><path d="M1 1l12 12M13 1L1 13" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg></button>
+                    </div>
+                    <div class="qv-details" style="overflow-y:auto;max-height:600px">
+                        <p class="qv-brand">Zimmermann</p>
+                        <h2 class="qv-name">Silk Wrap Midi Dress</h2>
+                        <div class="qv-price-row">
+                            <span class="qv-price-main">From £45/day</span>
+                            <span class="qv-price-rrp">RRP £620</span>
+                        </div>
+                        <div class="qv-divider"></div>
+                        <p class="qv-label">Colour <span class="qv-label-val">Rose</span></p>
+                        <div class="qv-colors">
+                            <div class="qv-color-swatch active" style="background:#8C6878"></div>
+                            <div class="qv-color-swatch" style="background:#2A2520"></div>
+                            <div class="qv-color-swatch" style="background:#C4A860"></div>
+                        </div>
+                        <p class="qv-label">Size</p>
+                        <div class="qv-sizes">
+                            <div class="qv-size">XS</div>
+                            <div class="qv-size active">S</div>
+                            <div class="qv-size">M</div>
+                            <div class="qv-size sold-out">L</div>
+                            <div class="qv-size">XL</div>
+                        </div>
+                        <a href="#" class="qv-size-guide">Size guide</a>
+                        <p class="qv-label">Rental duration</p>
+                        <div class="qv-duration">
+                            <div class="qv-dur-btn"><p class="qv-dur-days">4 days</p><p class="qv-dur-price">£45</p></div>
+                            <div class="qv-dur-btn active"><p class="qv-dur-days">8 days</p><p class="qv-dur-price">£75</p></div>
+                            <div class="qv-dur-btn"><p class="qv-dur-days">14 days</p><p class="qv-dur-price">£100</p></div>
+                        </div>
+                        <button class="qv-atb"><svg viewBox="0 0 16 16"><path d="M2 2h2l2 8h6l2-6H6" stroke-linecap="round" stroke-linejoin="round"/><circle cx="9" cy="13" r="1" fill="currentColor" stroke="none"/><circle cx="6" cy="13" r="1" fill="currentColor" stroke="none"/></svg>Add to Bag</button>
+                        <button class="qv-wishlist-btn"><svg viewBox="0 0 15 15"><path d="M7.5 13S1 9 1 4.5a3.5 3.5 0 0 1 6.5-1.8A3.5 3.5 0 0 1 14 4.5C14 9 7.5 13 7.5 13z"/></svg>Save to Wishlist</button>
+                        <div class="qv-accordion-item open">
+                            <button class="qv-acc-trigger">Details <svg viewBox="0 0 14 14"><path d="M2 5l5 5 5-5" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+                            <div class="qv-acc-body"><div class="qv-acc-body-inner"><p>100% silk. Dry clean only. Runs true to size.</p></div></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+
+    <!-- ══ 10. HERO ═══════════════════════════════════ -->
+    <section id="hero" class="guide-section">
+        <div class="guide-section-header">
+            <div>
+                <span class="guide-section-num">Section 10</span>
+                <h2 class="guide-section-title">Hero Section</h2>
+            </div>
+        </div>
+
+        <div class="guide-preview">
+            <div class="guide-preview-label">Full hero layout</div>
+            <div class="guide-preview-body guide-preview-body--tight">
+                <div class="hero" style="min-height:460px;grid-template-columns:1fr 1fr">
+                    <div class="hero-text" style="padding:60px 48px">
+                        <p class="hero-eyebrow">Spring / Summer 2026</p>
+                        <h1 class="hero-title" style="font-size:clamp(2.2rem,4vw,3.5rem)">Dress for<br><em>every moment</em></h1>
+                        <p class="hero-sub">Rent designer pieces from £30/day. Delivered to your door.</p>
+                        <div class="hero-actions">
+                            <a href="#" class="btn-primary">Shop Now</a>
+                            <a href="#" class="btn-outline">How it works</a>
+                        </div>
+                    </div>
+                    <div class="hero-image">
+                        <div class="hero-image-placeholder" style="min-height:460px">
+                            <div style="position:absolute;inset:0;background:linear-gradient(160deg,#C8B4A8,#907060)"></div>
+                            <span class="hero-img-label">Zimmermann SS26</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+
+    <!-- ══ 11. HOW IT WORKS ═══════════════════════════ -->
+    <section id="howitworks" class="guide-section">
+        <div class="guide-section-header">
+            <div>
+                <span class="guide-section-num">Section 11</span>
+                <h2 class="guide-section-title">How It Works Strip</h2>
+            </div>
+        </div>
+
+        <div class="guide-preview">
+            <div class="guide-preview-label">Dark strip — 3 steps</div>
+            <div class="guide-preview-body guide-preview-body--tight">
+                <div class="how-strip">
+                    <div class="how-inner">
+                        <p class="how-label">How it works</p>
+                        <div class="how-steps">
+                            <div class="how-step">
+                                <div class="step-number">01</div>
+                                <div class="step-icon"><svg viewBox="0 0 22 22"><circle cx="11" cy="11" r="8"/><path d="M8 11l2 2 4-4" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+                                <h3 class="step-title">Browse & Choose</h3>
+                                <p class="step-desc">Select from 500+ designer pieces for any occasion.</p>
+                            </div>
+                            <div class="how-step">
+                                <div class="step-number">02</div>
+                                <div class="step-icon"><svg viewBox="0 0 22 22"><rect x="3" y="4" width="16" height="16" rx="2"/><path d="M7 2v4M15 2v4M3 10h16"/></svg></div>
+                                <h3 class="step-title">Pick Your Dates</h3>
+                                <p class="step-desc">Choose your rental period — 4, 8, or 14 days.</p>
+                            </div>
+                            <div class="how-step">
+                                <div class="step-number">03</div>
+                                <div class="step-icon"><svg viewBox="0 0 22 22"><path d="M4 12l4 4 10-10" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+                                <h3 class="step-title">Wear & Return</h3>
+                                <p class="step-desc">Delivered to your door. Return in the pre-paid bag.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+
+    <!-- ══ 12. EDITORIAL ══════════════════════════════ -->
+    <section id="editorial" class="guide-section">
+        <div class="guide-section-header">
+            <div>
+                <span class="guide-section-num">Section 12</span>
+                <h2 class="guide-section-title">Editorial Banner & Grid</h2>
+            </div>
+        </div>
+
+        <div class="guide-preview">
+            <div class="guide-preview-label">Editorial banner</div>
+            <div class="guide-preview-body guide-preview-body--tight">
+                <div class="editorial-banner" style="padding:64px 40px">
+                    <div class="editorial-banner-inner">
+                        <p class="editorial-kicker">The Edit</p>
+                        <h2 class="editorial-headline">Dressed in <em>Gold</em></h2>
+                        <p class="editorial-sub">Curator-selected pieces for the season ahead.</p>
+                        <a href="#" class="btn-outline" style="border-color:rgba(255,255,255,0.3);color:#fff">View the Edit</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="guide-preview" style="margin-top:16px">
+            <div class="guide-preview-label">Editorial grid (2fr + 1fr + 1fr)</div>
+            <div class="guide-preview-body">
+                <div class="editorial-grid" style="grid-template-rows:200px 200px">
+                    <div class="ed-card" style="grid-row:1/3"><div class="ed-bg ed-c1" style="height:100%"></div><div class="ed-info"><p class="ed-brand">Zimmermann</p><p class="ed-name">Silk Wrap Maxi</p><p class="ed-price">From £65/day</p></div></div>
+                    <div class="ed-card"><div class="ed-bg ed-c2" style="height:200px"></div><div class="ed-info"><p class="ed-brand">Self Portrait</p><p class="ed-name">Lace Mini</p><p class="ed-price">From £40/day</p></div></div>
+                    <div class="ed-card"><div class="ed-bg ed-c3" style="height:200px"></div><div class="ed-info"><p class="ed-brand">Rotate</p><p class="ed-name">Pleated Midi</p><p class="ed-price">From £35/day</p></div></div>
+                    <div class="ed-card"><div class="ed-bg ed-c4" style="height:200px"></div><div class="ed-info"><p class="ed-brand">Ganni</p><p class="ed-name">Floral Dress</p><p class="ed-price">From £30/day</p></div></div>
+                    <div class="ed-card"><div class="ed-bg ed-c5" style="height:200px"></div><div class="ed-info"><p class="ed-brand">Staud</p><p class="ed-name">Column Gown</p><p class="ed-price">From £55/day</p></div></div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+
+    <!-- ══ 13. OCCASIONS ══════════════════════════════ -->
+    <section id="occasions" class="guide-section">
+        <div class="guide-section-header">
+            <div>
+                <span class="guide-section-num">Section 13</span>
+                <h2 class="guide-section-title">Occasion Grid</h2>
+                <p class="guide-section-desc">Masonry 3-col 2-row grid. First card spans 2 rows. Hover turns overlay teal.</p>
+            </div>
+        </div>
+
+        <div class="guide-preview">
+            <div class="guide-preview-label">Hover any card to see overlay</div>
+            <div class="guide-preview-body">
+                <div class="occasion-grid" style="grid-template-rows:200px 200px">
+                    <a class="occ-card" href="#"><div class="occ-bg" style="height:100%;background:linear-gradient(135deg,#D4C5B8,#B8A090)"></div><div class="occ-overlay"><span class="occ-label">Wedding</span></div></a>
+                    <a class="occ-card" href="#"><div class="occ-bg" style="background:linear-gradient(135deg,#2A2520,#4A3F38);height:200px"></div><div class="occ-overlay"><span class="occ-label">Black Tie</span></div></a>
+                    <a class="occ-card" href="#"><div class="occ-bg" style="background:linear-gradient(135deg,#8FA87A,#C5D4B8);height:200px"></div><div class="occ-overlay"><span class="occ-label">Garden Party</span></div></a>
+                    <a class="occ-card" href="#"><div class="occ-bg" style="background:linear-gradient(135deg,#5A6880,#8A98A8);height:200px"></div><div class="occ-overlay"><span class="occ-label">Business</span></div></a>
+                    <a class="occ-card" href="#"><div class="occ-bg" style="background:linear-gradient(135deg,#8B4F6A,#C48090);height:200px"></div><div class="occ-overlay"><span class="occ-label">Cocktail</span></div></a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+
+    <!-- ══ 14. PRODUCT GRID ═══════════════════════════ -->
+    <section id="productgrid" class="guide-section">
+        <div class="guide-section-header">
+            <div>
+                <span class="guide-section-num">Section 14</span>
+                <h2 class="guide-section-title">Product Grid & Cards</h2>
+                <p class="guide-section-desc">Hover a card to reveal the wishlist button and quick-view bar. Use JSTL <code>c:forEach</code> to loop cards.</p>
+            </div>
+        </div>
+
+        <div class="guide-preview">
+            <div class="guide-preview-label">4-column grid (hover cards)</div>
+            <div class="guide-preview-body guide-preview-body--cream">
+                <div class="product-scroll">
+                    <!-- Card 1 -->
+                    <div class="product-card">
+                        <div class="product-img-wrap">
+                            <div class="product-img-bg pg-3" style="height:100%"></div>
+                            <span class="product-badge new">New</span>
+                            <button class="product-wishlist"><svg viewBox="0 0 15 15"><path d="M7.5 13S1 9 1 4.5a3.5 3.5 0 0 1 6.5-1.8A3.5 3.5 0 0 1 14 4.5C14 9 7.5 13 7.5 13z" stroke-width="1.8"/></svg></button>
+                            <button class="product-qv"><svg viewBox="0 0 14 14"><circle cx="7" cy="7" r="4"/><path d="M1 7s2-5 6-5 6 5 6 5-2 5-6 5-6-5-6-5z"/></svg>Quick View</button>
+                        </div>
+                        <div class="swatch-row" style="margin-bottom:10px">
+                            <span class="swatch" style="background:#8C6878"></span>
+                            <span class="swatch active" style="background:#2A2520"></span>
+                            <span class="swatch" style="background:#C4A860"></span>
+                        </div>
+                        <div class="product-footer">
+                            <div class="product-info">
+                                <p class="product-brand">Zimmermann</p>
+                                <p class="product-name">Silk Wrap Midi</p>
+                                <p class="product-price">From <strong>£45</strong>/day <s>RRP £620</s></p>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Card 2 -->
+                    <div class="product-card">
+                        <div class="product-img-wrap">
+                            <div class="product-img-bg pg-5" style="height:100%"></div>
+                            <span class="product-badge">Popular</span>
+                            <button class="product-wishlist"><svg viewBox="0 0 15 15"><path d="M7.5 13S1 9 1 4.5a3.5 3.5 0 0 1 6.5-1.8A3.5 3.5 0 0 1 14 4.5C14 9 7.5 13 7.5 13z" stroke-width="1.8"/></svg></button>
+                            <button class="product-qv"><svg viewBox="0 0 14 14"><circle cx="7" cy="7" r="4"/><path d="M1 7s2-5 6-5 6 5 6 5-2 5-6 5-6-5-6-5z"/></svg>Quick View</button>
+                        </div>
+                        <div class="swatch-row" style="margin-bottom:10px">
+                            <span class="swatch" style="background:#C4A860"></span>
+                            <span class="swatch-overflow">+2</span>
+                        </div>
+                        <div class="product-footer">
+                            <div class="product-info">
+                                <p class="product-brand">Self Portrait</p>
+                                <p class="product-name">Floral Lace Midi</p>
+                                <p class="product-price">From <strong>£55</strong>/day</p>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Card 3 (skeleton) -->
+                    <div class="product-card product-skel">
+                        <div class="product-img-wrap">
+                            <div class="product-img-bg" style="height:100%"></div>
+                        </div>
+                        <div style="margin-top:14px">
+                            <div class="rw-skel-line rw-skel-line--brand"></div>
+                            <div class="rw-skel-line rw-skel-line--name"></div>
+                            <div class="rw-skel-line rw-skel-line--price"></div>
+                        </div>
+                    </div>
+                    <!-- Card 4 -->
+                    <div class="product-card">
+                        <div class="product-img-wrap">
+                            <div class="product-img-bg pg-2" style="height:100%"></div>
+                            <button class="product-wishlist"><svg viewBox="0 0 15 15"><path d="M7.5 13S1 9 1 4.5a3.5 3.5 0 0 1 6.5-1.8A3.5 3.5 0 0 1 14 4.5C14 9 7.5 13 7.5 13z" stroke-width="1.8"/></svg></button>
+                            <button class="product-qv"><svg viewBox="0 0 14 14"><circle cx="7" cy="7" r="4"/><path d="M1 7s2-5 6-5 6 5 6 5-2 5-6 5-6-5-6-5z"/></svg>Quick View</button>
+                        </div>
+                        <div class="swatch-row" style="margin-bottom:10px">
+                            <span class="swatch" style="background:#2A3040"></span>
+                            <span class="swatch active" style="background:#506080"></span>
+                        </div>
+                        <div class="product-footer">
+                            <div class="product-info">
+                                <p class="product-brand">Rotate</p>
+                                <p class="product-name">Structured Blazer</p>
+                                <p class="product-price">From <strong>£35</strong>/day</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <p class="guide-sub">Image Placeholder Classes</p>
+        <div style="display:grid;grid-template-columns:repeat(8,1fr);gap:6px">
+            <div class="pg-1" style="aspect-ratio:3/4;border-radius:4px;display:flex;align-items:flex-end;padding:6px"><span style="font-size:0.6rem;color:#fff;font-family:monospace">.pg-1</span></div>
+            <div class="pg-2" style="aspect-ratio:3/4;border-radius:4px;display:flex;align-items:flex-end;padding:6px"><span style="font-size:0.6rem;color:#fff;font-family:monospace">.pg-2</span></div>
+            <div class="pg-3" style="aspect-ratio:3/4;border-radius:4px;display:flex;align-items:flex-end;padding:6px"><span style="font-size:0.6rem;color:#fff;font-family:monospace">.pg-3</span></div>
+            <div class="pg-4" style="aspect-ratio:3/4;border-radius:4px;display:flex;align-items:flex-end;padding:6px"><span style="font-size:0.6rem;color:#fff;font-family:monospace">.pg-4</span></div>
+            <div class="pg-5" style="aspect-ratio:3/4;border-radius:4px;display:flex;align-items:flex-end;padding:6px"><span style="font-size:0.6rem;color:#fff;font-family:monospace">.pg-5</span></div>
+            <div class="pg-6" style="aspect-ratio:3/4;border-radius:4px;display:flex;align-items:flex-end;padding:6px"><span style="font-size:0.6rem;color:#fff;font-family:monospace">.pg-6</span></div>
+            <div class="pg-7" style="aspect-ratio:3/4;border-radius:4px;display:flex;align-items:flex-end;padding:6px"><span style="font-size:0.6rem;color:#fff;font-family:monospace">.pg-7</span></div>
+            <div class="pg-8" style="aspect-ratio:3/4;border-radius:4px;display:flex;align-items:flex-end;padding:6px"><span style="font-size:0.6rem;color:#fff;font-family:monospace">.pg-8</span></div>
+        </div>
+    </section>
+
+
+    <!-- ══ 15. SWATCHES ═══════════════════════════════ -->
+    <section id="swatches" class="guide-section">
+        <div class="guide-section-header">
+            <div>
+                <span class="guide-section-num">Section 15</span>
+                <h2 class="guide-section-title">Colour Swatches</h2>
+            </div>
+        </div>
+
+        <div class="guide-preview">
+            <div class="guide-preview-label">Click to toggle active state</div>
+            <div class="guide-preview-body" style="display:flex;gap:32px;flex-wrap:wrap;align-items:flex-start">
+                <div>
+                    <p class="variant-label">Default</p>
+                    <div class="swatch-row">
+                        <span class="swatch" style="background:#2A2520" title="Noir" onclick="this.classList.toggle('active')"></span>
+                        <span class="swatch active" style="background:#8C6878" title="Rose" onclick="this.classList.toggle('active')"></span>
+                        <span class="swatch" style="background:#C4A860" title="Gold" onclick="this.classList.toggle('active')"></span>
+                        <span class="swatch" style="background:#406080" title="Navy" onclick="this.classList.toggle('active')"></span>
+                        <span class="swatch-overflow" title="+3 more">+3</span>
+                    </div>
+                </div>
+                <div>
+                    <p class="variant-label">QV larger swatches</p>
+                    <div class="qv-colors">
+                        <div class="qv-color-swatch active" style="background:#8C6878" onclick="document.querySelectorAll('.qv-color-swatch').forEach(s=>s.classList.remove('active'));this.classList.add('active')"></div>
+                        <div class="qv-color-swatch" style="background:#2A2520" onclick="document.querySelectorAll('.qv-color-swatch').forEach(s=>s.classList.remove('active'));this.classList.add('active')"></div>
+                        <div class="qv-color-swatch" style="background:#C4A860" onclick="document.querySelectorAll('.qv-color-swatch').forEach(s=>s.classList.remove('active'));this.classList.add('active')"></div>
+                        <div class="qv-color-swatch" style="background:#406080" onclick="document.querySelectorAll('.qv-color-swatch').forEach(s=>s.classList.remove('active'));this.classList.add('active')"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+
+    <!-- ══ 16. PRODUCT DETAIL ═════════════════════════ -->
+    <section id="pdp" class="guide-section">
+        <div class="guide-section-header">
+            <div>
+                <span class="guide-section-num">Section 16</span>
+                <h2 class="guide-section-title">Product Detail Components</h2>
+            </div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
+            <div class="guide-preview">
+                <div class="guide-preview-label">Size selector</div>
+                <div class="guide-preview-body">
+                    <div class="rw-size-grid" style="display:flex;gap:8px;flex-wrap:wrap">
+                        <button class="rw-size-btn">XS</button>
+                        <button class="rw-size-btn active">S</button>
+                        <button class="rw-size-btn">M</button>
+                        <button class="rw-size-btn" disabled style="opacity:.35;cursor:not-allowed">L</button>
+                        <button class="rw-size-btn">XL</button>
+                    </div>
+                </div>
+            </div>
+            <div class="guide-preview">
+                <div class="guide-preview-label">Price range slider</div>
+                <div class="guide-preview-body">
+                    <div style="display:flex;justify-content:space-between;font-size:0.8rem;color:#9E9189;margin-bottom:8px"><span>£0</span><span id="priceDisplay">£30 – £120</span><span>£200</span></div>
+                    <div class="rw-range-wrap">
+                        <div class="rw-range-track"><div class="rw-range-fill" id="rangeFill" style="left:15%;width:45%"></div></div>
+                        <input type="range" class="rw-range rw-range-min" id="priceMin" min="0" max="200" value="30" oninput="updateRange()">
+                        <input type="range" class="rw-range rw-range-max" id="priceMax" min="0" max="200" value="120" oninput="updateRange()">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="guide-preview" style="margin-top:16px">
+            <div class="guide-preview-label">Rental period picker</div>
+            <div class="guide-preview-body">
+                <div class="rw-rental-period">
+                    <p class="label">Rental Period</p>
+                    <div class="date-row">
+                        <div class="date-box">
+                            <span class="date-label">From</span>
+                            <span class="date-value">12 Jul 2026</span>
+                        </div>
+                        <span class="days-badge">4 days</span>
+                        <div class="date-box">
+                            <span class="date-label">Until</span>
+                            <span class="date-value">16 Jul 2026</span>
+                        </div>
+                        <button class="calendar-btn"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M8 2v4M16 2v4M3 10h18"/></svg></button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="guide-preview" style="margin-top:16px">
+            <div class="guide-preview-label">Sticky bottom bar (mobile — shown static)</div>
+            <div class="guide-preview-body guide-preview-body--tight">
+                <div class="rw-sticky-bottom" style="position:static;border-top:1px solid #EDE9E3">
+                    <div>
+                        <p class="total-label">Total</p>
+                        <p class="total-price">£180</p>
+                    </div>
+                    <button class="btn-primary">Add to Bag</button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+
+    <!-- ══ 17. SKELETONS ══════════════════════════════ -->
+    <section id="skeleton" class="guide-section">
+        <div class="guide-section-header">
+            <div>
+                <span class="guide-section-num">Section 17</span>
+                <h2 class="guide-section-title">Skeleton Loaders</h2>
+                <p class="guide-section-desc">Used while product data is fetching from the Servlet. Add <code>.product-skel</code> to the card.</p>
+            </div>
+        </div>
+
+        <div class="guide-preview">
+            <div class="guide-preview-label">Shimmer animation</div>
+            <div class="guide-preview-body guide-preview-body--cream">
+                <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:20px">
+                    <div class="product-card product-skel" style="cursor:default" >
+                        <div class="product-img-wrap"><div class="product-img-bg" style="height:100%"></div></div>
+                        <div style="margin-top:14px"><div class="rw-skel-line rw-skel-line--brand"></div><div class="rw-skel-line rw-skel-line--name"></div><div class="rw-skel-line rw-skel-line--price"></div></div>
+                    </div>
+                    <div class="product-card product-skel" style="cursor:default">
+                        <div class="product-img-wrap"><div class="product-img-bg" style="height:100%"></div></div>
+                        <div style="margin-top:14px"><div class="rw-skel-line rw-skel-line--brand"></div><div class="rw-skel-line rw-skel-line--name"></div><div class="rw-skel-line rw-skel-line--price"></div></div>
+                    </div>
+                    <div class="product-card product-skel" style="cursor:default">
+                        <div class="product-img-wrap"><div class="product-img-bg" style="height:100%"></div></div>
+                        <div style="margin-top:14px"><div class="rw-skel-line rw-skel-line--brand"></div><div class="rw-skel-line rw-skel-line--name"></div><div class="rw-skel-line rw-skel-line--price"></div></div>
+                    </div>
+                    <div class="product-card product-skel" style="cursor:default">
+                        <div class="product-img-wrap"><div class="product-img-bg" style="height:100%"></div></div>
+                        <div style="margin-top:14px"><div class="rw-skel-line rw-skel-line--brand"></div><div class="rw-skel-line rw-skel-line--name"></div><div class="rw-skel-line rw-skel-line--price"></div></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+
+    <!-- ══ 18. BUTTONS ═══════════════════════════════ -->
+    <section id="buttons" class="guide-section">
+        <div class="guide-section-header">
+            <div>
+                <span class="guide-section-num">Section 18</span>
+                <h2 class="guide-section-title">Buttons</h2>
+            </div>
+        </div>
+
+        <div class="guide-preview">
+            <div class="guide-preview-label">All button variants — hover to see states</div>
+            <div class="guide-preview-body" style="display:flex;gap:16px;flex-wrap:wrap;align-items:center">
+                <button class="btn-primary">Primary</button>
+                <button class="btn-outline">Outline</button>
+                <button class="btn-teal">Teal</button>
+                <button class="btn-primary" style="opacity:0.45;cursor:not-allowed">Disabled</button>
+            </div>
+        </div>
+
+        <div class="guide-preview" style="margin-top:16px">
+            <div class="guide-preview-label">With icons</div>
+            <div class="guide-preview-body" style="display:flex;gap:16px;flex-wrap:wrap;align-items:center">
+                <button class="btn-primary"><i class="fa fa-bag-shopping"></i> Add to Bag</button>
+                <button class="btn-outline"><i class="fa fa-heart"></i> Save Wishlist</button>
+                <button class="btn-teal"><i class="fa fa-arrow-right"></i> Shop Now</button>
+            </div>
+        </div>
+
+        <div class="guide-preview" style="margin-top:16px">
+            <div class="guide-preview-label">Auth button (full width)</div>
+            <div class="guide-preview-body" style="max-width:360px">
+                <button class="rw-auth-btn-primary"><i class="fa fa-sign-in-alt"></i> Sign In</button>
+            </div>
+        </div>
+
+        <table class="guide-prop-table" style="margin-top:20px">
+            <thead><tr><th>Class</th><th>Hover</th><th>Notes</th></tr></thead>
+            <tbody>
+            <tr><td>.btn-primary</td><td>Teal bg + lift</td><td>Dark ink — main CTA</td></tr>
+            <tr><td>.btn-outline</td><td>Charcoal fill</td><td>Bordered secondary action</td></tr>
+            <tr><td>.btn-teal</td><td>Darker teal</td><td>Accent action (add to bag, checkout)</td></tr>
+            <tr><td>.rw-auth-btn-primary</td><td>Teal + lift</td><td>Full-width form submit on auth pages</td></tr>
+            <tr><td>.cart-cta</td><td>Teal bg</td><td>Full-width checkout button inside cart footer</td></tr>
+            <tr><td>.qv-atb</td><td>Teal bg + lift</td><td>Add to bag inside quick view modal</td></tr>
+            </tbody>
+        </table>
+    </section>
+
+
+    <!-- ══ 19. FILTER PILLS ═══════════════════════════ -->
+    <section id="pills" class="guide-section">
+        <div class="guide-section-header">
+            <div>
+                <span class="guide-section-num">Section 19</span>
+                <h2 class="guide-section-title">Filter Pills</h2>
+            </div>
+        </div>
+
+        <div class="guide-preview">
+            <div class="guide-preview-label">Click to toggle active — search filters</div>
+            <div class="guide-preview-body" style="display:flex;gap:8px;flex-wrap:wrap">
+                <span class="filter-label" style="display:flex;align-items:center">Filter:</span>
+                <button class="filter-pill active" onclick="togglePill(this)">All</button>
+                <button class="filter-pill" onclick="togglePill(this)">Dresses</button>
+                <button class="filter-pill" onclick="togglePill(this)">Jumpsuits</button>
+                <button class="filter-pill" onclick="togglePill(this)">Under £30</button>
+                <button class="filter-pill" onclick="togglePill(this)">New In</button>
+            </div>
+        </div>
+
+        <div class="guide-preview" style="margin-top:16px">
+            <div class="guide-preview-label">Search trending pills</div>
+            <div class="guide-preview-body" style="display:flex;gap:8px;flex-wrap:wrap">
+                <button class="search-trending-pill"><svg width="13" height="13" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="2,10 5,5 8,8 12,2"/></svg>Wedding Guest</button>
+                <button class="search-trending-pill"><svg width="13" height="13" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="2,10 5,5 8,8 12,2"/></svg>Black Tie</button>
+                <button class="search-trending-pill"><svg width="13" height="13" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="2,10 5,5 8,8 12,2"/></svg>Zimmermann</button>
+            </div>
+        </div>
+    </section>
+
+
+    <!-- ══ 20. TRUST & REVIEWS ════════════════════════ -->
+    <section id="trust" class="guide-section">
+        <div class="guide-section-header">
+            <div>
+                <span class="guide-section-num">Section 20</span>
+                <h2 class="guide-section-title">Trust Strip, Badges & Reviews</h2>
+            </div>
+        </div>
+
+        <div class="guide-preview">
+            <div class="guide-preview-label">Press / trust strip</div>
+            <div class="guide-preview-body guide-preview-body--tight">
+                <div class="trust-strip">
+                    <p class="trust-label">As featured in</p>
+                    <div class="trust-logos">
+                        <span class="trust-logo">Vogue</span>
+                        <span class="trust-logo">Elle</span>
+                        <span class="trust-logo">Tatler</span>
+                        <span class="trust-logo">Harper's Bazaar</span>
+                        <span class="trust-logo">Grazia</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="guide-preview" style="margin-top:16px">
+            <div class="guide-preview-label">Trust badges row (3-col)</div>
+            <div class="guide-preview-body guide-preview-body--tight">
+                <div class="badges-row">
+                    <div class="badge-item">
+                        <div class="badge-icon"><svg viewBox="0 0 20 20"><path d="M10 2L3 6v5c0 4 3.5 7 7 8 3.5-1 7-4 7-8V6l-7-4z" fill="none" stroke="#00A898" stroke-width="1.6"/></svg></div>
+                        <div><p class="badge-title">Insured Delivery</p><p class="badge-desc">Every rental is fully insured in transit.</p></div>
+                    </div>
+                    <div class="badge-item">
+                        <div class="badge-icon"><svg viewBox="0 0 20 20"><path d="M3 10l5 5 9-9" fill="none" stroke="#00A898" stroke-width="1.6" stroke-linecap="round"/></svg></div>
+                        <div><p class="badge-title">Free Returns</p><p class="badge-desc">Pre-paid return bag included with every order.</p></div>
+                    </div>
+                    <div class="badge-item">
+                        <div class="badge-icon"><svg viewBox="0 0 20 20"><path d="M10 1l2.5 5.5 6 .9-4.4 4.2 1 6-5.1-2.7L4.9 17.6l1-6L1.5 7.4l6-.9z" fill="none" stroke="#00A898" stroke-width="1.6"/></svg></div>
+                        <div><p class="badge-title">4.9 / 5 Rating</p><p class="badge-desc">Based on 12,000+ verified reviews.</p></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="guide-preview" style="margin-top:16px">
+            <div class="guide-preview-label">Trust badge pills</div>
+            <div class="guide-preview-body">
+                <div class="rw-trust-row">
+                    <span class="rw-trust-badge"><i class="fa fa-shield-halved"></i> Secure checkout</span>
+                    <span class="rw-trust-badge"><i class="fa fa-rotate-left"></i> Free returns</span>
+                    <span class="rw-trust-badge"><i class="fa fa-star"></i> 4.9 rating</span>
+                    <span class="rw-trust-badge"><i class="fa fa-truck"></i> Free delivery £50+</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="guide-preview" style="margin-top:16px">
+            <div class="guide-preview-label">Reviews grid (3-column)</div>
+            <div class="guide-preview-body guide-preview-body--cream">
+                <div class="reviews-grid">
+                    <div class="review-card">
+                        <div class="review-stars">★★★★★</div>
+                        <p class="review-text">"The dress arrived perfectly pressed and fit exactly as described. Will absolutely rent again!"</p>
+                        <p class="review-author"><strong>Sophie M.</strong> · Wedding Guest</p>
+                    </div>
+                    <div class="review-card">
+                        <div class="review-stars">★★★★★</div>
+                        <p class="review-text">"Incredible quality for the price. Everyone asked where it was from. Felt like a million pounds."</p>
+                        <p class="review-author"><strong>Priya K.</strong> · Black Tie Event</p>
+                    </div>
+                    <div class="review-card">
+                        <div class="review-stars">★★★★☆</div>
+                        <p class="review-text">"Delivery was fast and the returns process couldn't be easier. Great selection of designers."</p>
+                        <p class="review-author"><strong>Charlotte B.</strong> · Hen Party</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+
+    <!-- ══ 21. AUTH FORMS ════════════════════════════ -->
+    <section id="auth" class="guide-section">
+        <div class="guide-section-header">
+            <div>
+                <span class="guide-section-num">Section 21</span>
+                <h2 class="guide-section-title">Auth Forms</h2>
+                <p class="guide-section-desc">Login / Register card with input states, password strength, and custom checkbox.</p>
+            </div>
+        </div>
+
+        <div class="guide-preview">
+            <div class="guide-preview-label">Auth card (full login form)</div>
+            <div class="guide-preview-body" style="background:radial-gradient(ellipse at 20% 0%,rgba(0,168,152,.12) 0%,transparent 55%),radial-gradient(ellipse at 80% 100%,rgba(0,168,152,.08) 0%,transparent 55%),#F9F7F4;padding:48px 24px">
+                <div class="rw-auth-wrap" style="max-width:480px;margin:0 auto">
+                    <div class="rw-auth-card">
+                        <a class="rw-auth-logo" href="#">rentawear</a>
+                        <p class="rw-auth-subtitle">Sign in to your account</p>
+                        <div class="rw-trust-row">
+                            <span class="rw-trust-badge"><i class="fa fa-lock"></i> Secure login</span>
+                            <span class="rw-trust-badge"><i class="fa fa-star"></i> 50k+ members</span>
+                        </div>
+
+                        <div class="rw-auth-alert rw-auth-alert--error">
+                            <i class="fa fa-circle-exclamation"></i> Incorrect email or password.
+                        </div>
+
+                        <div class="rw-form-group">
+                            <label class="rw-form-label" for="demoEmail">Email address</label>
+                            <div class="rw-input-wrap rw-input--error">
+                                <i class="fa fa-envelope rw-input-icon"></i>
+                                <input class="rw-form-input" type="email" id="demoEmail" value="notvalid@" readonly>
+                            </div>
+                            <p class="rw-field-error visible">Please enter a valid email address.</p>
+                        </div>
+
+                        <div class="rw-form-group">
+                            <div class="rw-label-row">
+                                <label class="rw-form-label" for="demoPwd">Password</label>
+                                <a href="#" class="rw-forgot-link">Forgot password?</a>
+                            </div>
+                            <div class="rw-input-wrap rw-input--ok">
+                                <i class="fa fa-lock rw-input-icon"></i>
+                                <input class="rw-form-input" type="password" id="demoPwd" value="MySecret123" readonly>
+                                <button class="rw-eye-btn"><i class="fa fa-eye"></i></button>
+                            </div>
+                            <div class="rw-pwd-strength">
+                                <div class="rw-pwd-strength-bar"><div class="rw-pwd-strength-fill strong"></div></div>
+                                <span class="rw-pwd-strength-label strong">Strong</span>
+                            </div>
+                        </div>
+
+                        <div class="rw-remember-row">
+                            <label class="rw-checkbox-label">
+                                <input type="checkbox" class="rw-checkbox" checked>
+                                <span class="rw-checkbox-custom"></span>
+                                Remember me for 30 days
+                            </label>
+                        </div>
+
+                        <button class="rw-auth-btn-primary"><i class="fa fa-sign-in-alt"></i> Sign In</button>
+
+                        <div class="rw-auth-divider"><span>or</span></div>
+                        <p class="rw-auth-switch">Don't have an account? <a href="#">Register free</a></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <p class="guide-sub">Input States</p>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px">
+            <div class="guide-preview">
+                <div class="guide-preview-label">Default</div>
+                <div class="guide-preview-body">
+                    <div class="rw-input-wrap">
+                        <i class="fa fa-user rw-input-icon"></i>
+                        <input class="rw-form-input" type="text" placeholder="Enter text…">
+                    </div>
+                </div>
+            </div>
+            <div class="guide-preview">
+                <div class="guide-preview-label">Error state</div>
+                <div class="guide-preview-body">
+                    <div class="rw-input-wrap rw-input--error">
+                        <i class="fa fa-envelope rw-input-icon"></i>
+                        <input class="rw-form-input" type="text" value="bad@" readonly>
+                    </div>
+                    <p class="rw-field-error visible">Invalid email.</p>
+                </div>
+            </div>
+            <div class="guide-preview">
+                <div class="guide-preview-label">Valid state</div>
+                <div class="guide-preview-body">
+                    <div class="rw-input-wrap rw-input--ok">
+                        <i class="fa fa-check rw-input-icon" style="color:#27ae60"></i>
+                        <input class="rw-form-input" type="text" value="sophie@example.com" readonly>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <p class="guide-sub">Password Strength Indicator</p>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px">
+            <div class="guide-preview">
+                <div class="guide-preview-label">Weak</div>
+                <div class="guide-preview-body">
+                    <div class="rw-pwd-strength"><div class="rw-pwd-strength-bar"><div class="rw-pwd-strength-fill weak"></div></div><span class="rw-pwd-strength-label weak">Weak</span></div>
+                </div>
+            </div>
+            <div class="guide-preview">
+                <div class="guide-preview-label">Medium</div>
+                <div class="guide-preview-body">
+                    <div class="rw-pwd-strength"><div class="rw-pwd-strength-bar"><div class="rw-pwd-strength-fill medium"></div></div><span class="rw-pwd-strength-label medium">Medium</span></div>
+                </div>
+            </div>
+            <div class="guide-preview">
+                <div class="guide-preview-label">Strong</div>
+                <div class="guide-preview-body">
+                    <div class="rw-pwd-strength"><div class="rw-pwd-strength-bar"><div class="rw-pwd-strength-fill strong"></div></div><span class="rw-pwd-strength-label strong">Strong</span></div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+
+    <!-- ══ 22. PERSONALISED ═══════════════════════════ -->
+    <section id="personalised" class="guide-section">
+        <div class="guide-section-header">
+            <div>
+                <span class="guide-section-num">Section 22</span>
+                <h2 class="guide-section-title">Personalised Section</h2>
+                <p class="guide-section-desc">Add <code>.rw-section--personalised</code> to a section to show a teal accent border.</p>
+            </div>
+        </div>
+
+        <div class="guide-preview">
+            <div class="guide-preview-label">Live</div>
+            <div class="guide-preview-body guide-preview-body--cream">
+                <div class="rw-section--personalised" style="padding:24px 0">
+                    <div class="rw-personalised-header">
+                        <div>
+                            <p class="section-eyebrow">Recommended</p>
+                            <h3 class="section-title" style="font-size:1.5rem">Picked for <em>You</em></h3>
+                        </div>
+                        <span class="rw-personalised-badge"><i class="fa fa-wand-magic-sparkles"></i> For You</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+
+    <!-- ══ 23. FOOTER ════════════════════════════════ -->
+    <section id="footer" class="guide-section">
+        <div class="guide-section-header">
+            <div>
+                <span class="guide-section-num">Section 23</span>
+                <h2 class="guide-section-title">Footer</h2>
+            </div>
+        </div>
+
+        <div class="guide-preview">
+            <div class="guide-preview-label">Full footer</div>
+            <div class="guide-preview-body guide-preview-body--tight">
+                <footer class="rw-footer" style="--rw-footer-bg:#1A1512">
+                    <div style="background:#1A1512;padding:60px 48px 40px">
+                        <div style="display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:48px;max-width:1280px;margin:0 auto">
+                            <div>
+                                <a class="rw-logo" href="#" style="margin-bottom:16px;display:inline-flex">renta<em>wear</em></a>
+                                <p style="font-size:0.82rem;color:rgba(255,255,255,0.4);line-height:1.7;margin:12px 0 20px;font-style:italic">Fashion rental for every occasion.<br>Delivered to your door.</p>
+                                <div style="display:flex;gap:8px">
+                                    <a href="#" style="width:36px;height:36px;border:1px solid rgba(255,255,255,0.15);border-radius:50%;display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,0.4);font-size:0.9rem;transition:all 0.2s" onmouseover="this.style.borderColor='#00A898';this.style.color='#00A898'" onmouseout="this.style.borderColor='rgba(255,255,255,0.15)';this.style.color='rgba(255,255,255,0.4)'"><i class="fab fa-instagram"></i></a>
+                                    <a href="#" style="width:36px;height:36px;border:1px solid rgba(255,255,255,0.15);border-radius:50%;display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,0.4);font-size:0.9rem;transition:all 0.2s" onmouseover="this.style.borderColor='#00A898';this.style.color='#00A898'" onmouseout="this.style.borderColor='rgba(255,255,255,0.15)';this.style.color='rgba(255,255,255,0.4)'"><i class="fab fa-tiktok"></i></a>
+                                    <a href="#" style="width:36px;height:36px;border:1px solid rgba(255,255,255,0.15);border-radius:50%;display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,0.4);font-size:0.9rem;transition:all 0.2s" onmouseover="this.style.borderColor='#00A898';this.style.color='#00A898'" onmouseout="this.style.borderColor='rgba(255,255,255,0.15)';this.style.color='rgba(255,255,255,0.4)'"><i class="fab fa-pinterest"></i></a>
+                                </div>
+                            </div>
+                            <div>
+                                <p style="font-size:0.62rem;letter-spacing:0.2em;text-transform:uppercase;color:rgba(255,255,255,0.3);margin-bottom:20px">Shop</p>
+                                <ul style="list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:10px">
+                                    <li><a href="#" style="font-size:0.85rem;color:rgba(255,255,255,0.45);transition:color 0.15s" onmouseover="this.style.color='#00A898'" onmouseout="this.style.color='rgba(255,255,255,0.45)'">New Arrivals</a></li>
+                                    <li><a href="#" style="font-size:0.85rem;color:rgba(255,255,255,0.45);transition:color 0.15s" onmouseover="this.style.color='#00A898'" onmouseout="this.style.color='rgba(255,255,255,0.45)'">Dresses</a></li>
+                                    <li><a href="#" style="font-size:0.85rem;color:rgba(255,255,255,0.45);transition:color 0.15s" onmouseover="this.style.color='#00A898'" onmouseout="this.style.color='rgba(255,255,255,0.45)'">Designers</a></li>
+                                </ul>
+                            </div>
+                            <div>
+                                <p style="font-size:0.62rem;letter-spacing:0.2em;text-transform:uppercase;color:rgba(255,255,255,0.3);margin-bottom:20px">Help</p>
+                                <ul style="list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:10px">
+                                    <li><a href="#" style="font-size:0.85rem;color:rgba(255,255,255,0.45);transition:color 0.15s" onmouseover="this.style.color='#00A898'" onmouseout="this.style.color='rgba(255,255,255,0.45)'">How It Works</a></li>
+                                    <li><a href="#" style="font-size:0.85rem;color:rgba(255,255,255,0.45);transition:color 0.15s" onmouseover="this.style.color='#00A898'" onmouseout="this.style.color='rgba(255,255,255,0.45)'">FAQs</a></li>
+                                    <li><a href="#" style="font-size:0.85rem;color:rgba(255,255,255,0.45);transition:color 0.15s" onmouseover="this.style.color='#00A898'" onmouseout="this.style.color='rgba(255,255,255,0.45)'">Contact Us</a></li>
+                                </ul>
+                            </div>
+                            <div>
+                                <p style="font-size:0.62rem;letter-spacing:0.2em;text-transform:uppercase;color:rgba(255,255,255,0.3);margin-bottom:20px">Account</p>
+                                <ul style="list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:10px">
+                                    <li><a href="#" style="font-size:0.85rem;color:rgba(255,255,255,0.45);transition:color 0.15s" onmouseover="this.style.color='#00A898'" onmouseout="this.style.color='rgba(255,255,255,0.45)'">Sign In</a></li>
+                                    <li><a href="#" style="font-size:0.85rem;color:rgba(255,255,255,0.45);transition:color 0.15s" onmouseover="this.style.color='#00A898'" onmouseout="this.style.color='rgba(255,255,255,0.45)'">Register</a></li>
+                                    <li><a href="#" style="font-size:0.85rem;color:rgba(255,255,255,0.45);transition:color 0.15s" onmouseover="this.style.color='#00A898'" onmouseout="this.style.color='rgba(255,255,255,0.45)'">My Orders</a></li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    <div style="background:#120E0B;padding:16px 48px;display:flex;align-items:center;justify-content:space-between">
+                        <p style="font-size:0.72rem;color:rgba(255,255,255,0.25);margin:0">© 2026 Rentawear Ltd. All rights reserved.</p>
+                        <div style="display:flex;gap:16px">
+                            <a href="#" style="font-size:0.72rem;color:rgba(255,255,255,0.25)">Privacy</a>
+                            <a href="#" style="font-size:0.72rem;color:rgba(255,255,255,0.25)">Terms</a>
+                            <a href="#" style="font-size:0.72rem;color:rgba(255,255,255,0.25)">Cookies</a>
+                        </div>
+                    </div>
+                </footer>
+            </div>
+        </div>
+    </section>
+
+</main>
+
+<script>
+    // Sidebar active state on scroll
+    const sections = document.querySelectorAll('.guide-section');
+    const navLinks = document.querySelectorAll('.guide-nav a');
+
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(e => {
+            if (e.isIntersecting) {
+                navLinks.forEach(l => l.classList.remove('active'));
+                const link = document.querySelector(`.guide-nav a[href="#${e.target.id}"]`);
+                if (link) link.classList.add('active');
+            }
+        });
+    }, { rootMargin: '-20% 0px -70% 0px' });
+
+    sections.forEach(s => observer.observe(s));
+
+    // Filter pill toggle
+    function togglePill(el) {
+        const container = el.closest('[style]') || el.parentElement;
+        container.querySelectorAll('.filter-pill').forEach(p => p.classList.remove('active'));
+        el.classList.add('active');
+    }
+
+    // Price range slider
+    function updateRange() {
+        const min = parseInt(document.getElementById('priceMin').value);
+        const max = parseInt(document.getElementById('priceMax').value);
+        if (min > max) return;
+        const fill = document.getElementById('rangeFill');
+        fill.style.left = (min / 200 * 100) + '%';
+        fill.style.width = ((max - min) / 200 * 100) + '%';
+        document.getElementById('priceDisplay').textContent = '£' + min + ' – £' + max;
+    }
+
+    // Scroll reveal
+    const revealObserver = new IntersectionObserver((entries) => {
+        entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('is-visible'); });
+    }, { threshold: 0.1 });
+    document.querySelectorAll('.rw-reveal').forEach(el => revealObserver.observe(el));
+</script>
+</body>
+</html>
