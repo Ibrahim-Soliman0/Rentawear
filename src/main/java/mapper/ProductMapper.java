@@ -11,8 +11,10 @@ import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 @Mapper
 public interface ProductMapper {
@@ -28,14 +30,9 @@ public interface ProductMapper {
     @Mapping(target = "isNew",               expression = "java(isNew(product))")
     @Mapping(target = "soldOut",             expression = "java(product.getProductVariants().stream().noneMatch(v -> v.getQuantity() > 0))")
     @Mapping(target = "swatches",            expression = "java(buildSwatchesWithFallback(images, variants))")
-    @Mapping(target = "primaryImageByColor", expression = "java(buildPrimaryImageByColor(images))")
+    @Mapping(target = "primaryImageByColor", expression = "java(buildPrimaryImageByColor(images, variants))")
     ProductCardDTO toCardDTO(Product product, List<ProductVariant> variants, List<ProductImage> images);
 
-    // FIX 1: Added missing @Mapping for quantityByVariantId — buildQuantityByVariantId()
-    //         existed as a helper but was never wired, causing the field to always be null.
-    // FIX 2: swatches now uses buildSwatchesFromVariants(variants) when the images list is
-    //         empty (products added via admin with no uploaded images). This ensures colour
-    //         chips are always rendered in quick-view as long as variants exist.
     @Mapping(target = "core",                      expression = "java(toCoreDTO(product))")
     @Mapping(target = "swatches",                  expression = "java(buildSwatchesWithFallback(images, variants))")
     @Mapping(target = "sizesByColor",              expression = "java(buildSizesByColor(variants))")
@@ -67,15 +64,12 @@ public interface ProductMapper {
 
     default Map<Integer, Integer> buildQuantityByVariantId(List<ProductVariant> variants) {
         Map<Integer, Integer> map = new LinkedHashMap<>();
-        for (ProductVariant v : variants) {
-            map.put(v.getId(), v.getQuantity());
-        }
+        for (ProductVariant v : variants) map.put(v.getId(), v.getQuantity());
         return map;
     }
 
     default boolean isNew(Product product) {
-        return product.getCreatedAt()
-                .isAfter(Instant.now().minus(30, ChronoUnit.DAYS));
+        return product.getCreatedAt().isAfter(Instant.now().minus(30, ChronoUnit.DAYS));
     }
 
     default boolean isInStock(List<ProductVariant> variants) {
@@ -87,30 +81,20 @@ public interface ProductMapper {
         return variants.stream().mapToInt(ProductVariant::getQuantity).sum();
     }
 
-    // Builds colour swatches from the primary image list.
-    // Images arrive ordered by id ASC — putIfAbsent ensures the first image per
-    // colour wins, which matches the default-colour guarantee from the repo.
-    // Color strings are stored as "#FFFFFF-White"; we split on the first "-".
     default List<ColorSwatchDTO> buildSwatches(List<ProductImage> images) {
         Map<String, ProductImage> seen = new LinkedHashMap<>();
-        for (ProductImage img : images) {
-            seen.putIfAbsent(img.getColor(), img);
-        }
+        for (ProductImage img : images) seen.putIfAbsent(img.getColor(), img);
         List<ColorSwatchDTO> swatches = new ArrayList<>();
         for (ProductImage img : seen.values()) {
             String[] parts = img.getColor().split("-", 2);
             String hex  = parts[0];
             String name = parts.length > 1 ? parts[1] : parts[0];
-            String slug = name.toLowerCase().replaceAll("\\s+", "-");
-            swatches.add(new ColorSwatchDTO(img.getColor(), hex, name, slug));
+            swatches.add(new ColorSwatchDTO(img.getColor(), hex, name,
+                    name.toLowerCase().replaceAll("\\s+", "-")));
         }
         return swatches;
     }
 
-    // Builds colour swatches from variant color strings when no images are available.
-    // Color strings follow the same "#FFFFFF-White" encoding as images.
-    // Uses putIfAbsent so each colour only contributes one swatch regardless of
-    // how many size variants share the same colour.
     default List<ColorSwatchDTO> buildSwatchesFromVariants(List<ProductVariant> variants) {
         Map<String, Boolean> seen = new LinkedHashMap<>();
         List<ColorSwatchDTO> swatches = new ArrayList<>();
@@ -121,16 +105,13 @@ public interface ProductMapper {
                 String[] parts = color.split("-", 2);
                 String hex  = parts[0];
                 String name = parts.length > 1 ? parts[1] : parts[0];
-                String slug = name.toLowerCase().replaceAll("\\s+", "-");
-                swatches.add(new ColorSwatchDTO(color, hex, name, slug));
+                swatches.add(new ColorSwatchDTO(color, hex, name,
+                        name.toLowerCase().replaceAll("\\s+", "-")));
             }
         }
         return swatches;
     }
 
-    // Used by toDetailDTO: prefers images when present, falls back to variants.
-    // This ensures colour chips are always rendered in quick-view/PDP even for
-    // products that were created via the admin panel without uploaded images.
     default List<ColorSwatchDTO> buildSwatchesWithFallback(List<ProductImage> images,
                                                            List<ProductVariant> variants) {
         List<ColorSwatchDTO> fromVariants = buildSwatchesFromVariants(
@@ -139,70 +120,73 @@ public interface ProductMapper {
         return buildSwatches(images != null ? images : List.of());
     }
 
-    // Maps colour → first image URL for swatch-click image swapping on cards.
-    default Map<String, String> buildPrimaryImageByColor(List<ProductImage> images) {
-        Map<String, String> map = new LinkedHashMap<>();
-        for (ProductImage img : images) {
-            map.putIfAbsent(img.getColor(), img.getImageUrl());
+    default Map<String, String> buildPrimaryImageByColor(List<ProductImage> images,
+                                                         List<ProductVariant> variants) {
+        // Build color → imageUrl lookup from images; putIfAbsent keeps the first
+        // image per color (stable across calls because images arrive id ASC).
+        Map<String, String> imageByColor = new LinkedHashMap<>();
+        if (images != null) {
+            for (ProductImage img : images) {
+                if (img.getColor() != null) {
+                    imageByColor.putIfAbsent(img.getColor(), img.getImageUrl());
+                }
+            }
         }
-        return map;
+
+        // No variants — fall back to upload order so something still shows.
+        if (variants == null || variants.isEmpty()) return imageByColor;
+
+        // Walk variants in insertion order; emit each color exactly once,
+        // only if it has an image.
+        Map<String, String> result = new LinkedHashMap<>();
+        Set<String> seen = new LinkedHashSet<>();
+        for (ProductVariant v : variants) {
+            String color = v.getColor();
+            if (color == null || !seen.add(color)) continue;
+            String url = imageByColor.get(color);
+            if (url != null) result.put(color, url);
+        }
+
+        return result;
     }
 
-    // Maps colour → all sizes (including out-of-stock).
-    // Render all sizes on the PDP; use availableSizesByColor to grey out OOS ones.
     default Map<String, List<String>> buildSizesByColor(List<ProductVariant> variants) {
         Map<String, List<String>> map = new LinkedHashMap<>();
-        for (ProductVariant v : variants) {
-            map.computeIfAbsent(v.getColor(), k -> new ArrayList<>())
-                    .add(v.getSize());
-        }
+        for (ProductVariant v : variants)
+            map.computeIfAbsent(v.getColor(), k -> new ArrayList<>()).add(v.getSize());
         return map;
     }
 
-    // Maps colour → in-stock sizes only (quantity > 0).
     default Map<String, List<String>> buildAvailableSizes(List<ProductVariant> variants) {
         Map<String, List<String>> map = new LinkedHashMap<>();
         for (ProductVariant v : variants) {
-            if (v.getQuantity() > 0) {
-                map.computeIfAbsent(v.getColor(), k -> new ArrayList<>())
-                        .add(v.getSize());
-            }
+            if (v.getQuantity() > 0)
+                map.computeIfAbsent(v.getColor(), k -> new ArrayList<>()).add(v.getSize());
         }
         return map;
     }
 
-    // Maps colour → all image URLs for the PDP gallery.
     default Map<String, List<String>> buildImagesByColor(List<ProductImage> images) {
         Map<String, List<String>> map = new LinkedHashMap<>();
-        for (ProductImage img : images) {
-            map.computeIfAbsent(img.getColor(), k -> new ArrayList<>())
-                    .add(img.getImageUrl());
-        }
+        for (ProductImage img : images)
+            map.computeIfAbsent(img.getColor(), k -> new ArrayList<>()).add(img.getImageUrl());
         return map;
     }
 
-    // Maps color → size → variantId.
-    // Used by quick-view.js so Cart.add() can carry the exact product_variants.id.
-    // Null/blank size is normalised to "OS" for one-size products.
     default Map<String, Map<String, Integer>> buildVariantIdByColorAndSize(
             List<ProductVariant> variants) {
         Map<String, Map<String, Integer>> map = new LinkedHashMap<>();
         for (ProductVariant v : variants) {
             String sizeKey = (v.getSize() == null || v.getSize().isBlank()) ? "OS" : v.getSize();
-            map.computeIfAbsent(v.getColor(), k -> new LinkedHashMap<>())
-                    .put(sizeKey, v.getId());
+            map.computeIfAbsent(v.getColor(), k -> new LinkedHashMap<>()).put(sizeKey, v.getId());
         }
         return map;
     }
 
-    // Maps colour → VariantStockDTO list for the admin stock editor.
-    default Map<String, List<VariantStockDTO>> buildStockByColor(
-            List<ProductVariant> variants) {
+    default Map<String, List<VariantStockDTO>> buildStockByColor(List<ProductVariant> variants) {
         Map<String, List<VariantStockDTO>> map = new LinkedHashMap<>();
-        for (ProductVariant v : variants) {
-            map.computeIfAbsent(v.getColor(), k -> new ArrayList<>())
-                    .add(toVariantStockDTO(v));
-        }
+        for (ProductVariant v : variants)
+            map.computeIfAbsent(v.getColor(), k -> new ArrayList<>()).add(toVariantStockDTO(v));
         return map;
     }
 }
