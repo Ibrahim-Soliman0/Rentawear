@@ -68,6 +68,7 @@ public class UserSessionServlet extends HttpServlet {
         response.put("address", user.address());
         response.put("paymentCards", cards);
         response.put("userJson", user);
+        response.put("creditLimit", user.creditLimit());
 
         resp.getWriter().write(JsonUtil.toJson(response));
     }

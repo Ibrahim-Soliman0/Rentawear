@@ -613,7 +613,7 @@ function buildOrderCard(order) {
     const itemsHtml = (order.items || []).map(item => `
         <div class="account-rental-card">
             <div class="account-rental-img">
-                <img src="${resolveProductImage(item.imageUrl)}"
+                <img src="${escHtml(resolveProductImage(item.imageUrl))}"
                      alt="${escHtml(item.productName)}"
                      onerror="this.src='https://placehold.co/80x110/EDE9E3/9E9189?text=Item'"/>
             </div>
