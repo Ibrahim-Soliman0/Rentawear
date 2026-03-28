@@ -7,6 +7,7 @@ import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
+import service.UserService;
 import util.JsonUtil;
 
 import java.io.IOException;
@@ -18,6 +19,8 @@ import java.util.stream.Collectors;
 // this servlet is used to return the user object inside the session in json format
 @WebServlet("/user/session")
 public class UserSessionServlet extends HttpServlet {
+
+    private final UserService userService = new UserService();
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp)
@@ -34,6 +37,10 @@ public class UserSessionServlet extends HttpServlet {
         }
 
         UserSessionDTO user = (UserSessionDTO) session.getAttribute("user");
+
+        user = userService.updateUserSession(user.id());
+
+        session.setAttribute("user", user);
 
         // Build only what checkout.js needs — no sensitive fields
         // paymentCards: id, cardType, cardNumber (last 4 only), expiryMonth, expiryYear
@@ -60,6 +67,8 @@ public class UserSessionServlet extends HttpServlet {
         response.put("name", user.name());
         response.put("address", user.address());
         response.put("paymentCards", cards);
+        response.put("userJson", user);
+        response.put("creditLimit", user.creditLimit());
 
         resp.getWriter().write(JsonUtil.toJson(response));
     }

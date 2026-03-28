@@ -78,6 +78,9 @@ public class CartService extends BaseService<Cart> {
         itemToAdd.setEndDate(LocalDate.parse(itemDTO.endDate()));
 
         userCart.addCartItem(itemToAdd);
+
+        itemToAdd = cartItemService.save(itemToAdd);
+
         save(userCart);
 
         return itemToAdd.getId();

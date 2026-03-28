@@ -7,6 +7,7 @@ import dto.UserSessionDTO;
 import entity.UserCategory;
 import exception.EmailAlreadyExistsException;
 import entity.User;
+import exception.UserNotFoundException;
 import mapper.UserMapper;
 import org.mapstruct.factory.Mappers;
 import repository.UserRepository;
@@ -80,11 +81,23 @@ public class UserService extends BaseService<User> {
         return Optional.of(mapper.toSessionDTO(user));
     }
 
+    public UserSessionDTO updateUserSession(Integer userId) throws IllegalArgumentException {
+
+        User user = getById(userId)
+                .orElseThrow(() -> new UserNotFoundException("User with id [" + userId + "] not found."));
+
+        /* ── Force-load lazy collections for session DTO ── */
+        user.getInterests().forEach(uc -> uc.getCategory().getName());
+        user.getPaymentCards().size();
+
+        return mapper.toSessionDTO(user);
+    }
+
     public UserSessionDTO updateProfile(Integer userId, UpdateProfileDTO dto)
             throws IllegalArgumentException {
 
         User user = getById(userId)
-                .orElseThrow(() -> new IllegalArgumentException("User not found."));
+                .orElseThrow(() -> new UserNotFoundException("User with id [" + userId + "] not found."));
 
         /* ── Name ── */
         if (isBlank(dto.name())) {

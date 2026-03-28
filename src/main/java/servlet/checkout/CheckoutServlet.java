@@ -9,6 +9,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import service.OrderService;
+import service.UserService;
 import util.JsonUtil;
 
 import java.io.IOException;
@@ -20,6 +21,7 @@ import java.util.Map;
 public class CheckoutServlet extends HttpServlet {
 
     private final OrderService orderService = new OrderService();
+    private final UserService userService = new UserService();
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp)
@@ -92,6 +94,10 @@ public class CheckoutServlet extends HttpServlet {
                     cartJson,
                     totalAmount
             );
+
+            user = userService.updateUserSession(user.id());
+
+            session.setAttribute("user", user);
 
             // ── Success — tell JS where to redirect ───────────────────────
             Map<String, Object> response = new LinkedHashMap<>();
