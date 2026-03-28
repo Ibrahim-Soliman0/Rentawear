@@ -52,6 +52,8 @@
                 colorName:           raw.colorName   ?? null,
                 variantId:           raw.variantId   ?? null,
                 inventoryQty:        raw.inventoryQty ?? null,
+                startDate:           raw.startDate    ?? null,
+                endDate:             raw.endDate      ?? null,
             };
         }
 
@@ -362,7 +364,7 @@
         // Unchanged from uploaded version.
         function cartItem(raw) {
             const it  = _normalise(raw);
-            const key = `${it.id}:${it.size || ''}:${it.color || ''}`;
+            const key = `${it.id}:${it.size || ''}:${it.color || ''}:${it.startDate || ''}:${it.endDate || ''}`;
 
             const li = document.createElement('li');
             li.className   = 'cart-item';

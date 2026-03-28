@@ -28,10 +28,10 @@
                                                        returned in items list)
    qty                 (int)        →   qty         ← managed by Cart
 
-   Variant key  =  "variantId:size:color"
-   This is the unique identity for a cart line-item.  Multiple
-   variants of the same product (different sizes / colours) are
-   separate line-items sharing the same productId.
+   Variant key  =  "variantId:size:color:startDate:endDate"
+   Same variant + same dates   → same key  → qty incremented
+   Same variant + diff dates   → diff key  → separate line-item
+   Different size/color        → diff key  → separate line-item
 
    Mutation payloads sent to the server
    ─────────────────────────────────────────────────────────────
@@ -376,7 +376,7 @@ class CartRenderer {
         if (this._total)    this._total.textContent    = formatted;
     }
 
-    _keyOf(item)     { return `${item.id}:${item.size || ''}:${item.color || ''}`; }
+    _keyOf(item)     { return `${item.id}:${item.size || ''}:${item.color || ''}:${item.startDate || ''}:${item.endDate || ''}`; }
     _cssSafeKey(key) { return key.replace(/\\/g, '\\\\').replace(/"/g, '\\"');     }
 }
 
@@ -438,11 +438,16 @@ class Cart {
     // ── Public API ────────────────────────────────────────────────────────────
 
     /**
-     * Variant key — "variantId:size:color"
+     * Variant key — "variantId:size:color:startDate:endDate"
+     *
+     * Dates are included so that:
+     *   • Same product + same variant + same dates  → same key  → qty incremented
+     *   • Same product + same variant + diff dates  → diff key  → new line-item
+     *
      * item.id IS the variantId after normalisation.
      */
     variantKey(item) {
-        return `${item.id}:${item.size || ''}:${item.color || ''}`;
+        return `${item.id}:${item.size || ''}:${item.color || ''}:${item.startDate || ''}:${item.endDate || ''}`;
     }
 
     getItems() {
@@ -480,29 +485,70 @@ class Cart {
         const key = this.variantKey(item);
         const existing = this._findByKey(key);
 
-        if (existing && existing.inventoryQty != null && existing.qty >= existing.inventoryQty) {
-            this._toast.show(`Only ${existing.inventoryQty} in stock for this variant.`);
-            return;
+        // ── Inventory check ───────────────────────────────────────────────────
+        // Count the total qty already in the cart for this variantId across ALL
+        // date ranges — not just the matching line-item.  This prevents the user
+        // from bypassing the stock limit by adding the same variant with
+        // different rental dates.
+        if (item.inventoryQty != null) {
+            const totalQtyInCart = this._totalQtyForVariant(item.id);
+            if (totalQtyInCart >= item.inventoryQty) {
+                const label = item.inventoryQty === 1
+                    ? 'Only 1 in stock for this variant.'
+                    : `Only ${item.inventoryQty} in stock for this variant across all rental periods.`;
+                this._toast.show(label);
+                return;
+            }
         }
 
-        // Optimistic update
-        existing ? existing.qty++ : this._items.push({...item, qty: 1, cartItemId: null});
+        // ── Optimistic update ────────────────────────────────────────────────
+        if (existing) {
+            existing.qty++;
+        } else {
+            this._items.push({...item, qty: 1, cartItemId: null});
+        }
         this._commitLocal();
 
-        // Server sync
+        // ── Server sync ───────────────────────────────────────────────────────
+        // Two completely different paths depending on whether the line-item
+        // already existed:
+        //
+        //   NEW item   → POST /cart/add    → server creates a DB row
+        //                                  → returns cartItemId
+        //
+        //   EXISTING   → POST /cart/update-qty → server updates the existing row
+        //              We must NOT call /cart/add again — that would create a
+        //              duplicate DB row, which is what causes the duplicates
+        //              seen after a page refresh.
         try {
-            const result = await this._server.addItem(existing ?? {...item, qty: 1});
-            if (result.success) {
-                // Store the cartItemId the server just created so future
-                // remove / update-qty calls can use it immediately.
-                const stored = this._findByKey(key);
-                if (stored && result.cartItemId) {
-                    stored.cartItemId = result.cartItemId;
+            if (existing) {
+                // ── Increment existing line-item ──────────────────────────────
+                if (existing.cartItemId == null) {
+                    // cartItemId not yet known (item was just added this session
+                    // and the /cart/add response hasn't come back yet, or the
+                    // server is offline).  Fall back to a full sync to reconcile.
+                    console.warn('[Cart] add — existing item has no cartItemId, syncing from server');
+                    await this.syncFromServer();
+                    return;
                 }
-                this._commitLocal();
+                const result = await this._server.updateQty(existing, existing.qty);
+                if (!result.success) {
+                    this._toast.show(result.message ?? 'Could not update quantity. Please try again.');
+                    existing.qty--;   // rollback the optimistic increment
+                    this._commitLocal();
+                }
             } else {
-                this._toast.show(result.message ?? 'Could not add item. Please try again.');
-                this._rollbackAdd(key, !!existing);
+                // ── Add brand-new line-item ───────────────────────────────────
+                const result = await this._server.addItem({...item, qty: 1});
+                if (result.success) {
+                    // Store the cartItemId so remove / update-qty work immediately
+                    const stored = this._findByKey(key);
+                    if (stored && result.cartItemId) stored.cartItemId = result.cartItemId;
+                    this._commitLocal();
+                } else {
+                    this._toast.show(result.message ?? 'Could not add item. Please try again.');
+                    this._rollbackAdd(key, false);
+                }
             }
         } catch (err) {
             console.error('[Cart] add — server error:', err);
@@ -541,9 +587,17 @@ class Cart {
         const item = this._findByKey(key);
         if (!item) return;
 
-        if (delta > 0 && item.inventoryQty != null && item.qty >= item.inventoryQty) {
-            this._toast.show(`Only ${item.inventoryQty} in stock for this variant.`);
-            return;
+        if (delta > 0 && item.inventoryQty != null) {
+            // Check total qty for this variantId across all date ranges in the cart
+            // so the + button on one line-item can't exceed stock shared with another
+            const totalQtyInCart = this._totalQtyForVariant(item.id);
+            if (totalQtyInCart >= item.inventoryQty) {
+                const label = item.inventoryQty === 1
+                    ? 'Only 1 in stock for this variant.'
+                    : `Only ${item.inventoryQty} in stock for this variant across all rental periods.`;
+                this._toast.show(label);
+                return;
+            }
         }
 
         if (item.qty + delta <= 0) {
@@ -580,6 +634,23 @@ class Cart {
 
     _findByKey(key) {
         return this._items.find(i => this.variantKey(i) === key) ?? null;
+    }
+
+    /**
+     * Sum of qty for every line-item in the cart that shares the same variantId,
+     * regardless of rental dates.
+     *
+     * This is the number that must not exceed inventoryQty — a single physical
+     * unit cannot be rented out to two different slots simultaneously, so all
+     * date ranges compete for the same stock pool.
+     *
+     * @param {number|string} variantId  — item.id after normalisation
+     * @returns {number}
+     */
+    _totalQtyForVariant(variantId) {
+        return this._items
+            .filter(i => i.id === variantId)
+            .reduce((sum, i) => sum + (i.qty ?? 1), 0);
     }
 
     _commitLocal() {
