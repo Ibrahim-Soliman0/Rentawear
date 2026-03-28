@@ -20,7 +20,7 @@
   const viewFullEl  = document.getElementById('qvViewFull');
   const colorLabelEl = document.getElementById('qvColorLabel');
   const colorNameEl  = document.getElementById('qvColorName');
-  const soldOutEl    = document.getElementById('qvSoldOutBanner');
+  const soldOutEl    = document.getElementById('qvSoldOutBanner'); // new
 
   let active              = null;
   let activeColor         = null;
@@ -48,7 +48,7 @@
   if (startInput && typeof flatpickr === 'function') {
     fpStart = flatpickr(startInput, {
       dateFormat:    'd/m/Y',
-      minDate:       getMinStartDate(),
+      minDate:       getMinStartDate(),   /* earliest = today + 2 */
       disableMobile: true,
       onChange(dates) {
         startDate = dates[0] || null;
@@ -57,7 +57,7 @@
             const minEnd = new Date(startDate);
             minEnd.setDate(minEnd.getDate() + 1);
             const maxEnd = new Date(startDate);
-            maxEnd.setDate(maxEnd.getDate() + 30);
+            maxEnd.setDate(maxEnd.getDate() + 30); /* max 30-day rental */
             fpEnd.set('minDate', minEnd);
             fpEnd.set('maxDate', maxEnd);
             if (endDate && (endDate <= startDate || endDate > maxEnd)) {
@@ -107,6 +107,7 @@
           ?.classList.toggle('qv-field-disabled', !enabled);
     });
 
+    /* Sold-out banner */
     if (soldOutEl) soldOutEl.style.display = enabled ? 'none' : 'flex';
 
     if (!enabled) {
@@ -167,6 +168,7 @@
     if (colorsEl) while (colorsEl.firstChild) colorsEl.removeChild(colorsEl.firstChild);
     if (sizesEl)  while (sizesEl.firstChild)  sizesEl.removeChild(sizesEl.firstChild);
 
+    // Size placeholder while detail loads
     const ph = document.createElement('span');
     ph.className = 'qv-size'; ph.textContent = '—'; ph.style.opacity = '0.3';
     sizesEl?.appendChild(ph);
@@ -182,7 +184,7 @@
     fpStart?.clear(); fpEnd?.clear();
     if (fpEnd) { fpEnd.set('minDate', getMinStartDate()); fpEnd.set('maxDate', null); }
     if (summaryEl) summaryEl.textContent = '';
-    _setDatesEnabled(true);
+    _setDatesEnabled(true); // resets sold-out banner
 
     descSection?.classList.remove('open');
     if (nudgeEl) nudgeEl.classList.remove('show');
@@ -233,39 +235,24 @@
   }
 
   // ── Image helpers ─────────────────────────────────────────
-  // setMainImage now attaches an onerror handler every time a real
-  // src is set. The previous onerror is cleared first so stale closures from
-  // a prior colour switch can never fire against the new image.
-  // When the img 404s: hides mainImg, shows .qv-img-placeholder — same
-  // recovery pattern as PDP (product.js) already used.
   function setMainImage(basePath) {
     activeImage = basePath;
     if (!mainImg) return;
     const src = imgUrl(basePath, 'md');
     if (!src) {
-      // No valid path — show placeholder immediately.
-      mainImg.onerror = null;
+      /* Placeholder when no real image */
       mainImg.removeAttribute('src');
       mainImg.removeAttribute('srcset');
       mainImg.style.display = 'none';
+      /* show placeholder icon if present in the panel */
       const ph = mainImg.parentElement?.querySelector('.qv-img-placeholder');
       if (ph) ph.style.display = 'flex';
       return;
     }
-
-    // Hide placeholder while the new image loads.
+    /* Hide placeholder if shown */
     const ph = mainImg.parentElement?.querySelector('.qv-img-placeholder');
     if (ph) ph.style.display = 'none';
     mainImg.style.display = '';
-
-    // Attach onerror BEFORE setting src so it is in place when the browser
-    // starts the request. Clear any previous handler first.
-    mainImg.onerror = function () {
-      mainImg.style.display = 'none';
-      const phErr = mainImg.parentElement?.querySelector('.qv-img-placeholder');
-      if (phErr) phErr.style.display = 'flex';
-    };
-
     mainImg.src    = src;
     mainImg.srcset = `${imgUrl(basePath,'sm')} 400w, ${imgUrl(basePath,'md')} 800w, ${imgUrl(basePath,'lg')} 1400w`;
     mainImg.sizes  = '(max-width:700px) 100vw, 50vw';
@@ -301,6 +288,7 @@
               detail.availableSizesByColor?.[activeColor] || []
           );
         }
+        /* Disable/enable dates + show/hide sold-out banner */
         _setDatesEnabled(g.available);
         _resolveVariant();
         _checkAddBtn();
@@ -323,8 +311,10 @@
     if (!thumbsEl) return;
     while (thumbsEl.firstChild) thumbsEl.removeChild(thumbsEl.firstChild);
 
+    /* Filter to only images that produce a real URL */
     const valid = (images || []).filter(img => !!imgUrl(img.base, 'sm'));
 
+    /* Hide the strip when there is nothing to navigate between */
     thumbsEl.style.display = valid.length > 1 ? '' : 'none';
     if (!valid.length) return;
 
@@ -435,8 +425,13 @@
 
     try {
       window.Cart.add({
-        id:           activeVariantId,
-        productId:    active.id,
+        // ── CHANGED ───────────────────────────────────────────────────────
+        // id must be variantId (the normalised item's identity root).
+        // productId is kept separately so the server knows which product
+        // this variant belongs to.
+        id:           activeVariantId,          // was: active.id
+        productId:    active.id,                // NEW: product PK for server payload
+        // ─────────────────────────────────────────────────────────────────
         name:         active.name,
         brand:        active.brand,
         imageUrl:     activeImage || active.image,
@@ -444,13 +439,14 @@
         size:         activeSize  || 'OS',
         color:        activeColor || null,
         colorName:    colorMeta?.name || null,
-        variantId:    activeVariantId,
+        variantId:    activeVariantId,          // kept for clarity / server payload
         inventoryQty: activeInventoryQty,
         qty:          1,
         days,
-        startDate:    isoDate(startDate),
-        endDate:      isoDate(endDate),
-        dates:        `${isoDate(startDate)}/${isoDate(endDate)}`,
+        startDate:    isoDate(startDate),       // was buried inside dates string
+        endDate:      isoDate(endDate),         // now separate — server needs these
+        dates:        `${isoDate(startDate)}/${isoDate(endDate)}`, // CardFactory._formatDates()
+        qty:          1,
       });
     } catch (err) {
       console.error('[quick-view] Cart.add failed:', err);

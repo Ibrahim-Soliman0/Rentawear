@@ -133,10 +133,10 @@ public interface ProductMapper {
     // products that were created via the admin panel without uploaded images.
     default List<ColorSwatchDTO> buildSwatchesWithFallback(List<ProductImage> images,
                                                            List<ProductVariant> variants) {
-        List<ColorSwatchDTO> fromVariants = buildSwatchesFromVariants(
-                variants != null ? variants : List.of());
-        if (!fromVariants.isEmpty()) return fromVariants;
-        return buildSwatches(images != null ? images : List.of());
+        if (images != null && !images.isEmpty()) {
+            return buildSwatches(images);
+        }
+        return buildSwatchesFromVariants(variants != null ? variants : List.of());
     }
 
     // Maps colour → first image URL for swatch-click image swapping on cards.
