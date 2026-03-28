@@ -1,7 +1,6 @@
 package servlet.checkout;
 
 import dto.UserSessionDTO;
-import entity.User;
 import exception.InsufficientFundsException;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
@@ -17,7 +16,6 @@ import java.io.IOException;
 import java.math.BigDecimal;
 import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.Optional;
 
 @WebServlet("/checkout")
 public class CheckoutServlet extends HttpServlet {
