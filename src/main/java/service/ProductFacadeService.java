@@ -13,12 +13,15 @@ import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.stream.Collectors;
 
+// Orchestrates ProductService, ProductVariantService, and ProductImageService.
+// This is the only class that:
+//   1. Calls more than one service in a single operation
+//   2. Calls the mapper to assemble final DTOs
+//   3. Is called directly by servlets
 public class ProductFacadeService {
 
     private final ProductService        productService;
@@ -31,16 +34,24 @@ public class ProductFacadeService {
                                 ProductVariantService variantService,
                                 ProductImageService imageService,
                                 ProductMapper mapper, CategoryService categoryService) {
-        this.productService  = productService;
-        this.variantService  = variantService;
-        this.imageService    = imageService;
-        this.mapper          = mapper;
+        this.productService = productService;
+        this.variantService = variantService;
+        this.imageService   = imageService;
+        this.mapper         = mapper;
         this.categoryService = categoryService;
     }
 
     // ── Catalog listing ───────────────────────────────────────────────────────
-    // 3 queries total. Variant-ordered primary image is handled inside the
-    // mapper via buildPrimaryImageByColor(images, variants).
+    //
+    // Batch strategy to avoid N+1:
+    //   1. Fetch the page of products (2-step pagination in repo)
+    //   2. Collect all product ids on that page
+    //   3. Fetch primary images for ALL those ids in ONE query
+    //   4. Group images by product id in memory
+    //   5. Map each product with its pre-fetched images
+    //
+    // Result: 3 queries total regardless of page size
+    //   (id query + entity fetch + batch image fetch)
 
     public ProductListResult getProducts(ProductFilterDTO filter) {
         List<Product> products = fetchProducts(filter);
@@ -49,10 +60,14 @@ public class ProductFacadeService {
                 ? productService.getMinMaxPriceForInterests(filter)
                 : productService.getMinMaxPrice(filter);
 
-        List<Integer> ids = products.stream().map(Product::getId).collect(Collectors.toList());
+        List<Integer> ids = products.stream()
+                .map(Product::getId)
+                .collect(Collectors.toList());
 
+        // Batch-fetch both variants AND images — still only 2 extra queries
         Map<Integer, List<ProductVariant>> variantsByProductId =
                 variantService.getByProductIds(ids);
+
         Map<Integer, List<ProductImage>> imagesByProductId =
                 imageService.getPrimaryPerColorForProducts(ids);
 
@@ -66,31 +81,12 @@ public class ProductFacadeService {
 
         return new ProductListResult(cards, total, range, filter.page(), filter.pageSize());
     }
-
-    // ── Search ────────────────────────────────────────────────────────────────
-    // Batch-fetches variants and images, resolves variant-ordered primary image
-    // per product, sets it on the entity before the mapper reads core.imageUrl.
-    // 4 queries total (products, count, variants, images).
+    // Returns ProductSearchDTO ->  no swatches or price range needed in the modal.
 
     public ProductSearchResult searchProducts(ProductFilterDTO filter) {
         List<Product> products = productService.searchFiltered(filter);
         long          total    = productService.countSearchFiltered(filter);
         PriceRangeDTO range    = productService.getMinMaxPrice(filter);
-
-        List<Integer> ids = products.stream().map(Product::getId).collect(Collectors.toList());
-
-        Map<Integer, List<ProductVariant>> variantsByProductId =
-                variantService.getByProductIds(ids);
-        Map<Integer, List<ProductImage>> imagesByProductId =
-                imageService.getPrimaryPerColorForProducts(ids);
-
-        products.forEach(p -> {
-            String resolved = resolveVariantOrderedPrimary(
-                    variantsByProductId.getOrDefault(p.getId(), List.of()),
-                    imagesByProductId.getOrDefault(p.getId(), List.of())
-            );
-            if (resolved != null) p.setImageUrl(resolved);
-        });
 
         List<ProductSearchDTO> results = products.stream()
                 .map(mapper::toSearchDTO)
@@ -99,8 +95,9 @@ public class ProductFacadeService {
         return new ProductSearchResult(results, total, range, filter.page(), filter.pageSize());
     }
 
-    // ── Product detail (PDP) ──────────────────────────────────────────────────
-    // 3 queries always.
+
+
+    // Fetches product + all variants + all images — three queries, always.
 
     public ProductDetailDTO getProductDetail(int productId) {
         Product              product  = productService.getById(productId);
@@ -109,56 +106,49 @@ public class ProductFacadeService {
         return mapper.toDetailDTO(product, variants, images);
     }
 
-    // ── Admin product list ────────────────────────────────────────────────────
-    // Same variant-ordered resolution as searchProducts.
 
     public AdminProductListResult getAdminProducts(ProductFilterDTO filter) {
         List<Product> products = fetchProducts(filter);
-        long          total    = countProducts(filter);
+        long total= countProducts(filter);
 
-        List<Integer> ids = products.stream().map(Product::getId).collect(Collectors.toList());
+        List<Integer> ids = products.stream()
+                .map(Product::getId)
+                .collect(Collectors.toList());
 
         Map<Integer, List<ProductVariant>> variantsByProductId =
                 variantService.getByProductIds(ids);
-        Map<Integer, List<ProductImage>> imagesByProductId =
-                imageService.getPrimaryPerColorForProducts(ids);
-
-        products.forEach(p -> {
-            String resolved = resolveVariantOrderedPrimary(
-                    variantsByProductId.getOrDefault(p.getId(), List.of()),
-                    imagesByProductId.getOrDefault(p.getId(), List.of())
-            );
-            if (resolved != null) p.setImageUrl(resolved);
-        });
 
         List<AdminProductRowDTO> rows = products.stream()
-                .map(p -> mapper.toAdminRowDTO(p,
-                        variantsByProductId.getOrDefault(p.getId(), List.of())))
+                .map(p -> mapper.toAdminRowDTO(p, variantsByProductId.getOrDefault(p.getId(), List.of())
+                ))
                 .collect(Collectors.toList());
 
         return new AdminProductListResult(rows, total, filter.page(), filter.pageSize());
     }
-
-    // ── Admin product detail ──────────────────────────────────────────────────
-    // N+1 eliminated. Always 3 queries (product + variants + images).
-
+    // Admin product detail
     public AdminProductDetailDTO getAdminDetail(int productId) {
-        Product              product   = productService.getById(productId);
-        List<ProductVariant> variants  = variantService.getByProductId(productId);
-        List<ProductImage>   allImages = imageService.getByProductId(productId);
+        Product              product  = productService.getById(productId);
+        List<ProductVariant> variants = variantService.getByProductId(productId);
 
-        Map<String, String> imageUrlByColor = new LinkedHashMap<>();
-        for (ProductImage img : allImages) {
-            imageUrlByColor.putIfAbsent(img.getColor(), img.getImageUrl());
-        }
-
+        // Build stockByColor with image URLs manually
         Map<String, List<VariantStockDTO>> stockByColor = new LinkedHashMap<>();
         for (ProductVariant v : variants) {
             String colorKey = v.getColor();
-            stockByColor.computeIfAbsent(colorKey, k -> new ArrayList<>());
+
+            // Fetch color image once per color key
+            stockByColor.computeIfAbsent(colorKey, k -> {
+                return new ArrayList<>();
+            });
+
+            // Get image URL for this color
+            ProductImage colorImage = imageService.findByProductIdAndColor(productId, colorKey)
+                    .stream()
+                    .findFirst()
+                    .orElse(null);
+            String imageUrl = colorImage != null ? colorImage.getImageUrl() : null;
+
             stockByColor.get(colorKey).add(
-                    new VariantStockDTO(v.getId(), v.getSize(), v.getQuantity(),
-                            imageUrlByColor.get(colorKey))
+                    new VariantStockDTO(v.getId(), v.getSize(), v.getQuantity(), imageUrl)
             );
         }
 
@@ -170,49 +160,26 @@ public class ProductFacadeService {
         );
     }
 
-    // ── Variant-ordered primary image resolver ────────────────────────────────
-    //
-    // Returns the image URL for the first color (in variant insertion order,
-    // i.e. variant id ASC) that has an uploaded image.
-    //
-    // Falls back to the first image in upload order when no variants exist.
-
-    private String resolveVariantOrderedPrimary(List<ProductVariant> variants,
-                                                List<ProductImage>   images) {
-        if (images == null || images.isEmpty()) return null;
-
-        if (variants == null || variants.isEmpty()) {
-            return images.get(0).getImageUrl();
-        }
-
-        Map<String, String> imageByColor = new LinkedHashMap<>();
-        for (ProductImage img : images) {
-            if (img.getColor() != null) {
-                imageByColor.putIfAbsent(img.getColor(), img.getImageUrl());
-            }
-        }
-
-        Set<String> seen = new LinkedHashSet<>();
-        for (ProductVariant v : variants) {
-            String color = v.getColor();
-            if (color == null || !seen.add(color)) continue;
-            String url = imageByColor.get(color);
-            if (url != null) return url;
-        }
-
-        return null;
-    }
-
-    // ── Colour / product deletion ─────────────────────────────────────────────
+    // Colour deletion
+    // Deletes both variants and images for a colour in one transaction.
+    // The EntityManagerFilter wraps the entire request in a transaction, so if
+    // either delete throws, both are rolled back automatically.
 
     public void deleteColor(int productId, String color) {
         variantService.deleteColor(productId, color);
         imageService.deleteColorImages(productId, color);
     }
 
+    // Product deletion
+    // Deletes product along with all its variants and images.
+    // Returns true if deleted, false if product not found.
+
     public boolean deleteProduct(int productId) {
         Product product = productService.getById(productId);
-        if (product == null) return false;
+        if (product == null) {
+            return false;
+        }
+        // Delete variants and images first (due to foreign key constraints)
         variantService.deleteByProductId(productId);
         imageService.deleteByProductId(productId);
         productService.delete(productId);
@@ -220,17 +187,20 @@ public class ProductFacadeService {
     }
 
     // ── Private routing helpers ───────────────────────────────────────────────
+    // These mirror the ProductFilterDTO routing flags so the logic lives
+    // in one place and both getProducts() and getAdminProducts() stay clean.
 
     private List<Product> fetchProducts(ProductFilterDTO f) {
         if (f.isSearch())        return productService.searchFiltered(f);
-        if (f.isNewOnly())       return productService.findNew(f);
+        if (f.isNewOnly())       return productService.findNew(f);            // ← passes full filter
         if (f.isInterestBased()) return productService.findByInterests(f);
         return productService.findFiltered(f);
     }
 
+
     private long countProducts(ProductFilterDTO f) {
         if (f.isSearch())        return productService.countSearchFiltered(f);
-        if (f.isNewOnly())       return productService.countNew(f);
+        if (f.isNewOnly())       return productService.countNew(f);           // ← passes full filter
         if (f.isInterestBased()) return productService.countByInterests(f);
         return productService.countFiltered(f);
     }
@@ -238,7 +208,8 @@ public class ProductFacadeService {
     public Integer saveProduct(SaveProductDTO dto) {
         Product product = new Product();
         applyDtoToProduct(product, dto);
-        return productService.save(product).getId();
+        Product saved = productService.save(product);
+        return saved.getId();
     }
 
     public AdminProductDetailDTO updateProduct(Integer id, SaveProductDTO dto) {
@@ -247,16 +218,19 @@ public class ProductFacadeService {
 
         applyDtoToProduct(product, dto);
 
+        // Handle variants — update existing, add new, remove deleted
         List<Integer> incomingIds = dto.variants().stream()
                 .filter(v -> v.variantId() != null)
                 .map(VariantSaveDTO::variantId)
                 .collect(Collectors.toList());
 
-        product.getProductVariants().stream()
+        // Remove variants not in incoming list using helper to keep bidirectional association consistent
+        List<ProductVariant> variantsToRemove = product.getProductVariants().stream()
                 .filter(v -> !incomingIds.contains(v.getId()))
-                .collect(Collectors.toList())
-                .forEach(product::removeProductVariant);
+                .collect(Collectors.toList());
+        variantsToRemove.forEach(product::removeProductVariant);
 
+        // Update existing / add new
         dto.variants().forEach(v -> {
             if (v.variantId() != null) {
                 product.getProductVariants().stream()
@@ -268,15 +242,16 @@ public class ProductFacadeService {
                             pv.setQuantity(v.quantity());
                         });
             } else {
-                ProductVariant nv = new ProductVariant();
-                nv.setColor(v.color());
-                nv.setSize(v.size());
-                nv.setQuantity(v.quantity());
-                product.addProductVariant(nv);
+                ProductVariant newVariant = new ProductVariant();
+                newVariant.setColor(v.color());
+                newVariant.setSize(v.size());
+                newVariant.setQuantity(v.quantity());
+                product.addProductVariant(newVariant);
             }
         });
 
-        return getAdminDetail(productService.save(product).getId());
+        Product saved = productService.save(product);
+        return getAdminDetail(saved.getId());
     }
 
     public String updateProductImage(int productId, String imageUrl) {
@@ -313,7 +288,8 @@ public class ProductFacadeService {
                 .isAfter(Instant.now().minus(30, ChronoUnit.DAYS));
     }
 
-    public void deleteColorImage(int productId, String color, String webappRoot) {
+    // Deletes all images for a colour.
+    public void deleteColorImage(int productId, String color,String webappRoot) {
         imageService.deleteColorImage(productId, color, webappRoot);
     }
 }
