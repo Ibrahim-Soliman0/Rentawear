@@ -12,16 +12,24 @@ import repository.impl.PaymentCardRepositoryImpl;
 public class PaymentCardService extends BaseService<PaymentCard> {
 
     private final PaymentCardRepository paymentCardRepository;
-    private final UserService userService = new UserService();
-    private final PaymentCardMapper mapper = Mappers.getMapper(PaymentCardMapper.class);
+    private final UserService userService;
+    private final PaymentCardMapper mapper;
 
     public PaymentCardService() {
-        this(new PaymentCardRepositoryImpl());
+        this(new PaymentCardRepositoryImpl(), new UserService(), Mappers.getMapper(PaymentCardMapper.class));
     }
 
     public PaymentCardService(PaymentCardRepository paymentCardRepository) {
+        this(paymentCardRepository, new UserService(), Mappers.getMapper(PaymentCardMapper.class));
+    }
+
+    public PaymentCardService(PaymentCardRepository paymentCardRepository,
+                              UserService userService,
+                              PaymentCardMapper mapper) {
         super(paymentCardRepository);
         this.paymentCardRepository = paymentCardRepository;
+        this.userService = userService;
+        this.mapper = mapper;
     }
 
     /**
