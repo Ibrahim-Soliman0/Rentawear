@@ -245,7 +245,7 @@
       <!-- Footer link -->
       <p class="rw-auth-switch" style="margin-top: 1.25rem;">
         Already have an account?
-        <a href="login.jsp">Sign in</a>
+        <a href="${pageContext.request.contextPath}/login">Sign in</a>
       </p>
 
     </div><!-- /.rw-auth-card -->
