@@ -83,7 +83,7 @@ function clearFieldError(inputId, errorId) {
 }
 function clearAllProductErrors() {
   ['productName','productCategory','productPrice']
-    .forEach((_, i, arr) => clearFieldError(arr[i], arr[i] + 'Error'));
+      .forEach((_, i, arr) => clearFieldError(arr[i], arr[i] + 'Error'));
 }
 
 /* ══════════════════════════════════════════════════════════════
@@ -170,6 +170,17 @@ function renderPagination(page, total, pageSize) {
     </div>`;
 }
 
+// Replaces a broken <img> with the standard placeholder icon on 404.
+function _imgToIcon(img) {
+  const icon = document.createElement('div');
+  icon.className = 'adm-product-img-placeholder';
+  if (img.id) icon.id = img.id;
+  const i = document.createElement('i');
+  i.className = 'bi bi-image';
+  icon.appendChild(i);
+  if (img.parentNode) img.parentNode.replaceChild(icon, img);
+}
+
 function renderProductsTable(products) {
   const tbody = document.getElementById('productsTableBody');
   if (!products || products.length === 0) {
@@ -193,8 +204,8 @@ function renderProductsTable(products) {
       <td>
         <div class="adm-product-cell">
           ${imageUrl
-            ? `<img src="${imageUrl}" alt="${escHtml(core.name)}" class="adm-product-img"/>`
-            : `<div class="adm-product-img-placeholder"><i class="bi bi-image"></i></div>`}
+        ? `<img src="${imageUrl}" alt="${escHtml(core.name)}" class="adm-product-img" onerror="_imgToIcon(this)"/>`
+        : `<div class="adm-product-img-placeholder"><i class="bi bi-image"></i></div>`}
           <div>
             <div class="adm-product-name">${escHtml(core.name)}</div>
             ${core.brand ? `<div class="adm-product-brand">${escHtml(core.brand)}</div>` : ''}
@@ -370,6 +381,7 @@ function addColorGroup(colorName, hex, existingVariants, existingImageUrl) {
         ${existingImageUrl
       ? `<img src="${resolveAdminImage(existingImageUrl)}"
                   class="adm-color-img-preview" id="${groupId}-preview"
+                  onerror="_imgToIcon(this)"
                   alt="Color image"/>`
       : `<div class="adm-color-img-placeholder" id="${groupId}-preview">
                <i class="bi bi-image"></i>
@@ -1061,10 +1073,10 @@ function addCategoryToDropdown(category) {
 /* ── Utilities ──────────────────────────────────────────────── */
 function escHtml(str) {
   return String(str || '')
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;');
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;');
 }
 
 function resolveAdminImage(base) {
@@ -1341,6 +1353,3 @@ function showToast(message, type) {
 }
 /* ── Init: load products on page load ───────────────────────── */
 loadProducts();
-
-
-
