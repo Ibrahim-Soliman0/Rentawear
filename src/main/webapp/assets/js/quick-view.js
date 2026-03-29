@@ -20,7 +20,7 @@
   const viewFullEl  = document.getElementById('qvViewFull');
   const colorLabelEl = document.getElementById('qvColorLabel');
   const colorNameEl  = document.getElementById('qvColorName');
-  const soldOutEl    = document.getElementById('qvSoldOutBanner'); // new
+  const soldOutEl    = document.getElementById('qvSoldOutBanner');
 
   let active              = null;
   let activeColor         = null;
@@ -48,7 +48,7 @@
   if (startInput && typeof flatpickr === 'function') {
     fpStart = flatpickr(startInput, {
       dateFormat:    'd/m/Y',
-      minDate:       getMinStartDate(),   /* earliest = today + 2 */
+      minDate:       getMinStartDate(),
       disableMobile: true,
       onChange(dates) {
         startDate = dates[0] || null;
@@ -57,7 +57,7 @@
             const minEnd = new Date(startDate);
             minEnd.setDate(minEnd.getDate() + 1);
             const maxEnd = new Date(startDate);
-            maxEnd.setDate(maxEnd.getDate() + 30); /* max 30-day rental */
+            maxEnd.setDate(maxEnd.getDate() + 30);
             fpEnd.set('minDate', minEnd);
             fpEnd.set('maxDate', maxEnd);
             if (endDate && (endDate <= startDate || endDate > maxEnd)) {
@@ -92,13 +92,13 @@
     });
   }
 
-  // ── Gate: disabled when no size, or colour is sold out ──────
+  // ── Gate: disabled when no size selected ──────────────────
   function _checkAddBtn() {
     if (!addBtn) return;
     addBtn.disabled = !activeSize;
   }
 
-  // ── Enable / disable date pickers + show sold-out banner ────
+  // ── Enable / disable date pickers + show sold-out banner ──
   function _setDatesEnabled(enabled) {
     [startInput, endInput].forEach(inp => {
       if (!inp) return;
@@ -107,7 +107,6 @@
           ?.classList.toggle('qv-field-disabled', !enabled);
     });
 
-    /* Sold-out banner */
     if (soldOutEl) soldOutEl.style.display = enabled ? 'none' : 'flex';
 
     if (!enabled) {
@@ -118,7 +117,7 @@
     }
   }
 
-  // ── Resolve variant from loaded detail ──────────────────────
+  // ── Resolve variant from loaded detail ────────────────────
   function _resolveVariant() {
     const detail = overlay._detail;
     if (!detail || !activeColor) {
@@ -149,7 +148,7 @@
     }
   }
 
-  // ── Open (sync — zero latency) ────────────────────────────
+  // ── Open (sync — zero latency) ───────────────────────────
   function openImmediate(data) {
     active             = data;
     activeSize         = null;
@@ -168,7 +167,6 @@
     if (colorsEl) while (colorsEl.firstChild) colorsEl.removeChild(colorsEl.firstChild);
     if (sizesEl)  while (sizesEl.firstChild)  sizesEl.removeChild(sizesEl.firstChild);
 
-    // Size placeholder while detail loads
     const ph = document.createElement('span');
     ph.className = 'qv-size'; ph.textContent = '—'; ph.style.opacity = '0.3';
     sizesEl?.appendChild(ph);
@@ -184,7 +182,7 @@
     fpStart?.clear(); fpEnd?.clear();
     if (fpEnd) { fpEnd.set('minDate', getMinStartDate()); fpEnd.set('maxDate', null); }
     if (summaryEl) summaryEl.textContent = '';
-    _setDatesEnabled(true); // resets sold-out banner
+    _setDatesEnabled(true);
 
     descSection?.classList.remove('open');
     if (nudgeEl) nudgeEl.classList.remove('show');
@@ -194,7 +192,7 @@
     document.body.style.overflow = 'hidden';
   }
 
-  // ── Load full detail async ────────────────────────────────
+  // ── Load full detail async ───────────────────────────────
   async function loadImages(productId) {
     try {
       const dto = await fetchJson(`${CTX}/products/${productId}`, { timeout: 8000 });
@@ -234,31 +232,38 @@
     }
   }
 
-  // ── Image helpers ─────────────────────────────────────────
+  // ── Image helpers ────────────────────────────────────────
   function setMainImage(basePath) {
     activeImage = basePath;
     if (!mainImg) return;
     const src = imgUrl(basePath, 'md');
     if (!src) {
-      /* Placeholder when no real image */
+      // No valid path — show placeholder immediately.
+      mainImg.onerror = null;
       mainImg.removeAttribute('src');
       mainImg.removeAttribute('srcset');
       mainImg.style.display = 'none';
-      /* show placeholder icon if present in the panel */
       const ph = mainImg.parentElement?.querySelector('.qv-img-placeholder');
       if (ph) ph.style.display = 'flex';
       return;
     }
-    /* Hide placeholder if shown */
+    // Hide placeholder while the new image loads.
     const ph = mainImg.parentElement?.querySelector('.qv-img-placeholder');
     if (ph) ph.style.display = 'none';
     mainImg.style.display = '';
+    // Clear previous handler, then set new one BEFORE assigning src.
+    mainImg.onerror = null;
+    mainImg.onerror = function () {
+      mainImg.style.display = 'none';
+      const phErr = mainImg.parentElement?.querySelector('.qv-img-placeholder');
+      if (phErr) phErr.style.display = 'flex';
+    };
     mainImg.src    = src;
     mainImg.srcset = `${imgUrl(basePath,'sm')} 400w, ${imgUrl(basePath,'md')} 800w, ${imgUrl(basePath,'lg')} 1400w`;
     mainImg.sizes  = '(max-width:700px) 100vw, 50vw';
   }
 
-  // ── Colour chips ──────────────────────────────────────────
+  // ── Colour chips ─────────────────────────────────────────
   function renderColors(groups) {
     if (!colorsEl) return;
     while (colorsEl.firstChild) colorsEl.removeChild(colorsEl.firstChild);
@@ -288,7 +293,6 @@
               detail.availableSizesByColor?.[activeColor] || []
           );
         }
-        /* Disable/enable dates + show/hide sold-out banner */
         _setDatesEnabled(g.available);
         _resolveVariant();
         _checkAddBtn();
@@ -303,18 +307,13 @@
     else setMainImage(null);
   }
 
-  // ── Thumbnails ────────────────────────────────────────────
-  // Only renders thumbnails for images that have a valid URL.
-  // Hides the entire strip when there are 0 or 1 valid images —
-  // a single thumbnail adds no navigation value and looks broken.
+  // ── Thumbnails ───────────────────────────────────────────
   function renderThumbs(images) {
     if (!thumbsEl) return;
     while (thumbsEl.firstChild) thumbsEl.removeChild(thumbsEl.firstChild);
 
-    /* Filter to only images that produce a real URL */
     const valid = (images || []).filter(img => !!imgUrl(img.base, 'sm'));
 
-    /* Hide the strip when there is nothing to navigate between */
     thumbsEl.style.display = valid.length > 1 ? '' : 'none';
     if (!valid.length) return;
 
@@ -336,7 +335,7 @@
     });
   }
 
-  // ── Sizes ──────────────────────────────────────────────────
+  // ── Sizes ────────────────────────────────────────────────
   function renderSizes(allSizes, availSizes = []) {
     if (!sizesEl) return;
     while (sizesEl.firstChild) sizesEl.removeChild(sizesEl.firstChild);
@@ -379,7 +378,7 @@
     _checkAddBtn();
   }
 
-  // ── Entry point ───────────────────────────────────────────
+  // ── Entry point ──────────────────────────────────────────
   document.addEventListener('click', e => {
     const trigger = e.target.closest('[data-qv]');
     if (!trigger) return;
@@ -394,7 +393,7 @@
     loadImages(data.id);
   });
 
-  // ── Add to Bag ────────────────────────────────────────────
+  // ── Add to Bag ───────────────────────────────────────────
   addBtn?.addEventListener('click', () => {
     if (!active || addBtn.disabled) return;
 
@@ -418,7 +417,7 @@
       return;
     }
 
-    const days      = Math.round((endDate - startDate) / 86400000);
+    const days = Math.round((endDate - startDate) / 86400000);
     const isoDate = (d) => {
       const year  = d.getFullYear();
       const month = String(d.getMonth() + 1).padStart(2, '0');
@@ -430,13 +429,8 @@
 
     try {
       window.Cart.add({
-        // ── CHANGED ───────────────────────────────────────────────────────
-        // id must be variantId (the normalised item's identity root).
-        // productId is kept separately so the server knows which product
-        // this variant belongs to.
-        id:           activeVariantId,          // was: active.id
-        productId:    active.id,                // NEW: product PK for server payload
-        // ─────────────────────────────────────────────────────────────────
+        id:           activeVariantId,
+        productId:    active.id,
         name:         active.name,
         brand:        active.brand,
         imageUrl:     activeImage || active.image,
@@ -444,14 +438,13 @@
         size:         activeSize  || 'OS',
         color:        activeColor || null,
         colorName:    colorMeta?.name || null,
-        variantId:    activeVariantId,          // kept for clarity / server payload
+        variantId:    activeVariantId,
         inventoryQty: activeInventoryQty,
         qty:          1,
         days,
-        startDate:    isoDate(startDate),       // was buried inside dates string
-        endDate:      isoDate(endDate),         // now separate — server needs these
-        dates:        `${isoDate(startDate)}/${isoDate(endDate)}`, // CardFactory._formatDates()
-        qty:          1,
+        startDate:    isoDate(startDate),
+        endDate:      isoDate(endDate),
+        dates:        `${isoDate(startDate)}/${isoDate(endDate)}`,
       });
     } catch (err) {
       console.error('[quick-view] Cart.add failed:', err);
@@ -460,12 +453,12 @@
     }
   });
 
-  // ── Description accordion ─────────────────────────────────
+  // ── Description accordion ────────────────────────────────
   descToggle?.addEventListener('click', () => {
     descSection?.classList.toggle('open');
   });
 
-  // ── Close ─────────────────────────────────────────────────
+  // ── Close ────────────────────────────────────────────────
   function close() {
     overlay.classList.remove('open');
     document.body.style.overflow = '';
