@@ -24,26 +24,6 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
-/*
- * ─────────────────────────────────────────────────────────────────────────────
- *  WHY CartService IS DIFFERENT FROM UserService
- * ─────────────────────────────────────────────────────────────────────────────
- *
- *  UserService only depended on a Repository (an interface), so @InjectMocks
- *  could wire everything automatically.
- *
- *  CartService depends on three other *Service* classes (UserService,
- *  ProductVariantService, CartItemService). Mockito can mock concrete classes,
- *  but @InjectMocks gets confused when there are multiple mocks of the same
- *  type hierarchy. So here we:
- *
- *    1. Declare @Mock for each dependency.
- *    2. Build the CartService manually in @BeforeEach using the new
- *       testable constructor we added.
- *
- *  This is the standard pattern when you have service-to-service dependencies.
- * ─────────────────────────────────────────────────────────────────────────────
- */
 
 @ExtendWith(MockitoExtension.class)
 class CartServiceTest {

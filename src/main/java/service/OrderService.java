@@ -43,6 +43,21 @@ public class OrderService extends BaseService<Order> {
         this.productVariantService = new ProductVariantService();
     }
 
+    /**
+     * Testable constructor for dependency injection in tests.
+     * Allows mocking all service dependencies.
+     */
+    public OrderService(OrderRepository orderRepository,
+                        CartService cartService,
+                        UserService userService,
+                        ProductVariantService productVariantService) {
+        super(orderRepository);
+        this.orderRepository = orderRepository;
+        this.cartService = cartService;
+        this.userService = userService;
+        this.productVariantService = productVariantService;
+    }
+
     public List<AdminOrderDTO> getAllOrders() {
         return orderRepository.findAll()
                 .stream()
