@@ -59,7 +59,7 @@
     </div>
 
     <%-- ── Body: filter column + results side by side ─────────── --%>
-    <div class="search-body-row">
+    <div class="search-body-row" id="searchBodyRow">
 
       <%-- Filter column — slides in from the left when toggled --%>
       <div class="search-filter-col" id="searchFilterPanel" aria-hidden="true">
@@ -114,8 +114,8 @@
             </div>
           </div>
 
-          <%-- Price slider — revealed by JS when a search returns price bounds --%>
-          <div class="sfp-section sfp-section--price" id="searchPriceWrap" style="display:none">
+          <%-- Price slider — always visible inside the filter column --%>
+          <div class="sfp-section sfp-section--price" id="searchPriceWrap">
             <p class="sfp-label">Price / day</p>
             <div class="search-price-hd">
               <span class="search-price-vals">
