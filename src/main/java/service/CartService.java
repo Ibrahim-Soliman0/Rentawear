@@ -10,9 +10,7 @@ import exception.CartItemNotFoundException;
 import exception.UserNotFoundException;
 import mapper.CartItemMapper;
 import org.mapstruct.factory.Mappers;
-import repository.CartItemRepository;
 import repository.CartRepository;
-import repository.impl.CartItemRepositoryImpl;
 import repository.impl.CartRepositoryImpl;
 
 import java.time.LocalDate;
