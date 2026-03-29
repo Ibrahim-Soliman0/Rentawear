@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<persistence xmlns="https://jakarta.ee/xml/ns/persistence"
+             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+             version="3.0"
+             xsi:schemaLocation="https://jakarta.ee/xml/ns/persistence
+                                 https://jakarta.ee/xml/ns/persistence/persistence_3_0.xsd">
+
+    <!--
+        This persistence unit is used ONLY by tests.
+        It must be placed at: src/test/resources/META-INF/persistence.xml
+
+        Key differences from production:
+          - H2 in-memory database instead of MySQL
+          - hibernate.hbm2ddl.auto = create-drop  →  Hibernate creates all
+            tables from your @Entity classes when the EntityManagerFactory opens,
+            and drops them when it closes. No migration scripts needed.
+          - No connection pool (HikariCP) needed for tests.
+          - show_sql = true so you can see the exact SQL each query generates.
+    -->
+
+    <persistence-unit name="rentawear_test" transaction-type="RESOURCE_LOCAL">
+
+
+        <class>entity.Product</class>
+        <class>entity.Category</class>
+        <class>entity.ProductVariant</class>
+        <class>entity.ProductImage</class>
+        <class>entity.User</class>
+        <class>entity.UserCategory</class>
+        <class>entity.PaymentCard</class>
+        <class>entity.Cart</class>
+        <class>entity.CartItem</class>
+        <class>entity.Order</class>
+        <class>entity.OrderItem</class>
+
+        <exclude-unlisted-classes>true</exclude-unlisted-classes>
+
+        <properties>
+            <!-- H2 in-memory database. DB_CLOSE_DELAY=-1 keeps the DB alive
+                 for the entire JVM lifetime (all tests share it).
+                 MODE=MySQL makes H2 understand MySQL-specific syntax if needed. -->
+            <property name="jakarta.persistence.jdbc.driver"   value="org.h2.Driver"/>
+            <property name="jakarta.persistence.jdbc.url"
+                      value="jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1;MODE=MySQL"/>
+            <property name="jakarta.persistence.jdbc.user"     value="sa"/>
+            <property name="jakarta.persistence.jdbc.password" value=""/>
+
+            <!-- H2 dialect — Hibernate translates JPQL to H2-compatible SQL -->
+            <property name="hibernate.dialect" value="org.hibernate.dialect.H2Dialect"/>
+
+            <!--
+                create-drop: schema is created fresh when EMF opens,
+                dropped when EMF closes. Each test class gets a clean slate.
+            -->
+            <property name="hibernate.hbm2ddl.auto" value="create-drop"/>
+
+            <!-- Useful during development — shows the SQL each query generates -->
+            <property name="hibernate.show_sql"    value="true"/>
+            <property name="hibernate.format_sql"  value="true"/>
+        </properties>
+
+    </persistence-unit>
+
+</persistence>
