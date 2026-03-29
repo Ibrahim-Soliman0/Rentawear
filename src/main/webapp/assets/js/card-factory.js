@@ -231,7 +231,7 @@
             el.href      = `${CTX}/product/${encodeURIComponent(p.id)}`;
             el.setAttribute('aria-label', `View ${p.name}`);
 
-            const initialColor    = Object.keys(p.primaryImageByColor)[0] ?? null;
+            const initialColor    = Object.keys(p.primaryImageByColor)[0] ?? p.swatches[0]?.color ?? null;
             const initialImageUrl = initialColor ? p.primaryImageByColor[initialColor] : null;
 
             const imgWrap = document.createElement('div');
