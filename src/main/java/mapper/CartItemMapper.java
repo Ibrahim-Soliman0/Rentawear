@@ -4,6 +4,7 @@ import dto.CartItemDTO;
 import dto.ProductCoreDTO;
 import entity.CartItem;
 import entity.Product;
+import entity.ProductImage;
 import entity.ProductVariant;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
@@ -99,14 +100,10 @@ public interface CartItemMapper {
     List<CartItemDTO> toDTOList(List<CartItem> cartItems);
 
     // ── Derived field helpers ─────────────────────────────────────────────────
-    // MapStruct calls these via the expression = "java(...)" annotations above.
-    // They are default methods so they live in this interface and remain
-    // testable without spinning up the full mapper implementation.
 
     /**
-     * Number of rental days — inclusive of both start and end date.
-     * e.g. Nov 12 → Nov 16 = 4 days  (ChronoUnit.DAYS gives 4, not 5)
-     * Adjust the +1 if your business rule treats end day as non-rental.
+     * Number of rental days — exclusive end date.
+     * e.g. Nov 12 → Nov 16 = 4 days (ChronoUnit.DAYS between gives 4, not 5)
      */
     default int calculateRentalDays(CartItem item) {
         if (item.getStartDate() == null || item.getEndDate() == null) return 0;
@@ -130,18 +127,39 @@ public interface CartItemMapper {
 
     /**
      * Builds the nested ProductCoreDTO from the ProductVariant's parent Product.
-     * MapStruct cannot auto-map this because the source fields live two levels
-     * deep (variant → product → fields), so we build it explicitly.
+     *
+     * Image resolution — reads from product_images filtered by this variant's
+     * color, same pattern as OrderMapper.variantToImageUrl. This is the correct
+     * source for the cart item image: it gives the color-specific image the user
+     * saw when they added the item, and it remains correct across page refreshes
+     * because it reads the ProductImage table rather than the stale
+     * products.image_url entity field.
+     *
+     * Falls back to null when no image exists for this color, the JS layer
+     * (CartItemNormaliser.fromDTO) substitutes '/assets/img/placeholder' when
+     * core.imageUrl is null.
      */
     default ProductCoreDTO toProductCoreDTO(ProductVariant variant) {
         if (variant == null || variant.getProduct() == null) return null;
         Product p = variant.getProduct();
+
+        // Resolve color-specific image from product_images — never reads
+        // the stale products.image_url column.
+        String color    = variant.getColor();
+        String imageUrl = p.getProductImages() == null ? null :
+                p.getProductImages().stream()
+                        .filter(img -> img.getColor() != null
+                                && img.getColor().equalsIgnoreCase(color))
+                        .findFirst()
+                        .map(ProductImage::getImageUrl)
+                        .orElse(null);
+
         return new ProductCoreDTO(
                 p.getId(),
                 p.getName(),
-                "Rentawear", //p.getBrand()
+                "rentawear",
                 p.getBasePrice().doubleValue(),
-                p.getImageUrl(),
+                imageUrl,
                 p.getCategory().getGender().toString(),
                 p.getCategory().getId(),
                 p.getCategory().getName()

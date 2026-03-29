@@ -581,6 +581,33 @@ function renderPastOrders(orders) {
     container.innerHTML = orders.map(o => buildOrderCard(o)).join('');
 }
 
+// Replaces a broken or missing <img> with the standard placeholder icon.
+// Called via onerror on every <img> in order history so 404s show the icon
+// instead of a broken image or an external placeholder URL.
+function _imgToIcon(img) {
+    const icon = document.createElement('div');
+    icon.className = 'product-img-placeholder';
+    const i = document.createElement('i');
+    i.className = 'bi bi-image';
+    icon.appendChild(i);
+    if (img.parentNode) img.parentNode.replaceChild(icon, img);
+}
+
+function resolveProductImage(base) {
+    if (!base) return null;
+
+    const hasExtension = /\.(jpg|jpeg|png|webp)$/i.test(base);
+    const isAbsolute   = /^https?:\/\//i.test(base);
+
+    if (isAbsolute) return base;
+    if (base.startsWith(CTX)) return base;
+    if (base.startsWith('/assets/')) {
+        return hasExtension ? CTX + base : `${CTX}${base}_sm.jpg`;
+    }
+
+    return hasExtension ? base : `${CTX}${base}_sm.jpg`;
+}
+
 /* ── Build one order card ── */
 function buildOrderCard(order) {
     const isCancelled = order.status === 'CANCELLED';
@@ -595,13 +622,15 @@ function buildOrderCard(order) {
         CANCELLED: 'account-status--cancelled'
     }[order.status] || '';
 
-    const itemsHtml = (order.items || []).map(item => `
+    const itemsHtml = (order.items || []).map(item => {
+        const imgSrc = resolveProductImage(item.imageUrl);
+        const imgHtml = imgSrc
+            ? `<img src="${escHtml(imgSrc)}" alt="${escHtml(item.productName)}"
+                    onerror="_imgToIcon(this)"/>`
+            : `<div class="product-img-placeholder"><i class="bi bi-image"></i></div>`;
+        return `
         <div class="account-rental-card">
-            <div class="account-rental-img">
-                <img src="${escHtml(item.imageUrl || '')}"
-                     alt="${escHtml(item.productName)}"
-                     onerror="this.src='https://placehold.co/80x110/EDE9E3/9E9189?text=Item'"/>
-            </div>
+            <div class="account-rental-img">${imgHtml}</div>
             <div class="account-rental-body">
                 <div class="account-rental-top">
                     <div>
@@ -632,7 +661,8 @@ function buildOrderCard(order) {
                 </div>
             </div>
         </div>
-    `).join('');
+    `;
+    }).join('');
 
     const progressHtml = isCancelled ? buildCancelledBanner() : buildStatusBar(order.status);
 

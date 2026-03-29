@@ -10,9 +10,7 @@ import exception.CartItemNotFoundException;
 import exception.UserNotFoundException;
 import mapper.CartItemMapper;
 import org.mapstruct.factory.Mappers;
-import repository.CartItemRepository;
 import repository.CartRepository;
-import repository.impl.CartItemRepositoryImpl;
 import repository.impl.CartRepositoryImpl;
 
 import java.time.LocalDate;
@@ -31,11 +29,30 @@ public class CartService extends BaseService<Cart> {
     }
 
     public CartService(CartRepository cartRepository) {
+        this(
+                cartRepository,
+                new UserService(),
+                new ProductVariantService(),
+                new CartItemService()
+        );
+    }
+
+    /*
+     * ── Testable constructor ───────────────────────────────────────────────────
+     * All dependencies come in from outside, so tests can pass mock versions.
+     * Production code never calls this directly — it goes through the one above.
+     */
+    public CartService(
+            CartRepository cartRepository,
+            UserService userService,
+            ProductVariantService productVariantService,
+            CartItemService cartItemService
+    ) {
         super(cartRepository);
         this.cartRepository = cartRepository;
-        this.userService = new UserService();
-        this.productVariantService = new ProductVariantService();
-        this.cartItemService = new CartItemService();
+        this.userService = userService;
+        this.productVariantService = productVariantService;
+        this.cartItemService = cartItemService;
     }
 
     public List<CartItemDTO> getItems(Integer userId) {
@@ -77,8 +94,9 @@ public class CartService extends BaseService<Cart> {
         itemToAdd.setStartDate(LocalDate.parse(itemDTO.startDate()));
         itemToAdd.setEndDate(LocalDate.parse(itemDTO.endDate()));
 
+        itemToAdd = cartItemService.save(itemToAdd);
+
         userCart.addCartItem(itemToAdd);
-        save(userCart);
 
         return itemToAdd.getId();
     }

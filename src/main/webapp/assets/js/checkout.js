@@ -42,28 +42,32 @@ const dom = {
 };
 
 /* ── Image URL helper ────────────────────────────────────────────────────── */
+// Returns null when base is missing or already-resolved — callers must guard.
+// Mirrors imgUrl() in card-factory.js so all surfaces behave identically.
 function coImgUrl(base, size) {
-    const b = (base && !base.endsWith('.jpg') && !base.endsWith('.png'))
-        ? base : '/assets/img/placeholder';
-    return `${window.CTX ?? ''}${b}_${size}.jpg`;
+    if (!base || base.includes('placeholder') || base.endsWith('.jpg') || base.endsWith('.png')) {
+        return null;
+    }
+    return `${window.CTX ?? ''}${base}_${size}.jpg`;
+}
+
+// Replaces a broken or missing <img> with the standard placeholder icon.
+// Called via onerror on every <img> in this file so 404s get the same
+// treatment as a missing image path.
+function _imgToIcon(img) {
+    const icon = document.createElement('div');
+    icon.className = 'product-img-placeholder';
+    const i = document.createElement('i');
+    i.className = 'bi bi-image';
+    icon.appendChild(i);
+    if (img.parentNode) img.parentNode.replaceChild(icon, img);
 }
 
 /* ── Date formatters ─────────────────────────────────────────────────────── */
-
-// "2024-11-12" → "12 Nov 2024"
-function formatDateFull(iso) {
-    if (!iso) return '—';
-    const d = new Date(iso + 'T00:00:00');
-    if (isNaN(d)) return iso;
-    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-    return `${d.getUTCDate()} ${months[d.getUTCMonth()]} ${d.getUTCFullYear()}`;
-}
-
-// "2024-11-12", "2024-11-16" → "12 Nov → 16 Nov 2024"
 function formatDateRange(startIso, endIso) {
     if (!startIso || !endIso) return '';
-    const a = new Date(startIso + 'T00:00:00');
-    const b = new Date(endIso + 'T00:00:00');
+    const a = new Date(startIso + 'T00:00:00Z');
+    const b = new Date(endIso + 'T00:00:00Z');
     if (isNaN(a) || isNaN(b)) return `${startIso} → ${endIso}`;
     const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
     const fmtA = `${a.getUTCDate()} ${months[a.getUTCMonth()]}`;
@@ -85,6 +89,31 @@ function loadCartItems() {
     } catch (_) {
         return [];
     }
+}
+
+/* ── Order success overlay ───────────────────────────────────────────────── */
+/**
+ * Shows the full-screen success overlay, waits for the CSS animations to
+ * complete, then redirects to redirectUrl.
+ */
+function showOrderSuccess(redirectUrl) {
+    localStorage.removeItem('rw_cart_items');
+    localStorage.removeItem('rw_cart_synced');
+    if (window.Cart?.clearLocalStorage) window.Cart.clearLocalStorage();
+
+    const overlay = document.getElementById('orderSuccessOverlay');
+    if (!overlay) {
+        window.location.href = redirectUrl;
+        return;
+    }
+
+    overlay.setAttribute('aria-hidden', 'false');
+    overlay.classList.add('visible');
+
+    // Match animation timing (~2.3s)
+    setTimeout(() => {
+        window.location.href = redirectUrl;
+    }, 2300);
 }
 
 /* ── Submit error banner ─────────────────────────────────────────────────── */
@@ -123,15 +152,12 @@ function setButtonLoading(loading) {
 }
 
 /* ── Credit limit check ──────────────────────────────────────────────────── */
-// Called after loadUserSession() resolves so we have both the total and the limit.
-// creditLimit from UserSessionDTO is a BigDecimal — arrives as a number in JSON.
 function checkCreditLimit(total, creditLimit) {
     const warning = dom.creditWarning();
     const msgEl = dom.creditWarningMsg();
     const btn = dom.confirmBtn();
 
     if (creditLimit != null && total > creditLimit) {
-        // Insufficient credit
         if (msgEl) {
             msgEl.textContent =
                 `Your order total (${fmt(total)}) exceeds your available credit limit (${fmt(creditLimit)}).`;
@@ -139,40 +165,33 @@ function checkCreditLimit(total, creditLimit) {
         if (warning) warning.classList.add('show');
         if (btn) btn.disabled = true;
     } else {
-        // Sufficient credit — hide warning and re-enable button
-        // (only if it wasn't disabled for other reasons like empty cart / no address)
         if (warning) warning.classList.remove('show');
     }
 }
 
 /* ── Rental period section ───────────────────────────────────────────────── */
-
-// Renders one row per cart item: thumbnail | product name | date range + duration
-
 function buildRentalRow(item) {
     const li = document.createElement('li');
     li.className = 'rental-item-row';
 
-    // Resolve date range from item fields
     let dateRange = '';
     if (item.startDate && item.endDate) {
         dateRange = formatDateRange(item.startDate, item.endDate);
     } else if (item.dates) {
         const parts = item.dates.split('/');
-        dateRange = parts.length === 2
-            ? formatDateRange(parts[0], parts[1])
-            : item.dates;
+        dateRange = parts.length === 2 ? formatDateRange(parts[0], parts[1]) : item.dates;
     }
 
-    const daysLabel = item.days
-        ? `${item.days} day${item.days !== 1 ? 's' : ''}`
-        : '';
+    const daysLabel = item.days ? `${item.days} day${item.days !== 1 ? 's' : ''}` : '';
+
+    const rentalThumbSrc = coImgUrl(item.imageUrl, 'sm');
+    const rentalThumbHtml = rentalThumbSrc
+        ? `<img src="${rentalThumbSrc}" alt="${item.name ?? ''}" loading="lazy" decoding="async"
+                onerror="_imgToIcon(this)"/>`
+        : `<div class="product-img-placeholder"><i class="bi bi-image"></i></div>`;
 
     li.innerHTML = `
-        <div class="rental-item-thumb">
-            <img src="${coImgUrl(item.imageUrl, 'sm')}"
-                 alt="${item.name ?? ''}" loading="lazy" decoding="async" />
-        </div>
+        <div class="rental-item-thumb">${rentalThumbHtml}</div>
         <div class="rental-item-info">
             <div class="rental-item-name">${item.name ?? ''}</div>
             ${dateRange ? `
@@ -187,7 +206,6 @@ function buildRentalRow(item) {
             </div>` : ''}
             ${daysLabel ? `<div class="rental-item-duration">${daysLabel}</div>` : ''}
         </div>`;
-
     return li;
 }
 
@@ -200,8 +218,6 @@ function renderRentalPeriod(items) {
         const li = document.createElement('li');
         li.innerHTML = '<p class="rental-empty">No items in your cart.</p>';
         list.appendChild(li);
-
-        // Write placeholder dates to hidden inputs
         const delInput = dom.deliveryInput();
         const retInput = dom.returnInput();
         if (delInput) delInput.value = '';
@@ -209,26 +225,22 @@ function renderRentalPeriod(items) {
         return;
     }
 
-    // Find the earliest startDate and latest endDate across all items
     const startDates = items.map(i => i.startDate).filter(Boolean).sort();
     const endDates = items.map(i => i.endDate).filter(Boolean).sort();
     const earliest = startDates[0] ?? null;
     const latest = endDates[endDates.length - 1] ?? null;
 
-    // Write to hidden inputs for the servlet
     const delInput = dom.deliveryInput();
     const retInput = dom.returnInput();
     if (delInput) delInput.value = earliest ?? '';
     if (retInput) retInput.value = latest ?? '';
 
-    // Render one row per item
     const frag = document.createDocumentFragment();
     items.forEach(item => frag.appendChild(buildRentalRow(item)));
     list.appendChild(frag);
 }
 
 /* ── Order summary (right column) ───────────────────────────────────────── */
-
 function renderEmpty() {
     const list = dom.itemsList();
     if (!list) return;
@@ -244,7 +256,7 @@ function renderEmpty() {
                 </svg>
             </div>
             <p class="co-empty-label">Your cart is empty</p>
-            <a href="${window.CTX ?? ''}/explore" class="co-empty-link">Continue browsing →</a>
+            <a href="${window.CTX ?? ''}/home" class="co-empty-link">Continue browsing →</a>
         </div>`;
     list.appendChild(li);
     const pricing = dom.pricing();
@@ -267,21 +279,22 @@ function buildSummaryRow(item) {
         dateRange = formatDateRange(item.startDate, item.endDate);
     } else if (item.dates) {
         const parts = item.dates.split('/');
-        dateRange = parts.length === 2
-            ? formatDateRange(parts[0], parts[1])
-            : item.dates;
+        dateRange = parts.length === 2 ? formatDateRange(parts[0], parts[1]) : item.dates;
     }
 
+    const summaryThumbSrc = coImgUrl(item.imageUrl, 'sm');
+    const summaryThumbHtml = summaryThumbSrc
+        ? `<img src="${summaryThumbSrc}" alt="${item.name ?? ''}" loading="lazy" decoding="async"
+                onerror="_imgToIcon(this)"/>`
+        : `<div class="product-img-placeholder"><i class="bi bi-image"></i></div>`;
+
     li.innerHTML = `
-        <div class="co-item-img">
-            <img src="${coImgUrl(item.imageUrl, 'sm')}"
-                 alt="${item.name ?? ''}" loading="lazy" decoding="async" />
-        </div>
+        <div class="co-item-img">${summaryThumbHtml}</div>
         <div class="co-item-info">
             <div class="co-item-brand">${item.brand ?? ''}</div>
             <div class="co-item-name">${item.name ?? ''}</div>
             ${variantLabel ? `<div class="co-item-meta">${variantLabel}</div>` : ''}
-            ${dateRange ? `<div class="co-item-meta co-item-dates">📅 ${dateRange}</div>` : ''}
+            ${dateRange ? `<div class="co-item-meta co-item-dates">${dateRange}</div>` : ''}
             ${(item.qty ?? 1) > 1 ? `<div class="co-item-meta">Qty: ${item.qty}</div>` : ''}
         </div>
         <div class="co-item-price">${fmt(lineTotal)}</div>`;
@@ -292,18 +305,13 @@ function renderPricing(items) {
     const subtotal = items.reduce(
         (sum, i) => sum + (i.pricePerDay ?? 0) * (i.days ?? 0) * (i.qty ?? 1), 0
     );
-
     if (dom.subtotalEl()) dom.subtotalEl().textContent = fmt(subtotal);
     if (dom.totalEl()) dom.totalEl().textContent = fmt(subtotal);
-
-    // Write total to hidden field so servlet can check against creditLimit
     const totalInput = dom.totalAmountInput();
     if (totalInput) totalInput.value = subtotal.toFixed(2);
-
     const pricing = dom.pricing();
     if (pricing) pricing.style.display = 'block';
-
-    return subtotal;   // returned so loadUserSession() can use it for credit check
+    return subtotal;
 }
 
 function renderCart() {
@@ -311,9 +319,7 @@ function renderCart() {
     const list = dom.itemsList();
     if (!list) return;
 
-    list.innerHTML = '';    // clear skeleton
-
-    // Always render rental period rows (even on empty — shows empty state)
+    list.innerHTML = '';
     renderRentalPeriod(items);
 
     if (!items.length) {
@@ -321,27 +327,20 @@ function renderCart() {
         return;
     }
 
-    // Order summary items
     const frag = document.createDocumentFragment();
     items.forEach(item => frag.appendChild(buildSummaryRow(item)));
     list.appendChild(frag);
 
-    const subtotal = renderPricing(items);
+    renderPricing(items);
 
-    // Enable confirm provisionally — loadUserSession() may disable it
-    // if address is missing, no payment card, or credit limit exceeded
     const btn = dom.confirmBtn();
     if (btn) btn.disabled = false;
 
-    // Pre-populate cart JSON for the servlet
     const cartJsonInput = dom.cartJsonInput();
     if (cartJsonInput) cartJsonInput.value = JSON.stringify(items);
-
-    return subtotal;
 }
 
 /* ── User session ────────────────────────────────────────────────────────── */
-
 function renderAddress(user) {
     const container = dom.addressContainer();
     if (!container) return;
@@ -408,8 +407,7 @@ function renderPaymentCards(user) {
             </div>`;
 
         div.addEventListener('click', () => {
-            container.querySelectorAll('.payment-option')
-                .forEach(o => o.classList.remove('selected'));
+            container.querySelectorAll('.payment-option').forEach(o => o.classList.remove('selected'));
             div.classList.add('selected');
             if (payInput) payInput.value = card.id;
         });
@@ -436,11 +434,8 @@ async function loadUserSession() {
         renderAddress(user);
         renderPaymentCards(user);
 
-        // Credit limit check — read the total that renderPricing() already wrote
         const totalInput = dom.totalAmountInput();
         const total = totalInput ? Number(totalInput.value) : 0;
-
-        // user.creditLimit comes from UserSessionDTO.creditLimit() — BigDecimal serialises as number
         checkCreditLimit(total, user.creditLimit ?? null);
 
     } catch (err) {
@@ -468,7 +463,6 @@ function attachFormHandler() {
         hideSubmitError();
         setButtonLoading(true);
 
-        // Refresh snapshot and total at submit time
         const items = loadCartItems();
         const cartJsonInput = dom.cartJsonInput();
         const totalAmtInput = dom.totalAmountInput();
@@ -481,11 +475,7 @@ function attachFormHandler() {
         }
 
         try {
-            // Build form data from all hidden fields
             const formData = new FormData(form);
-
-            // FormData never includes the submit button that triggered the submit
-            // — add it manually so the servlet receives action=placeOrder
             formData.append('action', trigger.value);
 
             const res = await fetch(`${window.CTX ?? ''}/checkout`, {
@@ -504,12 +494,11 @@ function attachFormHandler() {
             }
 
             if (data.success) {
-                // Clear cart — order placed
-                localStorage.removeItem('rw_cart_items');
-                localStorage.removeItem('rw_cart_synced');
-                if (window.Cart?.clearLocalStorage) window.Cart.clearLocalStorage();
+                // ── Show animation then redirect ──────────────────────────────
+                // showOrderSuccess() clears the cart and handles the redirect
+                // after the animation completes (~2.2 s).
+                showOrderSuccess(data.redirect ?? `${window.CTX ?? ''}/profile#history`);
 
-                window.location.href = data.redirect ?? `${window.CTX ?? ''}/profile#history`;
             } else {
                 showSubmitError(data.message
                     ? `${data.message}.`

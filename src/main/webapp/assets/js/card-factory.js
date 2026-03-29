@@ -19,7 +19,6 @@
     */
 
     // ── Image URL helper ──────────────────────────────────────────────────────
-    // Returns null for placeholder/already-extended paths — callers must guard.
     function imgUrl(base, size) {
         if (!base || base.includes('placeholder') || base.endsWith('.jpg') || base.endsWith('.png')) {
             return null;
@@ -52,6 +51,8 @@
                 colorName:           raw.colorName   ?? null,
                 variantId:           raw.variantId   ?? null,
                 inventoryQty:        raw.inventoryQty ?? null,
+                startDate:           raw.startDate    ?? null,
+                endDate:             raw.endDate      ?? null,
             };
         }
 
@@ -105,39 +106,47 @@
             const div = document.createElement('div');
             div.className = 'product-img-inner';
 
+            const img         = document.createElement('img');
+            img.alt           = name ? String(name) : '';
+            img.loading       = 'lazy';
+            img.decoding      = 'async';
+            const placeholder = _makePlaceholderIcon();
+
             const src = imgUrl(base, 'md');
-            if (!src) {
-                div.appendChild(_makePlaceholderIcon());
-                return div;
+            if (src) {
+                img.src    = src;
+                img.srcset = `${imgUrl(base,'sm')} 400w, ${imgUrl(base,'md')} 800w, ${imgUrl(base,'lg')} 1400w`;
+                img.sizes  = '(max-width:480px) 100vw, (max-width:900px) 50vw, 33vw';
+                img.style.display        = '';
+                placeholder.style.display = 'none';
+            } else {
+                img.style.display        = 'none';
+                placeholder.style.display = '';
             }
 
-            const img = document.createElement('img');
-            img.src      = src;
-            img.srcset   = `${imgUrl(base,'sm')} 400w, ${imgUrl(base,'md')} 800w, ${imgUrl(base,'lg')} 1400w`;
-            img.sizes    = '(max-width:480px) 100vw, (max-width:900px) 50vw, 33vw';
-            img.alt      = name ? String(name) : '';
-            img.loading  = 'lazy';
-            img.decoding = 'async';
-            img.onerror  = function () {
-                div.replaceChild(_makePlaceholderIcon(), img);
+            img.onerror = function () {
+                img.style.display        = 'none';
+                placeholder.style.display = '';
             };
 
             div.appendChild(img);
+            div.appendChild(placeholder);
             return div;
         }
 
         // ── Swatch row ────────────────────────────────────────────────────────
-        // e.preventDefault() inside click: blocks anchor navigation without
-        // breaking the QV document-level delegated listener.
-        function _swatchRowNode(p, qvBtn, el) {
+        function _swatchRowNode(p, qvBtn, el, initialActiveColor) {
             if (!p.swatches || !p.swatches.length) return null;
 
             const wrap = document.createElement('div');
             wrap.className = 'swatch-row';
 
-            p.swatches.slice(0, 5).forEach((s, i) => {
+            p.swatches.slice(0, 5).forEach((s) => {
                 const span = document.createElement('span');
-                span.className        = 'swatch' + (i === 0 ? ' active' : '');
+                const isActive = initialActiveColor
+                    ? s.color === initialActiveColor
+                    : false;
+                span.className        = 'swatch' + (isActive ? ' active' : '');
                 span.style.background = esc(s.hex || '#ccc');
                 span.title            = s.name || '';
                 if (s.color) span.dataset.color = s.color;
@@ -145,33 +154,42 @@
                 wrap.appendChild(span);
             });
 
-            if (Object.keys(p.primaryImageByColor).length) {
-                wrap.addEventListener('click', e => {
-                    const sw = e.target.closest('.swatch[data-color]');
-                    if (!sw) return;
+            // Listener always attached — Guard A removed.
+            wrap.addEventListener('click', e => {
+                const sw = e.target.closest('.swatch[data-color]');
+                // Click landed on the gap between chips — don't interfere.
+                if (!sw) return;
 
-                    /* Block anchor navigation — event still bubbles for QV */
-                    e.preventDefault();
+                // Always block anchor navigation for real swatch clicks.
+                e.preventDefault();
 
-                    const base = p.primaryImageByColor[sw.dataset.color];
-                    if (!base) return;
+                // Always update active class — no longer gated on having an image.
+                wrap.querySelectorAll('.swatch')
+                    .forEach(s => s.classList.toggle('active', s === sw));
 
-                    const img = el.querySelector('.product-img-inner img');
-                    if (img) {
-                        const sm = imgUrl(base, 'sm');
-                        const md = imgUrl(base, 'md');
-                        const lg = imgUrl(base, 'lg');
-                        if (md) {
-                            img.src    = md;
-                            img.srcset = `${sm} 400w, ${md} 800w, ${lg} 1400w`;
-                        }
+                const base        = p.primaryImageByColor[sw.dataset.color];
+                const imgEl       = el.querySelector('.product-img-inner img');
+                const placeholder = el.querySelector('.product-img-inner .product-img-placeholder');
+
+                if (base) {
+                    // Colour has an image — swap src and reveal.
+                    const sm = imgUrl(base, 'sm');
+                    const md = imgUrl(base, 'md');
+                    const lg = imgUrl(base, 'lg');
+                    if (md && imgEl) {
+                        imgEl.src           = md;
+                        imgEl.srcset        = `${sm} 400w, ${md} 800w, ${lg} 1400w`;
+                        imgEl.style.display = '';
+                        if (placeholder) placeholder.style.display = 'none';
                     }
                     if (qvBtn) qvBtn.dataset.image = base;
-
-                    wrap.querySelectorAll('.swatch')
-                        .forEach(s => s.classList.toggle('active', s === sw));
-                });
-            }
+                } else {
+                    // Colour has no image — show placeholder, clear QV image.
+                    if (imgEl)       imgEl.style.display       = 'none';
+                    if (placeholder) placeholder.style.display = '';
+                    if (qvBtn)       qvBtn.dataset.image        = '';
+                }
+            });
 
             return wrap;
         }
@@ -205,31 +223,16 @@
         }
 
         // ── Grid card ─────────────────────────────────────────────────────────
-        // Outer element changed from <div> to <a> for PDP navigation.
-        //
-        // QV BUTTON INTERACTION:
-        //   The QV listener in quick-view.js is document-level delegation:
-        //     document.addEventListener('click', e => { e.target.closest('[data-qv]')... })
-        //   If we call stopPropagation() here, the event never reaches the
-        //   document listener → QV breaks.
-        //   If we call preventDefault() only, anchor navigation is cancelled
-        //   AND the event still bubbles to document → QV works correctly.
-        //
-        // SWATCH ROW: same principle applied inside _swatchRowNode().
         function grid(rawProduct) {
             const p = _normalise(rawProduct);
 
-            /* Outer element is a navigating anchor */
             const el = document.createElement('a');
             el.className = 'product-card';
             el.href      = `${CTX}/product/${encodeURIComponent(p.id)}`;
             el.setAttribute('aria-label', `View ${p.name}`);
 
-            const firstSwatchColor = p.swatches[0]?.color ?? null;
-            const initialImageUrl  =
-                (firstSwatchColor != null && p.primaryImageByColor[firstSwatchColor] != null)
-                    ? p.primaryImageByColor[firstSwatchColor]
-                    : p.imageUrl;
+            const initialColor    = Object.keys(p.primaryImageByColor)[0] ?? p.swatches[0]?.color ?? null;
+            const initialImageUrl = initialColor ? p.primaryImageByColor[initialColor] : null;
 
             const imgWrap = document.createElement('div');
             imgWrap.className = 'product-img-wrap';
@@ -238,16 +241,12 @@
             const badge = _badgeNode(p);
             if (badge) imgWrap.appendChild(badge);
 
-            /* Quick-view button
-               preventDefault() → anchor does not navigate
-               No stopPropagation() → event bubbles to document QV handler */
             const qvBtn = document.createElement('button');
             qvBtn.className = 'product-qv';
             qvBtn.type      = 'button';
             qvBtn.setAttribute('aria-label', `Quick view ${p.name}`);
             qvBtn.addEventListener('click', e => {
                 e.preventDefault();
-                /* Event continues bubbling to document where quick-view.js picks it up */
             });
 
             const qvSvg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
@@ -264,7 +263,8 @@
 
             imgWrap.appendChild(qvBtn);
 
-            const swatchNode = _swatchRowNode(p, qvBtn, el);
+            // Pass initialColor so the matching swatch chip starts active.
+            const swatchNode = _swatchRowNode(p, qvBtn, el, initialColor);
 
             const footer = document.createElement('div');
             footer.className = 'product-footer';
@@ -312,7 +312,6 @@
         }
 
         // ── Search result row ─────────────────────────────────────────────────
-        // href updated: /products/{id} (JSON) → /product/{id} (HTML PDP).
         function searchResult(raw) {
             const p = _normalise(raw);
 
@@ -359,10 +358,9 @@
         }
 
         // ── Cart drawer item ──────────────────────────────────────────────────
-        // Unchanged from uploaded version.
         function cartItem(raw) {
             const it  = _normalise(raw);
-            const key = `${it.id}:${it.size || ''}:${it.color || ''}`;
+            const key = `${it.id}:${it.size || ''}:${it.color || ''}:${it.startDate || ''}:${it.endDate || ''}`;
 
             const li = document.createElement('li');
             li.className   = 'cart-item';
