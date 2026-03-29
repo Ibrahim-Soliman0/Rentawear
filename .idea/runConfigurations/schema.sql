@@ -85,7 +85,7 @@ CREATE TABLE product_variants
     size       VARCHAR(20),
     color      VARCHAR(50) NOT NULL,
     quantity   INT         NOT NULL,
-    version    INT         NOT NULL,
+    version    BIGINT      NOT NULL,
     UNIQUE (product_id, color, size),
     CHECK  (quantity >= 0),
     FOREIGN KEY (product_id) REFERENCES products (id)
