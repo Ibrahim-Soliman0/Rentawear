@@ -51,13 +51,14 @@ import java.util.*;
                 query = "SELECT COUNT(p) FROM Product p " +
                         "WHERE p.createdAt >= :cutoff"
         ),
-        // New arrivals filtered by gender only (no category)
         @NamedQuery(
                 name  = "Product.findNewFilteredIds",
                 query = "SELECT p.id FROM Product p " +
                         "LEFT JOIN p.category c " +
                         "WHERE p.createdAt >= :cutoff " +
-                        "AND (:gender IS NULL OR c.gender = :gender) " +
+                        "AND (:gender   IS NULL OR c.gender     = :gender) " +
+                        "AND (:minPrice IS NULL OR p.basePrice >= :minPrice) " +
+                        "AND (:maxPrice IS NULL OR p.basePrice <= :maxPrice) " +
                         "ORDER BY p.createdAt DESC"
         ),
         @NamedQuery(
@@ -65,16 +66,20 @@ import java.util.*;
                 query = "SELECT COUNT(p) FROM Product p " +
                         "LEFT JOIN p.category c " +
                         "WHERE p.createdAt >= :cutoff " +
-                        "AND (:gender IS NULL OR c.gender = :gender)"
+                        "AND (:gender   IS NULL OR c.gender     = :gender) " +
+                        "AND (:minPrice IS NULL OR p.basePrice >= :minPrice) " +
+                        "AND (:maxPrice IS NULL OR p.basePrice <= :maxPrice)"
         ),
-// New arrivals filtered by gender + specific categories
+
         @NamedQuery(
                 name  = "Product.findNewByCategoriesIds",
                 query = "SELECT p.id FROM Product p " +
                         "LEFT JOIN p.category c " +
                         "WHERE p.createdAt >= :cutoff " +
                         "AND c.id IN :ids " +
-                        "AND (:gender IS NULL OR c.gender = :gender) " +
+                        "AND (:gender   IS NULL OR c.gender     = :gender) " +
+                        "AND (:minPrice IS NULL OR p.basePrice >= :minPrice) " +
+                        "AND (:maxPrice IS NULL OR p.basePrice <= :maxPrice) " +
                         "ORDER BY p.createdAt DESC"
         ),
         @NamedQuery(
@@ -83,7 +88,9 @@ import java.util.*;
                         "LEFT JOIN p.category c " +
                         "WHERE p.createdAt >= :cutoff " +
                         "AND c.id IN :ids " +
-                        "AND (:gender IS NULL OR c.gender = :gender)"
+                        "AND (:gender   IS NULL OR c.gender     = :gender) " +
+                        "AND (:minPrice IS NULL OR p.basePrice >= :minPrice) " +
+                        "AND (:maxPrice IS NULL OR p.basePrice <= :maxPrice)"
         ),
 
         //Filtered browse (no category filter)

@@ -21,20 +21,25 @@ public class ProductRepositoryImpl extends BaseRepositoryImpl<Product>
 
     @Override
     public List<Product> findNew(int limit, int offset, int days,
-                                 String gender, List<Integer> categoryIds) {
+                                 String gender, List<Integer> categoryIds,
+                                 Double minPrice, Double maxPrice) {
         Instant cutoff = Instant.now().minus(days, ChronoUnit.DAYS);
 
         if (categoryIds != null && !categoryIds.isEmpty()) {
             return pagedFetch("Product.findNewByCategoriesIds",
-                    q -> q.setParameter("cutoff", cutoff)
+                    q -> q.setParameter("cutoff",   cutoff)
                             .setParameter("ids",    categoryIds)
-                            .setParameter("gender", toGender(gender)),
-                    limit, offset); // was: limit, 0
+                            .setParameter("gender", toGender(gender))
+                            .setParameter("minPrice", toBigDecimal(minPrice))
+                            .setParameter("maxPrice", toBigDecimal(maxPrice)),
+                    limit, offset);
         }
         return pagedFetch("Product.findNewFilteredIds",
                 q -> q.setParameter("cutoff", cutoff)
-                        .setParameter("gender", toGender(gender)),
-                limit, offset); // was: limit, 0
+                        .setParameter("gender", toGender(gender))
+                        .setParameter("minPrice", toBigDecimal(minPrice))
+                        .setParameter("maxPrice", toBigDecimal(maxPrice)),
+                limit, offset);
     }
 
     @Override
@@ -92,19 +97,24 @@ public class ProductRepositoryImpl extends BaseRepositoryImpl<Product>
     }
 
     @Override
-    public long countNew(int days, String gender, List<Integer> categoryIds) {
+    public long countNew(int days, String gender, List<Integer> categoryIds,
+                         Double minPrice, Double maxPrice) {
         Instant cutoff = Instant.now().minus(days, ChronoUnit.DAYS);
 
         if (categoryIds != null && !categoryIds.isEmpty()) {
             return em().createNamedQuery("Product.countNewByCategories", Long.class)
-                    .setParameter("cutoff", cutoff)
-                    .setParameter("ids",    categoryIds)
-                    .setParameter("gender", toGender(gender))
+                    .setParameter("cutoff",   cutoff)
+                    .setParameter("ids",      categoryIds)
+                    .setParameter("gender",   toGender(gender))
+                    .setParameter("minPrice", toBigDecimal(minPrice))
+                    .setParameter("maxPrice", toBigDecimal(maxPrice))
                     .getSingleResult();
         }
         return em().createNamedQuery("Product.countNewFiltered", Long.class)
-                .setParameter("cutoff", cutoff)
-                .setParameter("gender", toGender(gender))
+                .setParameter("cutoff",   cutoff)
+                .setParameter("gender",   toGender(gender))
+                .setParameter("minPrice", toBigDecimal(minPrice))
+                .setParameter("maxPrice", toBigDecimal(maxPrice))
                 .getSingleResult();
     }
 
@@ -175,18 +185,10 @@ public class ProductRepositoryImpl extends BaseRepositoryImpl<Product>
             return new PriceRangeDTO(null, null);
         }
 
-        // Defensive cast, aggregate result type is dialect-dependent.
-        // Handles both BigDecimal (most dialects) and Double (some drivers).
         Double min = toDouble(row[0]);
         Double max = toDouble(row[1]);
         return new PriceRangeDTO(min, max);
     }
-
-    //Two-step pagination
-    //
-    // Step 1 ->  ID query: lightweight index scan, LIMIT/OFFSET applied in SQL.
-    // Step 2 -> entity fetch: JOIN FETCH on the page-sized ID list, no LIMIT.
-    //
 
     private List<Product> pagedFetch(String idQueryName,
                                      Consumer<TypedQuery<Integer>> setup,
@@ -205,7 +207,6 @@ public class ProductRepositoryImpl extends BaseRepositoryImpl<Product>
                 .setParameter("ids", ids)
                 .getResultList();
     }
-
 
     private Gender toGender(String gender) {
         if (gender == null || gender.isBlank()) return null;
