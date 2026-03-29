@@ -42,10 +42,25 @@ const dom = {
 };
 
 /* ── Image URL helper ────────────────────────────────────────────────────── */
+// Returns null when base is missing or already-resolved — callers must guard.
+// Mirrors imgUrl() in card-factory.js so all surfaces behave identically.
 function coImgUrl(base, size) {
-    const b = (base && !base.endsWith('.jpg') && !base.endsWith('.png'))
-        ? base : '/assets/img/placeholder';
-    return `${window.CTX ?? ''}${b}_${size}.jpg`;
+    if (!base || base.includes('placeholder') || base.endsWith('.jpg') || base.endsWith('.png')) {
+        return null;
+    }
+    return `${window.CTX ?? ''}${base}_${size}.jpg`;
+}
+
+// Replaces a broken or missing <img> with the standard placeholder icon.
+// Called via onerror on every <img> in this file so 404s get the same
+// treatment as a missing image path.
+function _imgToIcon(img) {
+    const icon = document.createElement('div');
+    icon.className = 'product-img-placeholder';
+    const i = document.createElement('i');
+    i.className = 'bi bi-image';
+    icon.appendChild(i);
+    if (img.parentNode) img.parentNode.replaceChild(icon, img);
 }
 
 /* ── Date formatters ─────────────────────────────────────────────────────── */
@@ -169,11 +184,14 @@ function buildRentalRow(item) {
 
     const daysLabel = item.days ? `${item.days} day${item.days !== 1 ? 's' : ''}` : '';
 
+    const rentalThumbSrc = coImgUrl(item.imageUrl, 'sm');
+    const rentalThumbHtml = rentalThumbSrc
+        ? `<img src="${rentalThumbSrc}" alt="${item.name ?? ''}" loading="lazy" decoding="async"
+                onerror="_imgToIcon(this)"/>`
+        : `<div class="product-img-placeholder"><i class="bi bi-image"></i></div>`;
+
     li.innerHTML = `
-        <div class="rental-item-thumb">
-            <img src="${coImgUrl(item.imageUrl, 'sm')}"
-                 alt="${item.name ?? ''}" loading="lazy" decoding="async" />
-        </div>
+        <div class="rental-item-thumb">${rentalThumbHtml}</div>
         <div class="rental-item-info">
             <div class="rental-item-name">${item.name ?? ''}</div>
             ${dateRange ? `
@@ -264,11 +282,14 @@ function buildSummaryRow(item) {
         dateRange = parts.length === 2 ? formatDateRange(parts[0], parts[1]) : item.dates;
     }
 
+    const summaryThumbSrc = coImgUrl(item.imageUrl, 'sm');
+    const summaryThumbHtml = summaryThumbSrc
+        ? `<img src="${summaryThumbSrc}" alt="${item.name ?? ''}" loading="lazy" decoding="async"
+                onerror="_imgToIcon(this)"/>`
+        : `<div class="product-img-placeholder"><i class="bi bi-image"></i></div>`;
+
     li.innerHTML = `
-        <div class="co-item-img">
-            <img src="${coImgUrl(item.imageUrl, 'sm')}"
-                 alt="${item.name ?? ''}" loading="lazy" decoding="async" />
-        </div>
+        <div class="co-item-img">${summaryThumbHtml}</div>
         <div class="co-item-info">
             <div class="co-item-brand">${item.brand ?? ''}</div>
             <div class="co-item-name">${item.name ?? ''}</div>

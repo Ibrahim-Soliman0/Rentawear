@@ -11,8 +11,10 @@ import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 @Mapper
 public interface ProductMapper {
@@ -28,7 +30,7 @@ public interface ProductMapper {
     @Mapping(target = "isNew",               expression = "java(isNew(product))")
     @Mapping(target = "soldOut",             expression = "java(product.getProductVariants().stream().noneMatch(v -> v.getQuantity() > 0))")
     @Mapping(target = "swatches",            expression = "java(buildSwatchesWithFallback(images, variants))")
-    @Mapping(target = "primaryImageByColor", expression = "java(buildPrimaryImageByColor(images))")
+    @Mapping(target = "primaryImageByColor", expression = "java(buildPrimaryImageByColor(images, variants))")
     ProductCardDTO toCardDTO(Product product, List<ProductVariant> variants, List<ProductImage> images);
 
     // FIX 1: Added missing @Mapping for quantityByVariantId — buildQuantityByVariantId()
@@ -128,24 +130,46 @@ public interface ProductMapper {
         return swatches;
     }
 
-    // Used by toDetailDTO: prefers images when present, falls back to variants.
-    // This ensures colour chips are always rendered in quick-view/PDP even for
-    // products that were created via the admin panel without uploaded images.
     default List<ColorSwatchDTO> buildSwatchesWithFallback(List<ProductImage> images,
                                                            List<ProductVariant> variants) {
-        if (images != null && !images.isEmpty()) {
-            return buildSwatches(images);
-        }
+//        if (images != null && !images.isEmpty()) {
+//            return buildSwatches(images);
+//        }
         return buildSwatchesFromVariants(variants != null ? variants : List.of());
     }
 
-    // Maps colour → first image URL for swatch-click image swapping on cards.
-    default Map<String, String> buildPrimaryImageByColor(List<ProductImage> images) {
-        Map<String, String> map = new LinkedHashMap<>();
-        for (ProductImage img : images) {
-            map.putIfAbsent(img.getColor(), img.getImageUrl());
+    // ── Primary image map — variant-insertion-order ───────────────────────────
+
+    default Map<String, String> buildPrimaryImageByColor(List<ProductImage> images,
+                                                         List<ProductVariant> variants) {
+        // Step 1 — build color → imageUrl lookup from images.
+        // putIfAbsent: images arrive id ASC, so the first image per color is stable.
+        Map<String, String> imageByColor = new LinkedHashMap<>();
+        if (images != null) {
+            for (ProductImage img : images) {
+                if (img.getColor() != null) {
+                    imageByColor.putIfAbsent(img.getColor(), img.getImageUrl());
+                }
+            }
         }
-        return map;
+
+        // Step 2 — no variants: fall back to upload order.
+        if (variants == null || variants.isEmpty()) {
+            return imageByColor;
+        }
+
+        // Step 3 — walk variants in insertion order (id ASC from repo).
+        // Emit each color exactly once, only if it has an image.
+        Map<String, String> result = new LinkedHashMap<>();
+        Set<String> seen = new LinkedHashSet<>();
+        for (ProductVariant v : variants) {
+            String color = v.getColor();
+            if (color == null || !seen.add(color)) continue;
+            String url = imageByColor.get(color);
+            if (url != null) result.put(color, url);
+        }
+
+        return result;
     }
 
     // Maps colour → all sizes (including out-of-stock).

@@ -782,8 +782,7 @@ class ProductFacadeServiceTest {
             // ARRANGE
             when(productService.getById(1)).thenReturn(product1);
             when(variantService.getByProductId(1)).thenReturn(List.of(variant1, variant2));
-            when(imageService.findByProductIdAndColor(1, "Red")).thenReturn(List.of(image1));
-            when(imageService.findByProductIdAndColor(1, "Blue")).thenReturn(List.of());
+            when(imageService.getByProductId(1)).thenReturn(List.of(image1));
 
             ProductCoreDTO coreDTO = new ProductCoreDTO(1, "Basic T-Shirt", "Cotton Brand", 149.99,
                     "tshirt.jpg", "MALE", null, null);
@@ -818,7 +817,7 @@ class ProductFacadeServiceTest {
 
             when(productService.getById(1)).thenReturn(product1);
             when(variantService.getByProductId(1)).thenReturn(List.of(redVariant1, redVariant2));
-            when(imageService.findByProductIdAndColor(1, "Red")).thenReturn(List.of(image1));
+            when(imageService.getByProductId(1)).thenReturn(List.of(image1));
 
             ProductCoreDTO coreDTO = new ProductCoreDTO(1, "Product", "Test Brand", 100.0,
                     null, "MALE", null, null);
