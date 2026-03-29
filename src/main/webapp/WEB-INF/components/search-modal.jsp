@@ -58,123 +58,133 @@
       <button class="search-cancel" id="searchCancel" type="button">Cancel</button>
     </div>
 
-    <%-- ── Filter panel
-         The grid-template-rows collapse trick REQUIRES a single direct
-         child with min-height:0. All sections go inside .sfp-inner.    --%>
-    <div class="search-filter-panel" id="searchFilterPanel" aria-hidden="true">
-      <div class="sfp-inner">
+    <%-- ── Body: filter column + results side by side ─────────── --%>
+    <div class="search-body-row">
 
-        <%-- Gender --%>
-        <div class="sfp-section">
-          <p class="sfp-label">Gender</p>
-          <div class="sfp-radio-row">
-            <label class="sfp-radio-label">
-              <input type="radio" name="searchGender" value=""
-                     class="sfp-radio" id="sgAll" checked/>
-              <span class="sfp-radio-btn">All</span>
-            </label>
-            <label class="sfp-radio-label">
-              <input type="radio" name="searchGender" value="FEMALE"
-                     class="sfp-radio" id="sgFemale"/>
-              <span class="sfp-radio-btn">Women</span>
-            </label>
-            <label class="sfp-radio-label">
-              <input type="radio" name="searchGender" value="MALE"
-                     class="sfp-radio" id="sgMale"/>
-              <span class="sfp-radio-btn">Men</span>
-            </label>
-          </div>
-        </div>
+      <%-- Filter column — slides in from the left when toggled --%>
+      <div class="search-filter-col" id="searchFilterPanel" aria-hidden="true">
+        <div class="sfp-inner">
 
-        <%-- Categories — filtered by selected gender via search.js --%>
-        <div class="sfp-section">
-          <p class="sfp-label">Categories</p>
-          <div class="sfp-cats-grid" id="searchCatsGrid">
-            <c:forEach var="cat" items="${navCategoriesFemale}">
-              <label class="sfp-cat-label" data-cat-gender="FEMALE">
-                <input type="checkbox" class="sfp-cat-chk"
-                       value="${cat.id}" data-name="${cat.name}"
-                       data-gender="FEMALE"/>
-                <span class="sfp-cat-box"></span>
-                  ${cat.name}
-                <span class="sfp-cat-tag">W</span>
+          <%-- Gender --%>
+          <div class="sfp-section">
+            <p class="sfp-label">Gender</p>
+            <div class="sfp-radio-row">
+              <label class="sfp-radio-label">
+                <input type="radio" name="searchGender" value=""
+                       class="sfp-radio" id="sgAll" checked/>
+                <span class="sfp-radio-btn">All</span>
               </label>
-            </c:forEach>
-            <c:forEach var="cat" items="${navCategoriesMale}">
-              <label class="sfp-cat-label" data-cat-gender="MALE">
-                <input type="checkbox" class="sfp-cat-chk"
-                       value="${cat.id}" data-name="${cat.name}"
-                       data-gender="MALE"/>
-                <span class="sfp-cat-box"></span>
-                  ${cat.name}
-                <span class="sfp-cat-tag">M</span>
+              <label class="sfp-radio-label">
+                <input type="radio" name="searchGender" value="FEMALE"
+                       class="sfp-radio" id="sgFemale"/>
+                <span class="sfp-radio-btn">Women</span>
               </label>
-            </c:forEach>
-          </div>
-        </div>
-
-      </div><%-- /sfp-inner --%>
-    </div><%-- /search-filter-panel --%>
-
-    <div class="search-results-wrap" id="searchResultsWrap">
-      <div class="search-results-inner">
-
-        <%-- Active filter chips --%>
-        <div class="search-chips" id="searchChips" style="display:none"></div>
-
-        <%-- Price slider — shown only when a query is active --%>
-        <div class="search-price-wrap" id="searchPriceWrap" style="display:none">
-          <div class="search-price-hd">
-            <span class="search-price-label">Price / day</span>
-            <span class="search-price-vals">
-              £<span id="searchPriceMinDisp">0</span>&nbsp;–&nbsp;£<span id="searchPriceMaxDisp">500</span>
-            </span>
-          </div>
-          <div class="search-range-wrap">
-            <div class="search-range-track">
-              <div class="search-range-fill" id="searchRangeFill"></div>
+              <label class="sfp-radio-label">
+                <input type="radio" name="searchGender" value="MALE"
+                       class="sfp-radio" id="sgMale"/>
+                <span class="sfp-radio-btn">Men</span>
+              </label>
             </div>
-            <input type="range" class="search-range-input"
-                   id="searchRangeMin" min="0" max="500" value="0"
-                   step="1" aria-label="Minimum price per day"/>
-            <input type="range" class="search-range-input"
-                   id="searchRangeMax" min="0" max="500" value="500"
-                   step="1" aria-label="Maximum price per day"/>
           </div>
+
+          <%-- Categories — filtered by selected gender via search.js --%>
+          <div class="sfp-section">
+            <p class="sfp-label">Categories</p>
+            <div class="sfp-cats-grid" id="searchCatsGrid">
+              <c:forEach var="cat" items="${navCategoriesFemale}">
+                <label class="sfp-cat-label" data-cat-gender="FEMALE">
+                  <input type="checkbox" class="sfp-cat-chk"
+                         value="${cat.id}" data-name="${cat.name}"
+                         data-gender="FEMALE"/>
+                  <span class="sfp-cat-box"></span>
+                    ${cat.name}
+                  <span class="sfp-cat-tag">W</span>
+                </label>
+              </c:forEach>
+              <c:forEach var="cat" items="${navCategoriesMale}">
+                <label class="sfp-cat-label" data-cat-gender="MALE">
+                  <input type="checkbox" class="sfp-cat-chk"
+                         value="${cat.id}" data-name="${cat.name}"
+                         data-gender="MALE"/>
+                  <span class="sfp-cat-box"></span>
+                    ${cat.name}
+                  <span class="sfp-cat-tag">M</span>
+                </label>
+              </c:forEach>
+            </div>
+          </div>
+
+          <%-- Price slider — revealed by JS when a search returns price bounds --%>
+          <div class="sfp-section sfp-section--price" id="searchPriceWrap" style="display:none">
+            <p class="sfp-label">Price / day</p>
+            <div class="search-price-hd">
+              <span class="search-price-vals">
+                £<span id="searchPriceMinDisp">0</span>&nbsp;–&nbsp;£<span id="searchPriceMaxDisp">500</span>
+              </span>
+            </div>
+            <div class="search-range-wrap">
+              <div class="search-range-track">
+                <div class="search-range-fill" id="searchRangeFill"></div>
+              </div>
+              <input type="range" class="search-range-input"
+                     id="searchRangeMin" min="0" max="500" value="0"
+                     step="1" aria-label="Minimum price per day"/>
+              <input type="range" class="search-range-input"
+                     id="searchRangeMax" min="0" max="500" value="500"
+                     step="1" aria-label="Maximum price per day"/>
+            </div>
+          </div>
+
+        </div><%-- /sfp-inner --%>
+
+        <%-- Done button — visible only on mobile --%>
+        <div class="sfp-footer">
+          <button type="button" class="sfp-done-btn" id="searchFilterDone">Done</button>
         </div>
 
-        <%-- Trending — shown when no query --%>
-        <div class="search-trending" id="searchTrending">
-          <div class="search-trending-label">Trending searches</div>
-          <div class="search-trending-pills">
-            <button class="search-trending-pill" data-query="Evening dress" type="button">
-              <svg viewBox="0 0 24 24" aria-hidden="true"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
-              Evening dress
-            </button>
-            <button class="search-trending-pill" data-query="Wedding guest" type="button">
-              <svg viewBox="0 0 24 24" aria-hidden="true"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
-              Wedding guest
-            </button>
-            <button class="search-trending-pill" data-query="Black tie suit" type="button">
-              <svg viewBox="0 0 24 24" aria-hidden="true"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
-              Black tie suit
-            </button>
-            <button class="search-trending-pill" data-query="Midi dress" type="button">
-              <svg viewBox="0 0 24 24" aria-hidden="true"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
-              Midi dress
-            </button>
-            <button class="search-trending-pill" data-query="Cocktail" type="button">
-              <svg viewBox="0 0 24 24" aria-hidden="true"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
-              Cocktail
-            </button>
+      </div><%-- /search-filter-col --%>
+
+      <%-- Results column — always visible, scrolls independently --%>
+      <div class="search-results-wrap" id="searchResultsWrap">
+        <div class="search-results-inner">
+
+          <%-- Active filter chips --%>
+          <div class="search-chips" id="searchChips" style="display:none"></div>
+
+          <%-- Trending — shown when no query --%>
+          <div class="search-trending" id="searchTrending">
+            <div class="search-trending-label">Trending searches</div>
+            <div class="search-trending-pills">
+              <button class="search-trending-pill" data-query="Evening dress" type="button">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
+                Evening dress
+              </button>
+              <button class="search-trending-pill" data-query="Wedding guest" type="button">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
+                Wedding guest
+              </button>
+              <button class="search-trending-pill" data-query="Black tie suit" type="button">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
+                Black tie suit
+              </button>
+              <button class="search-trending-pill" data-query="Midi dress" type="button">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
+                Midi dress
+              </button>
+              <button class="search-trending-pill" data-query="Cocktail" type="button">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
+                Cocktail
+              </button>
+            </div>
           </div>
+
+          <%-- Results container — view-all link appended here by search.js --%>
+          <div id="searchResults" style="display:none"></div>
+
         </div>
+      </div><%-- /search-results-wrap --%>
 
-        <%-- Results container --%>
-        <div id="searchResults" style="display:none"></div>
-
-      </div>
-    </div>
+    </div><%-- /search-body-row --%>
 
   </div><%-- /search-panel --%>
 </div>

@@ -117,12 +117,6 @@
     filterBtn.setAttribute('aria-expanded', String(isOpen));
   });
 
-  document.addEventListener('click', e => {
-    if (filterPanel && !filterPanel.contains(e.target) && e.target !== filterBtn) {
-      closePanelOnly();
-    }
-  });
-
   document.addEventListener('keydown', e => {
     if (e.key === 'Escape' && modal.classList.contains('open')) {
       if (filterPanel && filterPanel.classList.contains('is-open')) closePanelOnly();
@@ -447,6 +441,8 @@
   }
 
   /* ── Entry points ─────────────────────────────────────────── */
+
+  document.getElementById('searchFilterDone')?.addEventListener('click', closePanelOnly);
 
   document.getElementById('searchToggle')?.addEventListener('click', openSearch);
   backdrop?.addEventListener('click', closeSearch);
