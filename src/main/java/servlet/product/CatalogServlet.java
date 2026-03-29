@@ -35,7 +35,21 @@ public class CatalogServlet extends HttpServlet {
             throws ServletException, IOException {
 
         String[] interestIds = req.getParameterValues("interestIds");
-        if (interestIds != null && interestIds.length > 0) {
+        boolean hasValidInterestId = false;
+        if (interestIds != null) {
+            for (String id : interestIds) {
+                if (id != null && !id.isBlank()) {
+                    try {
+                        Integer.parseInt(id);
+                        hasValidInterestId = true;
+                        break;
+                    } catch (NumberFormatException ignored) {
+                        // Ignore non-numeric interestIds; they should not trigger the auth gate
+                    }
+                }
+            }
+        }
+        if (hasValidInterestId) {
             HttpSession session = req.getSession(false);
             if (session == null || session.getAttribute("user") == null) {
                 resp.sendRedirect(req.getContextPath() + "/home");
