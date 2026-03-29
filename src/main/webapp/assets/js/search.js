@@ -393,7 +393,9 @@
   function setLoading() {
     results.style.display = 'block';
     while (results.firstChild) results.removeChild(results.firstChild);
-    results.appendChild(placeholder('Searching…'));
+    for (let i = 0; i < 4; i++) {
+      results.appendChild(CardFactory.searchSkeleton());
+    }
   }
 
   function setError() {
@@ -420,9 +422,11 @@
 
     /* Build each result row individually — a failure on one
        card must never prevent the view-all link from appearing. */
-    items.forEach(item => {
+    items.forEach((item, i) => {
       try {
-        results.appendChild(CardFactory.searchResult(item));
+        const el = CardFactory.searchResult(item);
+        el.style.animationDelay = `${i * 35}ms`;
+        results.appendChild(el);
       } catch (cardErr) {
         console.warn('[search] card render error:', cardErr, item);
         /* Skip this card silently — others still render */

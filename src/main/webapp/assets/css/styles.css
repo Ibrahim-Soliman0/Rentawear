@@ -591,9 +591,11 @@ h1, h2, h3, h4, h5, h6 {
   gap: 14px;
   align-items: start;
   padding: 20px 28px;
-  border-bottom: 1px solid var(--rw-stone);
+  border-top: 1px solid var(--rw-stone);
+  border-bottom: none;
   animation: slideInItem 0.3s var(--rw-ease-out);
 }
+.cart-item:first-child { border-top: none; }
 @keyframes slideInItem {
   from { opacity: 0; transform: translateX(16px); }
   to   { opacity: 1; transform: translateX(0); }
@@ -754,12 +756,43 @@ h1, h2, h3, h4, h5, h6 {
 .search-result-item {
   display: grid; grid-template-columns: 52px 1fr;
   gap: 14px; align-items: center;
-  padding: 10px 8px; border-bottom: 1px solid rgba(0,0,0,.05);
+  padding: 10px 8px;
+  border-top: 1px solid rgba(0,0,0,.05);
+  border-bottom: none;
   text-decoration: none; border-radius: 6px; transition: background 0.15s;
   margin: 0 -8px;
 }
-.search-result-item:last-of-type { border-bottom: none; }
+.search-result-item:first-of-type { border-top: none; }
 .search-result-item:hover        { background: var(--rw-cream); }
+
+/* Fade-in for real result rows (not skeletons) */
+@keyframes srFadeIn {
+  from { opacity: 0; transform: translateY(5px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.search-result-item:not(.search-result-skel) {
+  animation: srFadeIn 0.22s var(--rw-ease-out) both;
+}
+
+/* Search skeleton rows — same geometry as real rows, shimmer fill */
+.search-result-skel {
+  pointer-events: none;
+}
+.search-result-skel__thumb {
+  width: 52px; height: 66px; border-radius: 4px;
+  background: linear-gradient(90deg, var(--rw-stone) 25%, var(--rw-cream) 50%, var(--rw-stone) 75%);
+  background-size: 200% 100%;
+  animation: skelShimmer 1.5s ease infinite;
+}
+.search-result-skel__line {
+  height: 10px; border-radius: 4px; margin-bottom: 7px;
+  background: linear-gradient(90deg, var(--rw-stone) 25%, var(--rw-cream) 50%, var(--rw-stone) 75%);
+  background-size: 200% 100%;
+  animation: skelShimmer 1.5s ease infinite;
+}
+.search-result-skel__line--brand { width: 36%; height: 8px; }
+.search-result-skel__line--name  { width: 72%; height: 12px; }
+.search-result-skel__line--price { width: 28%; height: 8px; margin-bottom: 0; }
 .search-result-thumb  { width: 52px; height: 66px; border-radius: 4px; flex-shrink: 0; background-size: cover; background-position: center; background-color: var(--rw-stone); overflow: hidden;  }
 .search-result-thumb img {
   width: 100%;
