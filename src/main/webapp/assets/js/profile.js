@@ -557,7 +557,7 @@ function renderActiveOrders(orders) {
             '<line x1="3" y1="6" x2="21" y2="6"/>' +
             '<path d="M16 10a4 4 0 0 1-8 0"/></svg>' +
             '<p class="account-empty-label">No active rentals right now</p>' +
-            '<a href="' + CTX + '/products" class="btn-rw-primary btn-rw--sm">Browse Collection</a>' +
+            '<a href="' + CTX + '/catalog" class="btn-rw-primary btn-rw--sm">Browse Collection</a>' +
             '</div>';
         return;
     }
