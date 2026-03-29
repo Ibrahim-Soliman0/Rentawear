@@ -313,8 +313,6 @@
             return;
         }
 
-        // ── Compound: gender + single category (no newOnly) ───────────────────
-        // Home › Women's/Men's › [Category]
         if (state.gender && activeCatName && !state.newOnly) {
             appendBcLink(
                 state.gender === 'FEMALE' ? "Women's" : "Men's",
@@ -367,8 +365,6 @@
         bcMid.appendChild(sep);
     }
 
-    // Builds the New Arrivals URL without the active category, so the mid
-    // breadcrumb link takes the user back to unfiltered new arrivals.
     function buildNewArrivalsBaseUrl() {
         const p = new URLSearchParams();
         p.set('newOnly', 'true');
