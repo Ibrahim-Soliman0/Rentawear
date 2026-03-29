@@ -572,8 +572,11 @@
             }));
         }
 
-        /* Category chips — only when not locked by URL and not interests mode */
-        if (!urlCategoryIds.length && !state.interestIds.length) {
+        /* Category chips — only when not URL-locked.
+           urlCategoryIds means the category is the page context (came from nav),
+           so no chip. But on the interests page, categoryIds is a user refinement
+           and must produce a chip so the user can see and remove it. */
+        if (!urlCategoryIds.length) {
             state.categoryIds.forEach(id => {
                 frag.appendChild(makeChip(catNames[id] || `Cat ${id}`, () => {
                     state.categoryIds = state.categoryIds.filter(c => c !== id);
@@ -620,7 +623,7 @@
         if (state.q)                                                          count++;
         if (state.gender && !urlGender && !state.interestIds.length)          count++;
         if (state.newOnly && !urlNewOnly)                                      count++;
-        if (!urlCategoryIds.length && !state.interestIds.length)              count += state.categoryIds.length;
+        if (!urlCategoryIds.length)                                            count += state.categoryIds.length;
         if (state.interestIds.length && !urlInterestIds.length)               count++;
         if (state.minPrice != null || state.maxPrice != null)                 count++;
         filterBadge.textContent   = String(count);

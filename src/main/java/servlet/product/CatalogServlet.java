@@ -65,8 +65,8 @@ public class CatalogServlet extends HttpServlet {
         String[] catIds  = req.getParameterValues("categoryIds");
         String   newOnly = req.getParameter("newOnly");
 
-        req.setAttribute("pageTitle",   resolveTitle(q, gender, catIds, newOnly, categories));
-        req.setAttribute("pageEyebrow", resolveEyebrow(q, gender, newOnly));
+        req.setAttribute("pageTitle",   resolveTitle(q, gender, catIds, newOnly, interestIds, categories));
+        req.setAttribute("pageEyebrow", resolveEyebrow(q, gender, newOnly, interestIds));
 
         req.getRequestDispatcher("/WEB-INF/catalog.jsp").forward(req, resp);
     }
@@ -74,9 +74,12 @@ public class CatalogServlet extends HttpServlet {
     /* ── Heading helpers ──────────────────────────────────────── */
 
     private String resolveTitle(String q, String gender, String[] catIds,
-                                String newOnly, List<Category> categories) {
-        /* Search mode */
+                                String newOnly, String[] interestIds,
+                                List<Category> categories) {
         if (q != null && !q.isBlank()) return "Search Results";
+
+        boolean hasInterests = interestIds != null && interestIds.length > 0;
+        if (hasInterests) return "Based on Your Interests";
 
         if ("true".equalsIgnoreCase(newOnly)) return "New Arrivals";
 
@@ -100,12 +103,14 @@ public class CatalogServlet extends HttpServlet {
         return "All Products";
     }
 
-    private String resolveEyebrow(String q, String gender, String newOnly) {
+    private String resolveEyebrow(String q, String gender, String newOnly, String[] interestIds) {
         if (q != null && !q.isBlank())
-            return "Showing results for \u201c" + q + "\u201d"; // "q"
-        if ("true".equalsIgnoreCase(newOnly))  return "Fresh in this week";
-        if ("FEMALE".equalsIgnoreCase(gender)) return "Tailored for her";
-        if ("MALE".equalsIgnoreCase(gender))   return "Tailored for him";
+            return "Showing results for \u201c" + q + "\u201d";
+        boolean hasInterests = interestIds != null && interestIds.length > 0;
+        if (hasInterests)                          return "Picked just for you";
+        if ("true".equalsIgnoreCase(newOnly))      return "Fresh in this week";
+        if ("FEMALE".equalsIgnoreCase(gender))     return "Tailored for her";
+        if ("MALE".equalsIgnoreCase(gender))       return "Tailored for him";
         return "Browse the collection";
     }
 }
