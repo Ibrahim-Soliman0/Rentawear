@@ -24,7 +24,7 @@ public class ProductService {
     }
 
     public List<Product> findNew(ProductFilterDTO f) {
-        return productRepo.findNew(f.pageSize(), NEW_DAYS, f.gender(), f.categoryIds());
+        return productRepo.findNew(f.pageSize(), f.offset(), NEW_DAYS, f.gender(), f.categoryIds());
     }
 
     public List<Product> findFiltered(ProductFilterDTO f) {

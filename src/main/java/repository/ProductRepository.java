@@ -8,7 +8,7 @@ import java.util.List;
 public interface ProductRepository extends Repository<Product> {
 
     // Listing / browse
-    List<Product> findNew(int limit, int days, String gender, List<Integer> categoryIds);
+    List<Product> findNew(int limit, int offset, int days, String gender, List<Integer> categoryIds);
     long countNew(int days, String gender, List<Integer> categoryIds);
     List<Product> findFiltered(String gender, List<Integer> categoryIds, Double minPrice, Double maxPrice, int limit, int offset);
 

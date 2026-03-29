@@ -20,7 +20,7 @@ public class ProductRepositoryImpl extends BaseRepositoryImpl<Product>
     }
 
     @Override
-    public List<Product> findNew(int limit, int days,
+    public List<Product> findNew(int limit, int offset, int days,
                                  String gender, List<Integer> categoryIds) {
         Instant cutoff = Instant.now().minus(days, ChronoUnit.DAYS);
 
@@ -29,12 +29,12 @@ public class ProductRepositoryImpl extends BaseRepositoryImpl<Product>
                     q -> q.setParameter("cutoff", cutoff)
                             .setParameter("ids",    categoryIds)
                             .setParameter("gender", toGender(gender)),
-                    limit, 0);
+                    limit, offset); // was: limit, 0
         }
         return pagedFetch("Product.findNewFilteredIds",
                 q -> q.setParameter("cutoff", cutoff)
                         .setParameter("gender", toGender(gender)),
-                limit, 0);
+                limit, offset); // was: limit, 0
     }
 
     @Override
