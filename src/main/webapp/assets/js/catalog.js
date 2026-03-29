@@ -797,13 +797,13 @@
         state.page     = 0;
         if (!urlGender)   state.gender  = null;
         if (!urlNewOnly)  state.newOnly = false;  // preserve when it is the page context
-        /* Restore locked category / interest context if present */
-        if (urlCategoryIds.length > 0) {
-            state.categoryIds = [...urlCategoryIds];
-            state.interestIds = [];
-        } else if (urlInterestIds.length > 0) {
+        /* Restore locked interest / category context if present (interest wins) */
+        if (urlInterestIds.length > 0) {
             state.interestIds = [...urlInterestIds];
             state.categoryIds = [];
+        } else if (urlCategoryIds.length > 0) {
+            state.categoryIds = [...urlCategoryIds];
+            state.interestIds = [];
         } else {
             state.categoryIds = [];
             state.interestIds = [];
