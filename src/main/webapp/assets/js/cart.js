@@ -92,7 +92,7 @@ class CartItemNormaliser {
             name: core.name ?? '',
             brand: core.brand ?? '',
             pricePerDay: Number(core.pricePerDay ?? 0),
-            imageUrl: core.imageUrl ?? '/assets/img/placeholder',
+            imageUrl: core.imageUrl ?? null,
 
             // ── Variant fields ────────────────────────────────────────────────
             size: raw.size ?? null,
