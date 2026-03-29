@@ -317,7 +317,7 @@
         // Home › Women's/Men's › [Category]
         if (state.gender && activeCatName && !state.newOnly) {
             appendBcLink(
-                state.gender === 'FEMALE' ? "Women's Collection    " : "Men's Collection      ",
+                state.gender === 'FEMALE' ? "Women's" : "Men's",
                 CTX + '/catalog?gender=' + state.gender
             );
             bcCurrent.textContent = activeCatName;
@@ -328,17 +328,17 @@
         // Home › Women's/Men's › New Arrivals
         if (state.gender && state.newOnly) {
             appendBcLink(
-                state.gender === 'FEMALE' ? "Women's Collection     " : "Men's Collection     ",
+                state.gender === 'FEMALE' ? "Women's" : "Men's",
                 CTX + '/catalog?gender=' + state.gender
             );
-            bcCurrent.textContent = 'New Arrivals     ';
+            bcCurrent.textContent = 'New Arrivals';
             return;
         }
 
         // ── Simple: no gender, no special mode, single category ───────────────
         // Home › All Products › [Category]
         if (!state.gender && !state.interestIds.length && activeCatName && !state.newOnly) {
-            appendBcLink('All Products     ', CTX + '/catalog');
+            appendBcLink('All Products', CTX + '/catalog');
             bcCurrent.textContent = activeCatName;
             return;
         }
@@ -346,8 +346,8 @@
         // ── Simple: no gender, newOnly only ───────────────────────────────────
         // Home › All Products › New Arrivals
         if (!state.gender && !state.interestIds.length && state.newOnly && !activeCatName) {
-            appendBcLink('All Products     ', CTX + '/catalog');
-            bcCurrent.textContent = 'New Arrivals     ';
+            appendBcLink('All Products', CTX + '/catalog');
+            bcCurrent.textContent = 'New Arrivals';
             return;
         }
 
@@ -391,8 +391,20 @@
 
         renderSkeletons();
 
-        fetchJson(buildApiUrl(), { outerSignal: fetchController.signal, timeout: 10000 })
+        const url    = buildApiUrl();
+        const signal = fetchController.signal;
+
+        fetch(url, { signal })
+            .then(function (resp) {
+                if (resp.status === 401) {
+                    window.location.href = CTX + '/home';
+                    return null;
+                }
+                if (!resp.ok) throw new Error('HTTP ' + resp.status);
+                return resp.json();
+            })
             .then(function (data) {
+                if (!data) return;   // redirect already in flight
                 fetchController = null;
 
                 const pr = data.priceRange;

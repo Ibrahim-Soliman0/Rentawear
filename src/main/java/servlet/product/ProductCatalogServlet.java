@@ -6,6 +6,7 @@ import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
 import service.ProductFacadeService;
 import servlet.util.FilterBuilder;
 import util.JsonUtil;
@@ -42,6 +43,15 @@ public class ProductCatalogServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp)
             throws IOException {
+
+        String[] interestIds = req.getParameterValues("interestIds");
+        if (interestIds != null && interestIds.length > 0) {
+            HttpSession session = req.getSession(false);
+            if (session == null || session.getAttribute("user") == null) {
+                resp.sendError(HttpServletResponse.SC_UNAUTHORIZED);
+                return;
+            }
+        }
 
         ProductFilterDTO  filter = FilterBuilder.fromRequest(req);
         ProductListResult result = facade.getProducts(filter);

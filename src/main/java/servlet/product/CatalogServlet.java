@@ -6,6 +6,7 @@ import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
 import service.CategoryService;
 
 import java.io.IOException;
@@ -32,6 +33,15 @@ public class CatalogServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp)
             throws ServletException, IOException {
+
+        String[] interestIds = req.getParameterValues("interestIds");
+        if (interestIds != null && interestIds.length > 0) {
+            HttpSession session = req.getSession(false);
+            if (session == null || session.getAttribute("user") == null) {
+                resp.sendRedirect(req.getContextPath() + "/home");
+                return;
+            }
+        }
 
         List<Category> categories = categoryService.getAll();
         req.setAttribute("filterCategories", categories);
