@@ -389,7 +389,7 @@ public class UserRepositoryTest {
         void shouldDefaultCreditLimitToZero() {
             User user = persistUser("John Doe", "john@example.com", "hashed", Gender.MALE);
 
-            assertEquals(new BigDecimal("0"), user.getCreditLimit());
+            assertEquals(new BigDecimal("0.00"), user.getCreditLimit());
         }
     }
 
