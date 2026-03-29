@@ -174,6 +174,7 @@ function renderPagination(page, total, pageSize) {
 function _imgToIcon(img) {
   const icon = document.createElement('div');
   icon.className = 'adm-product-img-placeholder';
+  if (img.id) icon.id = img.id;
   const i = document.createElement('i');
   i.className = 'bi bi-image';
   icon.appendChild(i);
