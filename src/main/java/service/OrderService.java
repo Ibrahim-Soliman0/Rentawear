@@ -7,6 +7,7 @@ import entity.*;
 import entity.enums.OrderStatus;
 import exception.InsufficientFundsException;
 import exception.UserNotFoundException;
+import jakarta.persistence.OptimisticLockException;
 import mapper.OrderMapper;
 import org.mapstruct.factory.Mappers;
 import repository.OrderRepository;
@@ -146,7 +147,13 @@ public class OrderService extends BaseService<Order> {
                 );
             }
 
-            variant.setQuantity(variant.getQuantity() - qty);
+            try {
+                // decrease quantity
+                variant.setQuantity(variant.getQuantity() - qty);
+                variant = productVariantService.save(variant);
+            } catch (OptimisticLockException e) {
+                throw new OptimisticLockException("Please try again [High contention].");
+            }
 
             OrderItem orderItem = new OrderItem();
             orderItem.setVariant(variant);

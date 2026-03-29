@@ -19,7 +19,8 @@ CREATE TABLE users
     credit_limit  DECIMAL(10, 2) DEFAULT 0,
     role          ENUM('ADMIN','USER') DEFAULT 'USER',
     created_at    TIMESTAMP      DEFAULT CURRENT_TIMESTAMP,
-    gender        ENUM('MALE', 'FEMALE')
+    gender        ENUM('MALE', 'FEMALE'),
+    CHECK (credit_limit >= 0)
 );
 
 
@@ -84,7 +85,9 @@ CREATE TABLE product_variants
     size       VARCHAR(20),
     color      VARCHAR(50) NOT NULL,
     quantity   INT         NOT NULL,
+    version    INT         NOT NULL,
     UNIQUE (product_id, color, size),
+    CHECK  (quantity >= 0),
     FOREIGN KEY (product_id) REFERENCES products (id)
 );
 
