@@ -25,13 +25,13 @@
         <class>entity.Category</class>
         <class>entity.ProductVariant</class>
         <class>entity.ProductImage</class>
-
         <class>entity.User</class>
         <class>entity.UserCategory</class>
         <class>entity.PaymentCard</class>
-
         <class>entity.Cart</class>
         <class>entity.CartItem</class>
+        <class>entity.Order</class>
+        <class>entity.OrderItem</class>
 
         <exclude-unlisted-classes>true</exclude-unlisted-classes>
 
