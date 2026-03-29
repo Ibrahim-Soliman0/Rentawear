@@ -179,6 +179,9 @@ public class User {
         if (role == null) {
             role = UserRole.USER;
         }
+
+        if (creditLimit == null) {
+            creditLimit = new BigDecimal("0.00");        }
     }
 
     public void addInterest(Category category) {
