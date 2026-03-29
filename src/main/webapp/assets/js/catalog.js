@@ -27,7 +27,9 @@
     };
 
     let urlGender      = null;
-    let urlCategoryIds = [];   // locked category IDs from the original URL
+    let urlCategoryIds  = [];  // locked category IDs from the original URL
+    let urlNewOnly      = false;
+    let urlInterestIds  = [];  // locked interest IDs from the original URL
 
     let priceBounds    = { min: 0, max: 500 };
     let fetchController = null;
@@ -77,8 +79,11 @@
         });
 
         const initParams = new URLSearchParams(window.location.search);
-        urlGender        = initParams.get('gender') || null;
-        urlCategoryIds   = initParams.getAll('categoryIds')
+        urlGender       = initParams.get('gender') || null;
+        urlCategoryIds  = initParams.getAll('categoryIds')
+            .map(v => parseInt(v, 10)).filter(v => !isNaN(v));
+        urlNewOnly      = initParams.get('newOnly') === 'true';
+        urlInterestIds  = initParams.getAll('interestIds')
             .map(v => parseInt(v, 10)).filter(v => !isNaN(v));
 
         readUrlIntoState();
@@ -91,9 +96,12 @@
     });
 
     window.addEventListener('popstate', function () {
-        const p      = new URLSearchParams(window.location.search);
-        urlGender    = p.get('gender') || null;
+        const p        = new URLSearchParams(window.location.search);
+        urlGender      = p.get('gender') || null;
         urlCategoryIds = p.getAll('categoryIds')
+            .map(v => parseInt(v, 10)).filter(v => !isNaN(v));
+        urlNewOnly     = p.get('newOnly') === 'true';
+        urlInterestIds = p.getAll('interestIds')
             .map(v => parseInt(v, 10)).filter(v => !isNaN(v));
         readUrlIntoState();
         applyFilterGroupVisibility();
@@ -112,6 +120,12 @@
         /* Gender fgroup: hide when gender is locked from URL or on interests page */
         if (genderFgroup) {
             genderFgroup.classList.toggle('is-hidden', !!urlGender || onInterests);
+        }
+
+        /* New Arrivals checkbox: hide when it is the page context, not a filter */
+        const newOnlyFgroup = document.getElementById('fgroup-new');
+        if (newOnlyFgroup) {
+            newOnlyFgroup.classList.toggle('is-hidden', urlNewOnly);
         }
 
         /* Categories fgroup */
@@ -227,7 +241,7 @@
         if (titleEl)   titleEl.textContent   = title;
         if (eyebrowEl) eyebrowEl.textContent = eyebrow;
         document.title = title + ' – Rentawear';
-        updateBreadcrumb(title);
+        updateBreadcrumb();
     }
 
     /* Update eyebrow with result count once fetch completes */
@@ -241,13 +255,17 @@
         /* Search mode — q present */
         if (state.q) return 'Search Results';
 
+        /* Primary context wins — category is a refinement, not an override.
+           newOnly is now checked before categoryIds so "New Arrivals" is never
+           replaced by the selected category name; the category appears in the
+           breadcrumb as a sub-segment instead. */
         if (state.interestIds.length) return 'Based on Your Interests';
+        if (state.newOnly)            return 'New Arrivals';
 
         if (state.categoryIds.length === 1 && catNames[state.categoryIds[0]]) {
             return catNames[state.categoryIds[0]];
         }
 
-        if (state.newOnly)             return 'New Arrivals';
         if (state.gender === 'FEMALE') return "Women's Collection";
         if (state.gender === 'MALE')   return "Men's Collection";
         return 'All Products';
@@ -263,42 +281,106 @@
         return 'Browse the collection';
     }
 
-    function updateBreadcrumb(currentLabel) {
+    function updateBreadcrumb() {
         if (!bcMid || !bcCurrent) return;
-        bcMid.innerHTML = '';
+        bcMid.replaceChildren();
 
-        let mid = null;
+        // Resolve the single active category name, if exactly one is selected.
+        // Multiple selections don't warrant a category crumb — it would be noisy.
+        const activeCatId   = state.categoryIds.length === 1 ? state.categoryIds[0] : null;
+        const activeCatName = activeCatId != null && catNames[activeCatId]
+            ? catNames[activeCatId] : null;
 
+        // ── Search: flat, no mid segment ─────────────────────────────────────
         if (state.q) {
-            /* Search mode: Home › Search Results — no mid segment */
-            mid = null;
-        } else if (state.gender && state.categoryIds.length === 1) {
-            mid = {
-                label: state.gender === 'FEMALE' ? "Women's" : "Men's",
-                href:  CTX + '/catalog?gender=' + state.gender,
-            };
-        } else if (state.gender && state.newOnly && state.categoryIds.length === 0) {
-            mid = {
-                label: state.gender === 'FEMALE' ? "Women's" : "Men's",
-                href:  CTX + '/catalog?gender=' + state.gender,
-            };
-        } else if (!state.gender && !state.interestIds.length && !state.q
-            && (state.categoryIds.length > 0 || state.newOnly)) {
-            mid = { label: 'All Products', href: CTX + '/catalog' };
+            bcCurrent.textContent = 'Search Results';
+            return;
         }
 
-        if (mid) {
-            const a   = document.createElement('a');
-            a.href        = mid.href;
-            a.textContent = mid.label;
-            const sep = document.createElement('span');
-            sep.className   = 'catalog-breadcrumb-sep';
-            sep.textContent = '›';
-            bcMid.appendChild(a);
-            bcMid.appendChild(sep);
+        // ── Compound: New Arrivals + single category ──────────────────────────
+        // Home › New Arrivals › [Category]
+        if (state.newOnly && activeCatName) {
+            appendBcLink('New Arrivals', buildNewArrivalsBaseUrl());
+            bcCurrent.textContent = activeCatName;
+            return;
         }
 
-        bcCurrent.textContent = currentLabel;
+        // ── Compound: Interests + single category ─────────────────────────────
+        // Home › For You › [Category]
+        if (state.interestIds.length && activeCatName) {
+            appendBcLink('For You', buildInterestsBaseUrl());
+            bcCurrent.textContent = activeCatName;
+            return;
+        }
+
+        // ── Compound: gender + single category (no newOnly) ───────────────────
+        // Home › Women's/Men's › [Category]
+        if (state.gender && activeCatName && !state.newOnly) {
+            appendBcLink(
+                state.gender === 'FEMALE' ? "Women's Collection    " : "Men's Collection      ",
+                CTX + '/catalog?gender=' + state.gender
+            );
+            bcCurrent.textContent = activeCatName;
+            return;
+        }
+
+        // ── Compound: gender + newOnly (no category) ──────────────────────────
+        // Home › Women's/Men's › New Arrivals
+        if (state.gender && state.newOnly) {
+            appendBcLink(
+                state.gender === 'FEMALE' ? "Women's Collection     " : "Men's Collection     ",
+                CTX + '/catalog?gender=' + state.gender
+            );
+            bcCurrent.textContent = 'New Arrivals     ';
+            return;
+        }
+
+        // ── Simple: no gender, no special mode, single category ───────────────
+        // Home › All Products › [Category]
+        if (!state.gender && !state.interestIds.length && activeCatName && !state.newOnly) {
+            appendBcLink('All Products     ', CTX + '/catalog');
+            bcCurrent.textContent = activeCatName;
+            return;
+        }
+
+        // ── Simple: no gender, newOnly only ───────────────────────────────────
+        // Home › All Products › New Arrivals
+        if (!state.gender && !state.interestIds.length && state.newOnly && !activeCatName) {
+            appendBcLink('All Products     ', CTX + '/catalog');
+            bcCurrent.textContent = 'New Arrivals     ';
+            return;
+        }
+
+        // ── Fallback: interests / gender alone, all-products, etc ─────────────
+        bcCurrent.textContent = resolveTitle();
+    }
+
+    // Appends a linked segment + separator to bcMid.
+    function appendBcLink(label, href) {
+        const a       = document.createElement('a');
+        a.href        = href;
+        a.textContent = label;
+        const sep     = document.createElement('span');
+        sep.className   = 'catalog-breadcrumb-sep';
+        sep.textContent = '›';
+        bcMid.appendChild(a);
+        bcMid.appendChild(sep);
+    }
+
+    // Builds the New Arrivals URL without the active category, so the mid
+    // breadcrumb link takes the user back to unfiltered new arrivals.
+    function buildNewArrivalsBaseUrl() {
+        const p = new URLSearchParams();
+        p.set('newOnly', 'true');
+        if (state.gender) p.set('gender', state.gender);
+        return CTX + '/catalog?' + p.toString();
+    }
+
+    // Builds the interests base URL without the active category.
+    function buildInterestsBaseUrl() {
+        const p = new URLSearchParams();
+        state.interestIds.forEach(id => p.append('interestIds', id));
+        return CTX + '/catalog?' + p.toString();
     }
 
     /* ── Fetch & Render ───────────────────────────────────────── */
@@ -471,7 +553,8 @@
             ));
         }
 
-        if (state.newOnly) {
+        /* newOnly chip — suppressed when it is the page context, not a user-applied filter */
+        if (state.newOnly && !urlNewOnly) {
             frag.appendChild(makeChip('New Arrivals', () => {
                 state.newOnly = false; onFilterChange();
             }));
@@ -487,7 +570,8 @@
             });
         }
 
-        if (state.interestIds.length) {
+        /* Interests chip — suppressed when it is the page context */
+        if (state.interestIds.length && !urlInterestIds.length) {
             frag.appendChild(makeChip('Your Interests', () => {
                 state.interestIds = []; onFilterChange();
             }));
@@ -521,12 +605,12 @@
 
     function renderFilterBadge() {
         let count = 0;
-        if (state.q)                              count++;
-        if (state.gender && !urlGender && !state.interestIds.length) count++;
-        if (state.newOnly)                        count++;
-        if (!urlCategoryIds.length && !state.interestIds.length) count += state.categoryIds.length;
-        if (state.interestIds.length)             count++;
-        if (state.minPrice != null || state.maxPrice != null) count++;
+        if (state.q)                                                          count++;
+        if (state.gender && !urlGender && !state.interestIds.length)          count++;
+        if (state.newOnly && !urlNewOnly)                                      count++;
+        if (!urlCategoryIds.length && !state.interestIds.length)              count += state.categoryIds.length;
+        if (state.interestIds.length && !urlInterestIds.length)               count++;
+        if (state.minPrice != null || state.maxPrice != null)                 count++;
         filterBadge.textContent   = String(count);
         filterBadge.style.display = count > 0 ? 'inline-flex' : 'none';
     }
@@ -696,15 +780,18 @@
            the current search results page.
            "Clear search" (#catalogClearSearch) is the one that
            navigates away to /catalog.                                 */
-        state.newOnly  = false;
         state.minPrice = null;
         state.maxPrice = null;
         state.page     = 0;
-        if (!urlGender) state.gender = null;
-        /* Restore locked category context if present */
+        if (!urlGender)   state.gender  = null;
+        if (!urlNewOnly)  state.newOnly = false;  // preserve when it is the page context
+        /* Restore locked category / interest context if present */
         if (urlCategoryIds.length > 0) {
             state.categoryIds = [...urlCategoryIds];
             state.interestIds = [];
+        } else if (urlInterestIds.length > 0) {
+            state.interestIds = [...urlInterestIds];
+            state.categoryIds = [];
         } else {
             state.categoryIds = [];
             state.interestIds = [];
