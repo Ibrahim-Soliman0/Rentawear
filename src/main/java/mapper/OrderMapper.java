@@ -44,8 +44,8 @@ public interface OrderMapper {
     default String instantToString(Instant instant) {
         if (instant == null) return null;
         return instant.atZone(ZoneId.systemDefault())
-                      .toLocalDate()
-                      .format(DateTimeFormatter.ISO_LOCAL_DATE);
+                .toLocalDate()
+                .format(DateTimeFormatter.ISO_LOCAL_DATE);
     }
 
     @Named("localDateToString")
@@ -67,7 +67,7 @@ public interface OrderMapper {
                 .filter(img -> img.getColor().equalsIgnoreCase(color))
                 .findFirst()
                 .map(ProductImage::getImageUrl)
-                .orElse(variant.getProduct().getImageUrl());
+                .orElse(null);
     }
     @Mapping(target = "productName", source = "variant.product.name")
     @Mapping(target = "color",       source = "variant.color")
