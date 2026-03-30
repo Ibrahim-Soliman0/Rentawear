@@ -71,11 +71,11 @@ public class CheckoutServlet extends HttpServlet {
             String cartJson = req.getParameter("cartJson");
             BigDecimal totalAmount = new BigDecimal(req.getParameter("totalAmount"));
 
-            // ── Validate ──────────────────────────────────────────────────
-            if (cartJson == null || cartJson.isBlank()) {
-                resp.getWriter().write("{\"success\": false, \"message\": \"Cart is empty.\"}");
-                return;
-            }
+//            // ── Validate ──────────────────────────────────────────────────
+//            if (cartJson == null || cartJson.isBlank()) {
+//                resp.getWriter().write("{\"success\": false, \"message\": \"Cart is empty.\"}");
+//                return;
+//            }
 
             if (user.address() == null || user.address().isBlank()) {
                 resp.getWriter().write("{\"success\": false, " +
