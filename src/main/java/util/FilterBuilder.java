@@ -1,4 +1,4 @@
-package servlet.util;
+package util;
 
 import dto.ProductFilterDTO;
 import jakarta.servlet.http.HttpServletRequest;
@@ -8,7 +8,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 // Shared utility for building ProductFilterDTO from raw servlet request params.
-// Lives in servlet.util so all product servlets parse parameters identically.
+// Lives in util so all product servlets parse parameters identically.
 // Returns a valid ProductFilterDTO regardless of which params are missing —
 // null means "no filter on this dimension" downstream.
 public final class FilterBuilder {
