@@ -79,6 +79,9 @@ class CartServiceTest {
 
         variant = new ProductVariant();
         variant.setId(5);
+        variant.setQuantity(10);
+
+        cartItem.setVariant(variant);
 
         user = new User();
         user.setId(1);
@@ -86,6 +89,8 @@ class CartServiceTest {
         user.setEmail("ahmed@example.com");
         user.setGender(Gender.MALE);
         user.setCart(cart);
+
+        lenient().when(cartItemService.getReservedQty(anyInt(), anyInt())).thenReturn(0);
     }
 
     // ═════════════════════════════════════════════════════════════════════════

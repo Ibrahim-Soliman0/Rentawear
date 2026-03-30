@@ -29,8 +29,10 @@ public class CartItemsServlet extends HttpServlet {
 
         HttpSession session = req.getSession(false);
 
+        // ── Guest user — return an empty items list so cart.js can fall back
+        // to its localStorage cache without treating this as an error.
         if (session == null || session.getAttribute("user") == null) {
-            resp.getWriter().write("{\"success\": false, \"message\": \"Not logged in.\"}");
+            resp.getWriter().write("{\"loggedIn\": false, \"items\": []}");
             return;
         }
 
@@ -38,7 +40,7 @@ public class CartItemsServlet extends HttpServlet {
 
         List<CartItemDTO> itemsInCart = cartService.getItems(user.id());
 
-        String json = JsonUtil.toJson(Map.of("items", itemsInCart));
+        String json = JsonUtil.toJson(Map.of("loggedIn", true, "items", itemsInCart));
         resp.getWriter().write(json);
     }
 }
