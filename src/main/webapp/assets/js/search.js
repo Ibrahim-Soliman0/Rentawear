@@ -7,7 +7,7 @@
 
 (function () {
 
-  const RESULT_SIZE     = 6;
+  const RESULT_SIZE     = 5;
   const SEARCH_DEBOUNCE = 300;
   const PRICE_DEBOUNCE  = 500;
 
@@ -34,6 +34,7 @@
   const filterBtn   = document.getElementById('searchFilterBtn');
   const filterBadge = document.getElementById('searchFilterBadge');
   const filterPanel = document.getElementById('searchFilterPanel');
+  const bodyRow     = document.getElementById('searchBodyRow');
   const chips       = document.getElementById('searchChips');
   const priceWrap   = document.getElementById('searchPriceWrap');
   const rangeMin    = document.getElementById('searchRangeMin');
@@ -69,11 +70,25 @@
     reset();
   }
 
+  /* When the filter col opens, grow the body row to at least fit all
+     filter content so the modal doesn't feel too short. When it closes
+     the min-height is removed and the modal reverts to content height. */
+  function syncBodyRowHeight(isOpen) {
+    if (!bodyRow) return;
+    if (isOpen) {
+      const inner = filterPanel ? filterPanel.querySelector('.sfp-inner') : null;
+      bodyRow.style.minHeight = inner ? inner.scrollHeight + 'px' : '';
+    } else {
+      bodyRow.style.minHeight = '';
+    }
+  }
+
   function closePanelOnly() {
     if (!filterPanel) return;
     filterPanel.classList.remove('is-open');
     filterPanel.setAttribute('aria-hidden', 'true');
     filterBtn.setAttribute('aria-expanded', 'false');
+    syncBodyRowHeight(false);
   }
 
   /* ── Reset modal state ────────────────────────────────────── */
@@ -89,7 +104,6 @@
     document.querySelectorAll('.sfp-cat-chk').forEach(c => (c.checked = false));
     document.querySelectorAll('.sfp-cat-label').forEach(l => l.classList.remove('is-hidden'));
     resetPriceSlider();
-    if (priceWrap) priceWrap.style.display = 'none';
     if (trending)  trending.style.display  = 'block';
     results.style.display = 'none';
     while (results.firstChild) results.removeChild(results.firstChild);
@@ -115,12 +129,7 @@
     const isOpen = filterPanel.classList.toggle('is-open');
     filterPanel.setAttribute('aria-hidden', String(!isOpen));
     filterBtn.setAttribute('aria-expanded', String(isOpen));
-  });
-
-  document.addEventListener('click', e => {
-    if (filterPanel && !filterPanel.contains(e.target) && e.target !== filterBtn) {
-      closePanelOnly();
-    }
+    syncBodyRowHeight(isOpen);
   });
 
   document.addEventListener('keydown', e => {
@@ -322,7 +331,6 @@
   clearBtn.addEventListener('click', () => {
     input.value = '';
     clearBtn.classList.remove('show');
-    if (priceWrap) priceWrap.style.display = 'none';
     results.style.display = 'none';
     while (results.firstChild) results.removeChild(results.firstChild);
     if (trending) trending.style.display = 'block';
@@ -342,7 +350,6 @@
     const q = input.value.trim();
 
     if (q.length < 2) {
-      if (priceWrap) priceWrap.style.display = 'none';
       results.style.display = 'none';
       while (results.firstChild) results.removeChild(results.firstChild);
       if (trending) trending.style.display = 'block';
@@ -381,12 +388,11 @@
 
     /* ── Step 2: Render — outside try-catch ─────────────────── */
 
-    /* Calibrate price slider if bounds are in the response */
+    /* Calibrate price slider bounds from the response */
     if (data.priceRange && data.priceRange.min != null) {
       const lo = Math.floor(data.priceRange.min);
       const hi = Math.ceil(data.priceRange.max);
       calibratePriceSlider(lo, hi);
-      if (priceWrap) priceWrap.style.display = 'block';
     }
 
     renderChips();
@@ -399,7 +405,9 @@
   function setLoading() {
     results.style.display = 'block';
     while (results.firstChild) results.removeChild(results.firstChild);
-    results.appendChild(placeholder('Searching…'));
+    for (let i = 0; i < 4; i++) {
+      results.appendChild(CardFactory.searchSkeleton());
+    }
   }
 
   function setError() {
@@ -426,9 +434,11 @@
 
     /* Build each result row individually — a failure on one
        card must never prevent the view-all link from appearing. */
-    items.forEach(item => {
+    items.forEach((item, i) => {
       try {
-        results.appendChild(CardFactory.searchResult(item));
+        const el = CardFactory.searchResult(item);
+        el.style.animationDelay = `${i * 35}ms`;
+        results.appendChild(el);
       } catch (cardErr) {
         console.warn('[search] card render error:', cardErr, item);
         /* Skip this card silently — others still render */
@@ -440,13 +450,16 @@
     const a = document.createElement('a');
     a.className   = 'search-view-all';
     a.href        = buildCatalogUrl(q);
-    a.textContent = total > RESULT_SIZE
-        ? `View all ${total} result${total !== 1 ? 's' : ''} →`
-        : `View ${total} result${total !== 1 ? 's' : ''} →`;
+    // a.textContent = total > RESULT_SIZE
+    //     ? `View all ${total} result${total !== 1 ? 's' : ''} →`
+    //     : `View ${total} result${total !== 1 ? 's' : ''} →`;
+    a.textContent = `View all results →`;
     results.appendChild(a);
   }
 
   /* ── Entry points ─────────────────────────────────────────── */
+
+  document.getElementById('searchFilterDone')?.addEventListener('click', closePanelOnly);
 
   document.getElementById('searchToggle')?.addEventListener('click', openSearch);
   backdrop?.addEventListener('click', closeSearch);

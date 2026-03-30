@@ -155,7 +155,8 @@
                                     <label for="avatarInput" class="btn-rw-outline btn-rw--sm"
                                            style="cursor:pointer">Upload Photo</label>
                                     <button class="btn-rw-outline btn-rw--sm"
-                                            onclick="removeAvatar()" type="button">Remove</button>
+                                            onclick="removeAvatar()" type="button">Remove
+                                    </button>
                                 </div>
                             </c:if>
                         </div>
@@ -187,7 +188,7 @@
                             <div class="rw-input-wrap">
                                 <input id="email" class="rw-form-input" type="email"
                                        name="email" placeholder="jane@example.com"
-                                ${readOnly ? 'disabled' : ''}/>
+                                       disabled/>
                             </div>
                         </div>
                         <div class="rw-form-group">
@@ -292,9 +293,11 @@
                 <c:if test="${not readOnly}">
                     <div class="account-form-actions">
                         <button class="btn-rw-outline btn-rw--sm"
-                                onclick="resetForm()" type="button">Cancel</button>
+                                onclick="resetForm()" type="button">Cancel
+                        </button>
                         <button class="btn-rw-primary btn-rw--sm"
-                                onclick="saveProfile()" type="button">Save Changes</button>
+                                onclick="saveProfile()" type="button">Save Changes
+                        </button>
                     </div>
                 </c:if>
 
@@ -396,7 +399,8 @@
                     <p class="account-empty-label">No payment cards saved yet</p>
                     <c:if test="${not readOnly}">
                         <button class="btn-rw-primary btn-rw--sm" type="button"
-                                onclick="openAddCardModal()">Add Your First Card</button>
+                                onclick="openAddCardModal()">Add Your First Card
+                        </button>
                     </c:if>
                 </div>
 
@@ -506,9 +510,11 @@
         </div>
         <div class="account-modal-footer">
             <button class="btn-rw-outline btn-rw--sm" type="button"
-                    onclick="closeAddCardModal()">Cancel</button>
+                    onclick="closeAddCardModal()">Cancel
+            </button>
             <button class="btn-rw-primary btn-rw--sm" type="button"
-                    id="saveCardBtn" onclick="saveCard()">Save Card</button>
+                    id="saveCardBtn" onclick="saveCard()">Save Card
+            </button>
         </div>
     </div>
 </c:if>

@@ -2,6 +2,7 @@ package servlet.checkout;
 
 import dto.UserSessionDTO;
 import exception.InsufficientFundsException;
+import jakarta.persistence.OptimisticLockException;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -124,6 +125,11 @@ public class CheckoutServlet extends HttpServlet {
                     "{\"success\": false, \"message\": \"" + e.getMessage() + "\"}"
             );
 
+        } catch (OptimisticLockException e) {
+            // 2 users ordering the same product at the same time and the stock is not enough
+            resp.getWriter().write(
+                    "{\"success\": false, \"message\": \"" + e.getMessage() + "\"}"
+            );
         } catch (Exception e) {
             resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
             resp.getWriter().write(

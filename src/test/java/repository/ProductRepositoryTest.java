@@ -588,7 +588,7 @@ class ProductRepositoryTest {
             persistProduct("New Shirt", new BigDecimal("40.00"), menCategory);
             persistProduct("New Dress", new BigDecimal("60.00"), womenCategory);
 
-            List<Product> result = repository.findNew(10, 1, null, null);
+            List<Product> result = repository.findNew(10, 0, 1, null, null, null, null);
 
             assertEquals(2, result.size(),
                     "Both products are brand new, should be within 1 day cutoff");
@@ -600,7 +600,7 @@ class ProductRepositoryTest {
             persistProduct("New Men Shirt",  new BigDecimal("40.00"), menCategory);
             persistProduct("New Women Dress",new BigDecimal("60.00"), womenCategory);
 
-            List<Product> result = repository.findNew(10, 1, "FEMALE", null);
+            List<Product> result = repository.findNew(10, 0, 1, "FEMALE", null, null, null);
 
             assertEquals(1, result.size());
             assertEquals("New Women Dress", result.get(0).getName());
@@ -613,7 +613,7 @@ class ProductRepositoryTest {
             persistProduct("New Women Dress", new BigDecimal("60.00"), womenCategory);
 
             List<Product> result = repository.findNew(
-                    10, 1, null, List.of(menCategory.getId()));
+                    10, 0, 1, null, List.of(menCategory.getId()), null, null);
 
             assertEquals(1, result.size());
             assertEquals("New Men Shirt", result.get(0).getName());
@@ -634,7 +634,7 @@ class ProductRepositoryTest {
             persistProduct("New Shirt", new BigDecimal("40.00"), menCategory);
             persistProduct("New Dress", new BigDecimal("60.00"), womenCategory);
 
-            long count = repository.countNew(1, null, null);
+            long count = repository.countNew(1, null, null, null, null);
 
             assertEquals(2, count);
         }
@@ -642,7 +642,7 @@ class ProductRepositoryTest {
         @Test
         @DisplayName("should count zero when no products exist")
         void countNew_noProducts_returnsZero() {
-            long count = repository.countNew(1, null, null);
+            long count = repository.countNew(1, null, null, null, null);
 
             assertEquals(0, count);
         }

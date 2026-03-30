@@ -6,6 +6,7 @@ import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
 import service.CategoryService;
 
 import java.io.IOException;
@@ -33,6 +34,29 @@ public class CatalogServlet extends HttpServlet {
     protected void doGet(HttpServletRequest req, HttpServletResponse resp)
             throws ServletException, IOException {
 
+        String[] interestIds = req.getParameterValues("interestIds");
+        boolean hasValidInterestId = false;
+        if (interestIds != null) {
+            for (String id : interestIds) {
+                if (id != null && !id.isBlank()) {
+                    try {
+                        Integer.parseInt(id);
+                        hasValidInterestId = true;
+                        break;
+                    } catch (NumberFormatException ignored) {
+                        // Ignore non-numeric interestIds; they should not trigger the auth gate
+                    }
+                }
+            }
+        }
+        if (hasValidInterestId) {
+            HttpSession session = req.getSession(false);
+            if (session == null || session.getAttribute("user") == null) {
+                resp.sendRedirect(req.getContextPath() + "/home");
+                return;
+            }
+        }
+
         List<Category> categories = categoryService.getAll();
         req.setAttribute("filterCategories", categories);
 
@@ -41,8 +65,8 @@ public class CatalogServlet extends HttpServlet {
         String[] catIds  = req.getParameterValues("categoryIds");
         String   newOnly = req.getParameter("newOnly");
 
-        req.setAttribute("pageTitle",   resolveTitle(q, gender, catIds, newOnly, categories));
-        req.setAttribute("pageEyebrow", resolveEyebrow(q, gender, newOnly));
+        req.setAttribute("pageTitle",   resolveTitle(q, gender, catIds, newOnly, interestIds, categories));
+        req.setAttribute("pageEyebrow", resolveEyebrow(q, gender, newOnly, interestIds));
 
         req.getRequestDispatcher("/WEB-INF/catalog.jsp").forward(req, resp);
     }
@@ -50,9 +74,12 @@ public class CatalogServlet extends HttpServlet {
     /* ── Heading helpers ──────────────────────────────────────── */
 
     private String resolveTitle(String q, String gender, String[] catIds,
-                                String newOnly, List<Category> categories) {
-        /* Search mode */
+                                String newOnly, String[] interestIds,
+                                List<Category> categories) {
         if (q != null && !q.isBlank()) return "Search Results";
+
+        boolean hasInterests = interestIds != null && interestIds.length > 0;
+        if (hasInterests) return "Based on Your Interests";
 
         if ("true".equalsIgnoreCase(newOnly)) return "New Arrivals";
 
@@ -76,12 +103,14 @@ public class CatalogServlet extends HttpServlet {
         return "All Products";
     }
 
-    private String resolveEyebrow(String q, String gender, String newOnly) {
+    private String resolveEyebrow(String q, String gender, String newOnly, String[] interestIds) {
         if (q != null && !q.isBlank())
-            return "Showing results for \u201c" + q + "\u201d"; // "q"
-        if ("true".equalsIgnoreCase(newOnly))  return "Fresh in this week";
-        if ("FEMALE".equalsIgnoreCase(gender)) return "Tailored for her";
-        if ("MALE".equalsIgnoreCase(gender))   return "Tailored for him";
+            return "Showing results for \u201c" + q + "\u201d";
+        boolean hasInterests = interestIds != null && interestIds.length > 0;
+        if (hasInterests)                          return "Picked just for you";
+        if ("true".equalsIgnoreCase(newOnly))      return "Fresh in this week";
+        if ("FEMALE".equalsIgnoreCase(gender))     return "Tailored for her";
+        if ("MALE".equalsIgnoreCase(gender))       return "Tailored for him";
         return "Browse the collection";
     }
 }
