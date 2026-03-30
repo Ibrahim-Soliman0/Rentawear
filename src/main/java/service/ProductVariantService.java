@@ -10,7 +10,6 @@ import java.util.List;
 import java.util.Map;
 
 // Owns variant-level operations only.
-// Grouping helpers live here because they operate purely on variant data
 // no product or image context needed.
 public class ProductVariantService extends BaseService<ProductVariant> {
 
@@ -41,8 +40,7 @@ public class ProductVariantService extends BaseService<ProductVariant> {
         return variantRepo.findAvailableSizesByProductIdAndColor(productId, color);
     }
 
-
-    // Returns variants for multiple products grouped by product id.
+    /** Returns active (non-deleted) variants for multiple products grouped by product id. */
     public Map<Integer, List<ProductVariant>> getByProductIds(List<Integer> productIds) {
         List<ProductVariant> all = variantRepo.findByProductIds(productIds);
         Map<Integer, List<ProductVariant>> grouped = new LinkedHashMap<>();
@@ -52,6 +50,28 @@ public class ProductVariantService extends BaseService<ProductVariant> {
         }
         return grouped;
     }
+
+    /**
+     * Returns the IDs of active variants for a given product+color.
+     * Used to snapshot which cart_items to purge before soft-deleting.
+     */
+    public List<Integer> findIdsByColor(int productId, String color) {
+        return variantRepo.findIdsByProductIdAndColor(productId, color);
+    }
+
+    // ── Soft-delete (safe when order_items may reference these rows) ──────────
+
+    /** Soft-deletes all variants for the given product+color. */
+    public void softDeleteColor(int productId, String color) {
+        variantRepo.softDeleteByProductIdAndColor(productId, color);
+    }
+
+    /** Soft-deletes all variants for the given product. */
+    public void softDeleteByProductId(int productId) {
+        variantRepo.softDeleteByProductId(productId);
+    }
+
+    // ── Legacy hard-delete (no longer called by facade) ───────────────────────
 
     public void deleteColor(int productId, String color) {
         variantRepo.deleteByProductIdAndColor(productId, color);
