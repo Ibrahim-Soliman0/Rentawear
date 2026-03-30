@@ -97,37 +97,65 @@
    ──────────────────────────────────────────────────────────────────────────── */
 class CartItemNormaliser {
 
+    /**
+     * Convert a raw CartItemDTO (as returned by /cart/items) into the
+     * flat object shape that CardFactory.cartItem() and Cart._subtotal() need.
+     *
+     * @param  {Object} raw  — raw JSON from the server
+     * @returns {Object}     — normalised item
+     */
     static fromDTO(raw) {
         const core = raw.core ?? {};
 
+        // Build the ISO range string CardFactory._formatDates() expects:
+        // "2024-11-12/2024-11-16"
         const dates = (raw.startDate && raw.endDate)
             ? `${raw.startDate}/${raw.endDate}`
             : null;
 
+        // colorName — strip the hex prefix if present, e.g. "#2D5A3D-Forest Green" → "Forest Green"
+        // If the color has no prefix it is used as-is for display.
         const colorName = raw.color
             ? raw.color.replace(/^#[0-9a-fA-F]+-/, '')
             : null;
 
         return {
-            cartItemId:   raw.cartItemId  ?? null,
-            id:           raw.variantId   ?? null,
-            productId:    core.id         ?? null,
-            name:         core.name       ?? '',
-            brand:        core.brand      ?? '',
-            pricePerDay:  Number(core.pricePerDay ?? 0),
-            imageUrl:     core.imageUrl   ?? null,
-            size:         raw.size        ?? null,
-            color:        raw.color       ?? null,
-            colorName,
-            startDate:    raw.startDate   ?? null,
-            endDate:      raw.endDate     ?? null,
-            days:         raw.rentalDays  ?? 0,
-            dates,
-            inventoryQty: raw.inventoryQty ?? null,
-            qty:          Number(raw.qty ?? 1),
+            // ── Identity ──────────────────────────────────────────────────────
+            cartItemId:  raw.cartItemId  ?? null,   // DB primary key of cart_items row
+            id:          raw.variantId   ?? null,   // variantKey root  ("id" expected by CardFactory)
+            productId:   core.id         ?? null,   // product PK — sent in mutation payloads
+
+            // ── Display fields (CardFactory.cartItem) ─────────────────────────
+            name:        core.name       ?? '',
+            brand:       core.brand      ?? '',
+            pricePerDay: Number(core.pricePerDay ?? 0),
+            imageUrl:    core.imageUrl   ?? null,
+
+            // ── Variant fields ────────────────────────────────────────────────
+            size:        raw.size        ?? null,
+            color:       raw.color       ?? null,   // raw value used in variantKey
+            colorName,                               // display value used in UI
+
+            // ── Rental period ─────────────────────────────────────────────────
+            startDate:   raw.startDate   ?? null,   // "2024-11-12" — sent in mutations
+            endDate:     raw.endDate     ?? null,   // "2024-11-16" — sent in mutations
+            days:        raw.rentalDays  ?? 0,      // _subtotal() uses this
+            dates,                                   // CardFactory._formatDates() uses this
+
+            // ── Stock ─────────────────────────────────────────────────────────
+            inventoryQty: raw.inventoryQty ?? null,  // inc-button cap in CardFactory
+
+            // ── Quantity — managed client-side ────────────────────────────────
+            // Server returns current qty; Cart mutates it locally then syncs.
+            qty: Number(raw.qty ?? 1),
         };
     }
 
+    /**
+     * Normalise an array of raw DTOs in one call.
+     * @param  {Array} rawList
+     * @returns {Array}
+     */
     static fromDTOList(rawList) {
         if (!Array.isArray(rawList)) return [];
         return rawList.map(CartItemNormaliser.fromDTO);
@@ -191,6 +219,8 @@ class CartStorage {
 
 /* ── CartServer ──────────────────────────────────────────────────────────────
    Owns every fetch() call.
+   Uses cartItemId for mutations — simpler and safer than re-deriving
+   productId + size + color on the server.
    ──────────────────────────────────────────────────────────────────────────── */
 class CartServer {
 
@@ -214,6 +244,11 @@ class CartServer {
         return res.json();
     }
 
+    /**
+     * GET /cart/items
+     * Server returns: { loggedIn, items: [ ...CartItemDTO... ] }
+     * Each DTO includes inventoryQty (joined from product_variants).
+     */
     async fetchItems() {
         const res = await fetch(`${this._ctx}/cart/items`, {
             method: 'GET',
@@ -223,6 +258,10 @@ class CartServer {
         return this._checkResponse(res, 'fetchItems');
     }
 
+    /**
+     * GET /cart/merge-pending
+     * Returns { pending: true } if LoginServlet flagged a post-login merge.
+     */
     async fetchMergePending() {
         try {
             const res = await fetch(`${this._ctx}/cart/merge-pending`, {
@@ -237,6 +276,14 @@ class CartServer {
         }
     }
 
+    /**
+     * POST /cart/merge
+     * Body: JSON array of normalised guest items.
+     * Merge rule enforced server-side in CartMergeServlet:
+     *   • Same variant key already in DB cart  → guest item discarded
+     *   • Key not in DB cart                   → guest item added
+     * Returns: { merged, skipped }
+     */
     async mergeGuestCart(items) {
         const res = await fetch(`${this._ctx}/cart/merge`, {
             method: 'POST',
@@ -268,9 +315,16 @@ class CartServer {
         }
     }
 
+    /**
+     * POST /cart/add
+     * Payload: variantId, qty, startDate, endDate
+     * Server derives rentalDays from the dates.
+     * Returns: { success, loggedIn, cartItemId?, message? }
+     * cartItemId is returned so the client can store it immediately.
+     */
     async addItem(item) {
         const body = new URLSearchParams({
-            variantId: item.id,
+            variantId: item.id,          // item.id IS the variantId after normalisation
             qty:       item.qty ?? 1,
             startDate: item.startDate ?? '',
             endDate:   item.endDate   ?? '',
@@ -284,6 +338,12 @@ class CartServer {
         return this._checkResponse(res, 'addItem');
     }
 
+    /**
+     * POST /cart/remove
+     * Payload: cartItemId
+     * Using the PK is simpler than re-deriving variant on the server.
+     * Returns: { success, loggedIn, message? }
+     */
     async removeItem(item) {
         if (item.cartItemId == null) {
             throw new Error('[CartServer] removeItem — missing cartItemId');
@@ -298,6 +358,11 @@ class CartServer {
         return this._checkResponse(res, 'removeItem');
     }
 
+    /**
+     * POST /cart/update-qty
+     * Payload: cartItemId, qty (absolute, not delta)
+     * Returns: { success, loggedIn, message? }
+     */
     async updateQty(item, newQty) {
         const body = new URLSearchParams({ cartItemId: item.cartItemId, qty: newQty });
         const res = await fetch(`${this._ctx}/cart/update-qty`, {
@@ -313,6 +378,7 @@ class CartServer {
 
 /* ── CartRenderer ────────────────────────────────────────────────────────────
    Owns every DOM read/write for the cart drawer.
+   Receives only normalised items — knows nothing about DTOs.
    ──────────────────────────────────────────────────────────────────────────── */
 class CartRenderer {
 
@@ -325,11 +391,11 @@ class CartRenderer {
     get _cta()        { return document.querySelector('.cart-cta');       }
 
     render(items, subtotal) {
-        const totalQty     = items.reduce((sum, i) => sum + i.qty, 0);
-        const productCount = items.length;
+        const totalQty     = items.reduce((sum, i) => sum + i.qty, 0); // total units
+        const productCount = items.length;                              // distinct line-items
 
-        this._renderBadge(productCount);
-        this._renderCountLabel(totalQty);
+        this._renderBadge(productCount);     // badge shows number of products
+        this._renderCountLabel(totalQty);    // "3 items" label shows total units
 
         if (!this._itemsWrap) return;
         items.length === 0 ? this._renderEmpty() : this._renderItems(items);
@@ -437,6 +503,7 @@ class CartToast {
 
 /* ── Cart ────────────────────────────────────────────────────────────────────
    Orchestrator.  _items always holds normalised items.
+   DTOs from the server are normalised immediately in syncFromServer().
    ──────────────────────────────────────────────────────────────────────────── */
 class Cart {
 
@@ -453,6 +520,15 @@ class Cart {
 
     // ── Public API ────────────────────────────────────────────────────────────
 
+    /**
+     * Variant key — "variantId:size:color:startDate:endDate"
+     *
+     * Dates are included so that:
+     *   • Same product + same variant + same dates  → same key  → qty incremented
+     *   • Same product + same variant + diff dates  → diff key  → new line-item
+     *
+     * item.id IS the variantId after normalisation.
+     */
     variantKey(item) {
         return `${item.id}:${item.size || ''}:${item.color || ''}:${item.startDate || ''}:${item.endDate || ''}`;
     }
@@ -461,6 +537,12 @@ class Cart {
 
     render() { this._renderer.render(this._items, this._subtotal()); }
 
+    /**
+     * Fetch from server, normalise DTOs, overwrite localStorage, re-render.
+     * Call after login, logout, or any external cart mutation.
+     * If the server signals the user is not logged in, falls back to
+     * localStorage so the guest cart remains intact.
+     */
     async syncFromServer() {
         try {
             const data = await this._server.fetchItems();
@@ -472,20 +554,21 @@ class Cart {
                 return;
             }
 
-            this._items = CartItemNormaliser.fromDTOList(data.items);
+            this._items = CartItemNormaliser.fromDTOList(data.items); // normalise here
             this._storage.save(this._items);
             this._storage.markSynced();
             this.render();
             console.info(`[Cart] synced — ${this._items.length} item(s)`);
         } catch (err) {
             console.warn('[Cart] syncFromServer failed, using localStorage cache:', err);
-            this._items = this._storage.load();
+            this._items = this._storage.load();                       // already normalised
             this.render();
         }
     }
 
     /**
      * Add an item.  item must already be normalised (built by the product page).
+     * See CartItemNormaliser.fromDTO() for the expected shape.
      *
      * Inventory check order:
      *  1. Fetch DB-reserved qty from the server for this variantId.
@@ -501,6 +584,9 @@ class Cart {
         const existing = this._findByKey(key);
 
         // ── Inventory check ───────────────────────────────────────────────────
+        // Count total qty for this variantId across ALL date ranges — both in the
+        // DB and in the current in-memory cart — to prevent a user from bypassing
+        // the stock limit by adding the same variant with different rental dates.
         if (item.inventoryQty != null) {
 
             // Step 1: how many does the user already have reserved in the DB?
@@ -524,7 +610,7 @@ class Cart {
             }
         }
 
-        // ── Optimistic update ─────────────────────────────────────────────────
+        // ── Optimistic update ────────────────────────────────────────────────
         if (existing) {
             existing.qty++;
         } else {
@@ -533,9 +619,24 @@ class Cart {
         this._commitLocal();
 
         // ── Server sync ───────────────────────────────────────────────────────
+        // Two completely different paths depending on whether the line-item
+        // already existed:
+        //
+        //   NEW item   → POST /cart/add    → server creates a DB row
+        //                                  → returns cartItemId
+        //
+        //   EXISTING   → POST /cart/update-qty → server updates the existing row
+        //              We must NOT call /cart/add again — that would create a
+        //              duplicate DB row, which is what causes the duplicates
+        //              seen after a page refresh.
         try {
             if (existing) {
+                // ── Increment existing line-item ──────────────────────────────
                 if (existing.cartItemId == null) {
+                    // cartItemId not yet known (item was just added this session
+                    // and the /cart/add response hasn't come back yet, or the
+                    // server is offline).  For logged-in users, fall back to a
+                    // full sync to reconcile.  For guests, nothing to do.
                     const data = await this._server.fetchItems();
                     if (data.loggedIn) {
                         console.warn('[Cart] add — existing item has no cartItemId, syncing from server');
@@ -546,13 +647,15 @@ class Cart {
                 const result = await this._server.updateQty(existing, existing.qty);
                 if (!result.success && result.loggedIn !== false) {
                     this._toast.show(result.message ?? 'Could not update quantity. Please try again.');
-                    existing.qty--;
+                    existing.qty--;   // rollback the optimistic increment
                     this._commitLocal();
                 }
             } else {
+                // ── Add brand-new line-item ───────────────────────────────────
                 const result = await this._server.addItem({ ...item, qty: 1 });
                 if (result.loggedIn === false) return; // guest — already in localStorage
                 if (result.success) {
+                    // Store the cartItemId so remove / update-qty work immediately
                     const stored = this._findByKey(key);
                     if (stored && result.cartItemId) stored.cartItemId = result.cartItemId;
                     this._commitLocal();
@@ -572,6 +675,7 @@ class Cart {
         const item = this._findByKey(key);
         if (!item) return;
 
+        // Guest item — no cartItemId, local removal only
         if (item.cartItemId == null) {
             this._items = this._items.filter(i => this.variantKey(i) !== key);
             this._commitLocal();
@@ -579,6 +683,7 @@ class Cart {
         }
 
         const snapshot = [...this._items];
+
         this._items = this._items.filter(i => this.variantKey(i) !== key);
         this._commitLocal();
 
@@ -600,6 +705,8 @@ class Cart {
         if (!item) return;
 
         if (delta > 0 && item.inventoryQty != null) {
+            // Check total qty for this variantId across all date ranges in the cart
+            // so the + button on one line-item can't exceed stock shared with another
             const localQty = this._totalQtyForVariant(item.id);
             if (localQty >= item.inventoryQty) {
                 const label = item.inventoryQty === 1
@@ -646,6 +753,17 @@ class Cart {
         return this._items.find(i => this.variantKey(i) === key) ?? null;
     }
 
+    /**
+     * Sum of qty for every line-item in the cart that shares the same variantId,
+     * regardless of rental dates.
+     *
+     * This is the number that must not exceed inventoryQty — a single physical
+     * unit cannot be rented out to two different slots simultaneously, so all
+     * date ranges compete for the same stock pool.
+     *
+     * @param {number|string} variantId  — item.id after normalisation
+     * @returns {number}
+     */
     _totalQtyForVariant(variantId) {
         return this._items
             .filter(i => i.id === variantId)
@@ -746,6 +864,10 @@ class Cart {
         }
 
         await this.syncFromServer();
+    }
+
+    get ready() {
+        return this._syncPromise ?? Promise.resolve();
     }
 }
 

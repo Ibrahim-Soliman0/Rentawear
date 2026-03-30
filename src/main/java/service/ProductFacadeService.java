@@ -16,10 +16,13 @@ import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-// Orchestrates ProductService, ProductVariantService, and ProductImageService.
+// Orchestrates ProductService, ProductVariantService, ProductImageService,
+// and CartItemService.
 // This is the only class that:
 //   1. Calls more than one service in a single operation
 //   2. Calls the mapper to assemble final DTOs
@@ -31,16 +34,20 @@ public class ProductFacadeService {
     private final ProductImageService   imageService;
     private final ProductMapper         mapper;
     private final CategoryService       categoryService;
+    private final CartItemService       cartItemService;
 
     public ProductFacadeService(ProductService productService,
                                 ProductVariantService variantService,
                                 ProductImageService imageService,
-                                ProductMapper mapper, CategoryService categoryService) {
-        this.productService = productService;
-        this.variantService = variantService;
-        this.imageService   = imageService;
-        this.mapper         = mapper;
+                                ProductMapper mapper,
+                                CategoryService categoryService,
+                                CartItemService cartItemService) {
+        this.productService  = productService;
+        this.variantService  = variantService;
+        this.imageService    = imageService;
+        this.mapper          = mapper;
         this.categoryService = categoryService;
+        this.cartItemService = cartItemService;
     }
 
     // ── Catalog listing ───────────────────────────────────────────────────────
@@ -51,7 +58,6 @@ public class ProductFacadeService {
     //   3. Fetch primary images for ALL those ids in ONE query
     //   4. Group images by product id in memory
     //   5. Map each product with its pre-fetched images
-    //
 
     public ProductListResult getProducts(ProductFilterDTO filter) {
         List<Product> products = fetchProducts(filter);
@@ -60,14 +66,10 @@ public class ProductFacadeService {
                 ? productService.getMinMaxPriceForInterests(filter)
                 : productService.getMinMaxPrice(filter);
 
-        List<Integer> ids = products.stream()
-                .map(Product::getId)
-                .collect(Collectors.toList());
+        List<Integer> ids = products.stream().map(Product::getId).collect(Collectors.toList());
 
-        // Batch-fetch both variants AND images — still only 2 extra queries
         Map<Integer, List<ProductVariant>> variantsByProductId =
                 variantService.getByProductIds(ids);
-
         Map<Integer, List<ProductImage>> imagesByProductId =
                 imageService.getPrimaryPerColorForProducts(ids);
 
@@ -89,13 +91,10 @@ public class ProductFacadeService {
         long          total    = productService.countSearchFiltered(filter);
         PriceRangeDTO range    = productService.getMinMaxPrice(filter);
 
-        List<Integer> ids = products.stream()
-                .map(Product::getId)
-                .collect(Collectors.toList());
+        List<Integer> ids = products.stream().map(Product::getId).collect(Collectors.toList());
 
         Map<Integer, List<ProductVariant>> variantsByProductId =
                 variantService.getByProductIds(ids);
-
         Map<Integer, List<ProductImage>> imagesByProductId =
                 imageService.getPrimaryPerColorForProducts(ids);
 
@@ -124,17 +123,15 @@ public class ProductFacadeService {
     }
 
     // ── Admin product list ────────────────────────────────────────────────────
+
     public AdminProductListResult getAdminProducts(ProductFilterDTO filter) {
         List<Product> products = fetchProducts(filter);
-        long total = countProducts(filter);
+        long          total    = countProducts(filter);
 
-        List<Integer> ids = products.stream()
-                .map(Product::getId)
-                .collect(Collectors.toList());
+        List<Integer> ids = products.stream().map(Product::getId).collect(Collectors.toList());
 
         Map<Integer, List<ProductVariant>> variantsByProductId =
                 variantService.getByProductIds(ids);
-
         Map<Integer, List<ProductImage>> imagesByProductId =
                 imageService.getPrimaryPerColorForProducts(ids);
 
@@ -155,19 +152,14 @@ public class ProductFacadeService {
     }
 
     // ── Admin product detail ──────────────────────────────────────────────────
-    // FIX 1: Eliminated the per-color N+1 query inside the variant loop.
-    // Previously: imageService.findByProductIdAndColor() called once per unique
-    //             color → 5 colors = 5 extra queries.
-    // After fix:  imageService.getByProductId() called once, results grouped in
-    //             memory → always exactly 3 queries total regardless of color count.
+    // Images grouped in memory — always exactly 3 queries regardless of color count.
 
     public AdminProductDetailDTO getAdminDetail(int productId) {
         Product              product   = productService.getById(productId);
-        List<ProductVariant> variants  = variantService.getByProductId(productId);
+        List<ProductVariant> variants  = variantService.getByProductId(productId); // deleted=false
         List<ProductImage>   allImages = imageService.getByProductId(productId);
 
-        // Group images by color in memory — O(1) lookup replaces per-color query.
-        // putIfAbsent: images arrive id ASC, so the first image per color wins.
+        // Group images by color in memory — first image per color wins.
         Map<String, String> imageUrlByColor = new LinkedHashMap<>();
         for (ProductImage img : allImages) {
             imageUrlByColor.putIfAbsent(img.getColor(), img.getImageUrl());
@@ -177,10 +169,9 @@ public class ProductFacadeService {
         for (ProductVariant v : variants) {
             String colorKey = v.getColor();
             stockByColor.computeIfAbsent(colorKey, k -> new ArrayList<>());
-            String imageUrl = imageUrlByColor.get(colorKey);
             stockByColor.get(colorKey).add(
-                    new VariantStockDTO(v.getId(), v.getSize(), v.getQuantity(), imageUrl)
-            );
+                    new VariantStockDTO(v.getId(), v.getSize(), v.getQuantity(),
+                            imageUrlByColor.get(colorKey)));
         }
 
         return new AdminProductDetailDTO(
@@ -192,23 +183,15 @@ public class ProductFacadeService {
     }
 
     // ── Variant-ordered primary image resolver ────────────────────────────────
-    //
-    // Returns the image URL for the first color (in variant insertion order,
-    // variant id ASC) that has an uploaded image. Used by searchProducts and
-    // getAdminProducts to set product.imageUrl before the mapper reads it.
+
     private String resolveVariantOrderedPrimary(List<ProductVariant> variants,
                                                 List<ProductImage>   images) {
         if (images == null || images.isEmpty()) return null;
-
-        if (variants == null || variants.isEmpty()) {
-            return images.get(0).getImageUrl();
-        }
+        if (variants == null || variants.isEmpty()) return images.get(0).getImageUrl();
 
         Map<String, String> imageByColor = new LinkedHashMap<>();
         for (ProductImage img : images) {
-            if (img.getColor() != null) {
-                imageByColor.putIfAbsent(img.getColor(), img.getImageUrl());
-            }
+            if (img.getColor() != null) imageByColor.putIfAbsent(img.getColor(), img.getImageUrl());
         }
 
         Set<String> seen = new LinkedHashSet<>();
@@ -218,37 +201,198 @@ public class ProductFacadeService {
             String url = imageByColor.get(color);
             if (url != null) return url;
         }
-
         return null;
     }
 
-    // Colour deletion
-    // Deletes both variants and images for a colour in one transaction.
-    // The EntityManagerFilter wraps the entire request in a transaction, so if
-    // either delete throws, both are rolled back automatically.
+    // ── Color deletion ────────────────────────────────────────────────────────
+    //
+    // Safe delete sequence for a single color:
+    //
+    //  1. Collect active variant IDs for this product+color
+    //  2. Hard-delete cart_items referencing those variants   (ephemeral — safe)
+    //  3. Soft-delete the variants                            (order_items FK stays valid)
+    //  4. Delete the color image file + product_images row    (no inbound FKs)
+    //
+    // All four steps run inside the same transaction (EntityManagerFilter).
 
-    public void deleteColor(int productId, String color) {
-        variantService.deleteColor(productId, color);
-        imageService.deleteColorImages(productId, color);
+    public void deleteColor(int productId, String color, String webappRoot) {
+        // Step 1 — snapshot IDs before touching anything
+        List<Integer> variantIds = variantService.findIdsByColor(productId, color);
+
+        // Step 2 — purge cart items (hard delete is safe; they're ephemeral)
+        cartItemService.deleteByVariantIds(variantIds);
+
+        // Step 3 — soft-delete variants (keeps order_items FK valid)
+        variantService.softDeleteColor(productId, color);
+
+//        // Step 4 — delete image file + DB record (no FK constraints on product_images)
+//        imageService.deleteColorImage(productId, color, webappRoot);
     }
 
-    // Product deletion
-    // Deletes product along with all its variants and images.
-    // Returns true if deleted, false if product not found.
+    // ── Product deletion ──────────────────────────────────────────────────────
+    //
+    // Safe delete sequence for an entire product:
+    //
+    //  1. Snapshot ALL active variant IDs
+    //  2. Hard-delete cart_items referencing those variants
+    //  3. Soft-delete all variants
+    //  4. Hard-delete all product_images rows (no inbound FKs — safe)
+    //  5. Soft-delete the product itself
+    //
+    // Order history (order_items) is untouched throughout.
 
     public boolean deleteProduct(int productId) {
         Product product = productService.getById(productId);
-        if (product == null) {
-            return false;
-        }
-        // Delete variants and images first (due to foreign key constraints)
-        variantService.deleteByProductId(productId);
-        imageService.deleteByProductId(productId);
-        productService.delete(productId);
+        if (product == null) return false;
+
+        // Step 1 — snapshot active variant IDs (collection is loaded, EM is open)
+        List<Integer> variantIds = product.getProductVariants().stream()
+                .filter(v -> !v.isDeleted())
+                .map(ProductVariant::getId)
+                .collect(Collectors.toList());
+
+        // Step 2 — purge cart items
+        cartItemService.deleteByVariantIds(variantIds);
+
+        // Step 3 — soft-delete variants
+        variantService.softDeleteByProductId(productId);
+
+//        // Step 4 — hard-delete image DB rows (product_images has no inbound FKs)
+//        imageService.deleteByProductId(productId);
+
+        // Step 5 — soft-delete product
+        productService.softDelete(productId);
+
         return true;
     }
 
-    // ── Private routing helpers ───────────────────────────────────────────────
+    // ── Update product ────────────────────────────────────────────────────────
+    //
+    // Variants removed from the edit form must NOT go through
+    // product.removeProductVariant() — that triggers orphanRemoval which issues
+    // a hard DELETE and will violate the order_items FK if any orders exist.
+    //
+    // Instead:
+    //   a) Identify active variants not present in the incoming payload
+    //   b) Purge their cart items first (hard delete — safe)
+    //   c) Set deleted = true on the managed entity
+    //      → Hibernate flushes this as UPDATE, never DELETE
+
+    public AdminProductDetailDTO updateProduct(Integer id, SaveProductDTO dto) {
+        Product product = productService.getById(id);
+        if (product == null) return null;
+
+        applyDtoToProduct(product, dto);
+
+        List<Integer> incomingIds = dto.variants().stream()
+                .filter(v -> v.variantId() != null)
+                .map(VariantSaveDTO::variantId)
+                .collect(Collectors.toList());
+
+        // Active variants whose ID is NOT in the incoming payload → soft-delete
+        List<ProductVariant> variantsToRemove = product.getProductVariants().stream()
+                .filter(v -> !v.isDeleted())
+                .filter(v -> !incomingIds.contains(v.getId()))
+                .collect(Collectors.toList());
+
+        for (ProductVariant v : variantsToRemove) {
+            cartItemService.deleteByVariantIds(List.of(v.getId())); // purge cart first
+            v.setDeleted(true); // UPDATE only — entity stays in collection
+        }
+
+        // Update existing / add new (or resurrect a previously soft-deleted variant)
+        //
+        // WHY resurrection matters:
+        //   product_variants has UNIQUE (product_id, color, size).
+        //   A soft-deleted row still occupies that slot in the DB.
+        //   Blindly INSERTing the same color+size would cause a constraint violation.
+        //   Instead we search the full collection (which Hibernate loads including
+        //   deleted=true rows, since the filter only lives in named queries, not the
+        //   mapping) and flip the deleted flag back if a match is found.
+        dto.variants().forEach(v -> {
+            if (v.variantId() != null) {
+                // ── Update an existing active variant ─────────────────────────
+                product.getProductVariants().stream()
+                        .filter(pv -> !pv.isDeleted() && pv.getId().equals(v.variantId()))
+                        .findFirst()
+                        .ifPresent(pv -> {
+                            pv.setSize(v.size());
+                            pv.setColor(v.color());
+                            pv.setQuantity(v.quantity());
+                        });
+            } else {
+                // ── New variant from the form (no variantId) ──────────────────
+                // First check if a soft-deleted row with the same color+size exists.
+                // product.getProductVariants() includes deleted rows because the
+                // lazy collection has no @Where filter — Hibernate loads everything.
+                Optional<ProductVariant> softDeleted = product.getProductVariants().stream()
+                        .filter(pv -> pv.isDeleted()
+                                && Objects.equals(pv.getColor(), v.color())
+                                && Objects.equals(pv.getSize(),  v.size()))
+                        .findFirst();
+
+                if (softDeleted.isPresent()) {
+                    // Resurrect: un-delete the row, update quantity.
+                    // Hibernate flushes this as UPDATE — no INSERT, no constraint hit.
+                    ProductVariant pv = softDeleted.get();
+                    pv.setDeleted(false);
+                    pv.setQuantity(v.quantity());
+                } else {
+                    // Genuinely new color+size — safe to INSERT.
+                    ProductVariant newVariant = new ProductVariant();
+                    newVariant.setColor(v.color());
+                    newVariant.setSize(v.size());
+                    newVariant.setQuantity(v.quantity());
+                    product.addProductVariant(newVariant);
+                }
+            }
+        });
+
+        Product saved = productService.save(product);
+        return getAdminDetail(saved.getId());
+    }
+
+    // ── Image management ──────────────────────────────────────────────────────
+
+    public String updateProductImage(int productId, String imageUrl) {
+        Product product = productService.getById(productId);
+        if (product == null) return null;
+        String old = product.getImageUrl();
+        product.setImageUrl(imageUrl);
+        productService.save(product);
+        return old;
+    }
+
+    public String saveColorImage(Product product, String encodedColor,
+                                 InputStream inputStream, String webappRoot) throws IOException {
+        return imageService.saveColorImage(product, encodedColor, inputStream, webappRoot);
+    }
+
+    // Image-only deletion — no variant or cart changes.
+    // Still used by AdminProductColorImageServlet.doDelete (upload-replace flow).
+    public void deleteColorImage(int productId, String color, String webappRoot) {
+        imageService.deleteColorImage(productId, color, webappRoot);
+    }
+
+    // ── Create ────────────────────────────────────────────────────────────────
+
+    public Integer saveProduct(SaveProductDTO dto) {
+        Product product = new Product();
+        applyDtoToProduct(product, dto);
+        return productService.save(product).getId();
+    }
+
+    // ── Misc ──────────────────────────────────────────────────────────────────
+
+    public Product getProductById(int id) {
+        return productService.getById(id);
+    }
+
+    boolean isNew(Product product) {
+        return product.getCreatedAt().isAfter(Instant.now().minus(30, ChronoUnit.DAYS));
+    }
+
+    // ── Private helpers ───────────────────────────────────────────────────────
 
     private List<Product> fetchProducts(ProductFilterDTO f) {
         if (f.isSearch())        return productService.searchFiltered(f);
@@ -264,91 +408,13 @@ public class ProductFacadeService {
         return productService.countFiltered(f);
     }
 
-    public Integer saveProduct(SaveProductDTO dto) {
-        Product product = new Product();
-        applyDtoToProduct(product, dto);
-        Product saved = productService.save(product);
-        return saved.getId();
-    }
-
-    public AdminProductDetailDTO updateProduct(Integer id, SaveProductDTO dto) {
-        Product product = productService.getById(id);
-        if (product == null) return null;
-
-        applyDtoToProduct(product, dto);
-
-        // Handle variants — update existing, add new, remove deleted
-        List<Integer> incomingIds = dto.variants().stream()
-                .filter(v -> v.variantId() != null)
-                .map(VariantSaveDTO::variantId)
-                .collect(Collectors.toList());
-
-        // Remove variants not in incoming list
-        List<ProductVariant> variantsToRemove = product.getProductVariants().stream()
-                .filter(v -> !incomingIds.contains(v.getId()))
-                .collect(Collectors.toList());
-        variantsToRemove.forEach(product::removeProductVariant);
-
-        // Update existing / add new
-        dto.variants().forEach(v -> {
-            if (v.variantId() != null) {
-                product.getProductVariants().stream()
-                        .filter(pv -> pv.getId().equals(v.variantId()))
-                        .findFirst()
-                        .ifPresent(pv -> {
-                            pv.setSize(v.size());
-                            pv.setColor(v.color());
-                            pv.setQuantity(v.quantity());
-                        });
-            } else {
-                ProductVariant newVariant = new ProductVariant();
-                newVariant.setColor(v.color());
-                newVariant.setSize(v.size());
-                newVariant.setQuantity(v.quantity());
-                product.addProductVariant(newVariant);
-            }
-        });
-
-        Product saved = productService.save(product);
-        return getAdminDetail(saved.getId());
-    }
-
-    public String updateProductImage(int productId, String imageUrl) {
-        Product product = productService.getById(productId);
-        if (product == null) return null;
-        String old = product.getImageUrl();
-        product.setImageUrl(imageUrl);
-        productService.save(product);
-        return old;
-    }
-
     private void applyDtoToProduct(Product product, SaveProductDTO dto) {
         product.setName(dto.name());
         product.setBasePrice(BigDecimal.valueOf(dto.pricePerDay()));
         product.setImageUrl(dto.imageUrl());
         product.setDescription(dto.description());
         if (dto.categoryId() != null) {
-            categoryService.getById(dto.categoryId())
-                    .ifPresent(product::setCategory);
+            categoryService.getById(dto.categoryId()).ifPresent(product::setCategory);
         }
-    }
-
-    public Product getProductById(int id) {
-        return productService.getById(id);
-    }
-
-    public String saveColorImage(Product product, String encodedColor,
-                                 InputStream inputStream, String webappRoot) throws IOException {
-        return imageService.saveColorImage(product, encodedColor, inputStream, webappRoot);
-    }
-
-    boolean isNew(Product product) {
-        return product.getCreatedAt()
-                .isAfter(Instant.now().minus(30, ChronoUnit.DAYS));
-    }
-
-    // Deletes all images for a colour.
-    public void deleteColorImage(int productId, String color, String webappRoot) {
-        imageService.deleteColorImage(productId, color, webappRoot);
     }
 }

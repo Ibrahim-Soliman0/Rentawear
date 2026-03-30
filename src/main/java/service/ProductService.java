@@ -8,6 +8,7 @@ import repository.ProductRepository;
 import java.util.List;
 
 // Owns product-level queries only.
+// Does not know about variants, images, or DTOs, those belong to the facade.
 public class ProductService {
 
     private static final int NEW_DAYS = 30;
@@ -74,16 +75,12 @@ public class ProductService {
     }
 
     public long countFiltered(ProductFilterDTO f) {
-        return productRepo.countFiltered(
-                f.gender(), f.categoryIds(),
-                f.minPrice(), f.maxPrice());
+        return productRepo.countFiltered(f.gender(), f.categoryIds(), f.minPrice(), f.maxPrice());
     }
 
     public long countSearchFiltered(ProductFilterDTO f) {
         return productRepo.countSearchFiltered(
-                f.searchQuery(), f.gender(),
-                f.categoryIds(),
-                f.minPrice(), f.maxPrice());
+                f.searchQuery(), f.gender(), f.categoryIds(), f.minPrice(), f.maxPrice());
     }
 
     public PriceRangeDTO getMinMaxPriceForInterests(ProductFilterDTO f) {
@@ -92,6 +89,18 @@ public class ProductService {
 
     public PriceRangeDTO getMinMaxPrice(ProductFilterDTO f) {
         return productRepo.getMinMaxPrice(f.gender(), f.categoryIds());
+    }
+
+    /**
+     * Soft-deletes a product by setting deleted = true.
+     * The row is kept so that order_items FKs via product_variants stay valid.
+     */
+    public void softDelete(int productId) {
+        Product product = productRepo.findById(productId);
+        if (product != null) {
+            product.setDeleted(true);
+            productRepo.save(product);
+        }
     }
 
     public void delete(int productId) {

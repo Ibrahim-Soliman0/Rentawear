@@ -5,10 +5,7 @@ import jakarta.servlet.ServletContextEvent;
 import jakarta.servlet.ServletContextListener;
 import mapper.ProductMapper;
 import mapper.ProductMapperImpl;
-import repository.impl.ProductImageRepositoryImpl;
-import repository.impl.ProductRepositoryImpl;
-import repository.impl.ProductVariantRepositoryImpl;
-import repository.impl.UserCategoryRepositoryImpl;
+import repository.impl.*;
 import service.*;
 import util.EnvLoaderUtil;
 import util.JPAUtil;
@@ -23,23 +20,37 @@ public class ServletContextBoot implements ServletContextListener {
         System.out.println("Initialized JPA EntityManagerFactory...");
         ServletContext ctx = sce.getServletContext();
 
-        ProductRepositoryImpl productRepo = new ProductRepositoryImpl();
-        ProductVariantRepositoryImpl variantRepo = new ProductVariantRepositoryImpl();
-        ProductImageRepositoryImpl imageRepo   = new ProductImageRepositoryImpl();
+        // ── Repositories ──────────────────────────────────────────────────────
+        ProductRepositoryImpl        productRepo      = new ProductRepositoryImpl();
+        ProductVariantRepositoryImpl variantRepo      = new ProductVariantRepositoryImpl();
+        ProductImageRepositoryImpl   imageRepo        = new ProductImageRepositoryImpl();
+        CartItemRepositoryImpl       cartItemRepo     = new CartItemRepositoryImpl();
+        UserCategoryRepositoryImpl   userCategoryRepo = new UserCategoryRepositoryImpl();
 
-        ProductService productService = new ProductService(productRepo);
-        ProductVariantService variantService = new ProductVariantService(variantRepo);
-        ProductImageService imageService   = new ProductImageService(imageRepo);
+        // ── Services ──────────────────────────────────────────────────────────
+        ProductService        productService  = new ProductService(productRepo);
+        ProductVariantService variantService  = new ProductVariantService(variantRepo);
+        ProductImageService   imageService    = new ProductImageService(imageRepo);
+        CartItemService       cartItemService = new CartItemService(cartItemRepo); // built before facade
+        CategoryService       categoryService = new CategoryService();
+
         ProductMapper mapper = new ProductMapperImpl();
-        CategoryService categoryService = new CategoryService();
-
+        
         ProductFacadeService facade = new ProductFacadeService(
-                productService, variantService, imageService, mapper,categoryService);
+                productService,
+                variantService,
+                imageService,
+                mapper,
+                categoryService,
+                cartItemService
+        );
         System.out.println("[AppContextListener] Dependency graph initialized");
+
+        // ── Publish to ServletContext ─────────────────────────────────────────
         ctx.setAttribute("productFacadeService", facade);
 
         UserCategoryService userCategoryService =
-                new UserCategoryService(new UserCategoryRepositoryImpl());
+                new UserCategoryService(userCategoryRepo);
         ctx.setAttribute("userCategoryService", userCategoryService);
     }
 

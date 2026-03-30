@@ -54,6 +54,34 @@ public class ProductVariantRepositoryImpl extends BaseRepositoryImpl<ProductVari
     }
 
     @Override
+    public List<Integer> findIdsByProductIdAndColor(int productId, String color) {
+        return em().createNamedQuery(
+                        "ProductVariant.findIdsByProductIdAndColor", Integer.class)
+                .setParameter("pid",   productId)
+                .setParameter("color", color)
+                .getResultList();
+    }
+
+    // ── Soft-delete ───────────────────────────────────────────────────────────
+
+    @Override
+    public void softDeleteByProductIdAndColor(int productId, String color) {
+        em().createNamedQuery("ProductVariant.softDeleteByProductIdAndColor")
+                .setParameter("pid",   productId)
+                .setParameter("color", color)
+                .executeUpdate();
+    }
+
+    @Override
+    public void softDeleteByProductId(int productId) {
+        em().createNamedQuery("ProductVariant.softDeleteByProductId")
+                .setParameter("pid", productId)
+                .executeUpdate();
+    }
+
+    // ── Legacy hard-delete ────────────────────────────────────────────────────
+
+    @Override
     public void deleteByProductIdAndColor(int productId, String color) {
         em().createNamedQuery("ProductVariant.deleteByProductIdAndColor")
                 .setParameter("pid",   productId)
