@@ -1,4 +1,4 @@
-package servlet.util;
+package util;
 
 import dto.ProductFilterDTO;
 import jakarta.servlet.http.HttpServletRequest;
