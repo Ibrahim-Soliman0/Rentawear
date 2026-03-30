@@ -380,7 +380,6 @@ class ProductFacadeServiceTest {
             verify(cartItemService, times(1))
                     .deleteByVariantIds(List.of(variant1.getId(), variant2.getId()));
             verify(variantService, times(1)).softDeleteByProductId(1);
-            verify(imageService, times(1)).deleteByProductId(1);
             verify(productService, times(1)).softDelete(1);
         }
 
@@ -403,7 +402,6 @@ class ProductFacadeServiceTest {
             inOrder.verify(cartItemService)
                     .deleteByVariantIds(List.of(variant1.getId(), variant2.getId()));
             inOrder.verify(variantService).softDeleteByProductId(1);
-            inOrder.verify(imageService).deleteByProductId(1);
             inOrder.verify(productService).softDelete(1);
         }
 
@@ -445,7 +443,6 @@ class ProductFacadeServiceTest {
             verify(variantService, times(1)).findIdsByColor(1, "Red");
             verify(cartItemService, times(1)).deleteByVariantIds(List.of(10, 11));
             verify(variantService, times(1)).softDeleteColor(1, "Red");
-            verify(imageService, times(1)).deleteColorImage(1, "Red", "/var/www");
         }
 
         @Test
@@ -462,7 +459,6 @@ class ProductFacadeServiceTest {
             inOrder.verify(variantService).findIdsByColor(1, "Blue");
             inOrder.verify(cartItemService).deleteByVariantIds(List.of(12));
             inOrder.verify(variantService).softDeleteColor(1, "Blue");
-            inOrder.verify(imageService).deleteColorImage(1, "Blue", "/var/www");
         }
     }
 

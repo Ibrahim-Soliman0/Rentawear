@@ -5,6 +5,7 @@ import dto.OrderDTO;
 import entity.*;
 import entity.enums.OrderStatus;
 import exception.InsufficientFundsException;
+import exception.UnavailableItemsException;
 import exception.UserNotFoundException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -409,7 +410,7 @@ class OrderServiceTest {
 
             // ACT & ASSERT
             assertThrows(
-                    IllegalStateException.class,
+                    UnavailableItemsException.class,
                     () -> orderService.placeOrder(1, cartJson, orderAmount)
             );
 

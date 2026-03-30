@@ -16,7 +16,19 @@ import java.util.Optional;
 @WebServlet("/login")
 public class LoginServlet extends HttpServlet {
 
-    private final UserService userService = new UserService();
+    private final UserService userService;
+
+    public LoginServlet() {
+        this.userService = new UserService();
+    }
+
+    /*
+     * Package-private constructor for testing.
+     * Allows tests to inject a mock UserService.
+     */
+    LoginServlet(UserService userService) {
+        this.userService = userService;
+    }
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
