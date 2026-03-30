@@ -5087,6 +5087,21 @@ a.product-card .product-price strong { color: var(--rw-teal); }
 .search-price-wrap {
   /* Padding and border come from the .sfp-section wrapper in the filter col */
 }
+
+/* Slider locked until a search calibrates real price bounds.
+   Dims the whole section and shows a hint below the track. */
+.sfp-section--price.is-uncalibrated {
+  opacity: 0.45;
+  pointer-events: none;
+}
+.sfp-section--price.is-uncalibrated::after {
+  content: 'Search to enable';
+  display: block;
+  font-size: 0.65rem;
+  color: var(--rw-muted);
+  letter-spacing: 0.06em;
+  margin-top: 8px;
+}
 .search-price-hd {
   display: flex;
   align-items: center;

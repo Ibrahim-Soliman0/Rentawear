@@ -18,7 +18,8 @@
     maxPrice:    null,
   };
 
-  let priceBounds = { min: 0, max: 500 };
+  let priceBounds     = { min: 0, max: 500 };
+  let priceCalibrated = false; /* true only after API returns real bounds */
   let searchTimer = null;
   let priceTimer  = null;
   let abortCtrl   = null;
@@ -46,6 +47,10 @@
   const results     = document.getElementById('searchResults');
 
   if (!modal || !input || !results) return;
+
+  /* Initialise fill bar geometry and lock slider until API calibrates it */
+  updatePriceDisplay();
+  setPriceSliderEnabled(false);
 
   /* Build catNames from checkbox data attributes */
   document.querySelectorAll('.sfp-cat-chk').forEach(chk => {
@@ -104,6 +109,9 @@
     document.querySelectorAll('.sfp-cat-chk').forEach(c => (c.checked = false));
     document.querySelectorAll('.sfp-cat-label').forEach(l => l.classList.remove('is-hidden'));
     resetPriceSlider();
+    priceBounds     = { min: 0, max: 500 };
+    priceCalibrated = false;
+    setPriceSliderEnabled(false);
     if (trending)  trending.style.display  = 'block';
     results.style.display = 'none';
     while (results.firstChild) results.removeChild(results.firstChild);
@@ -256,8 +264,24 @@
     if (!rangeMin || !rangeMax) return;
     rangeMin.min = lo; rangeMin.max = hi;
     rangeMax.min = lo; rangeMax.max = hi;
-    if (state.minPrice == null) rangeMin.value = lo;
-    if (state.maxPrice == null) rangeMax.value = hi;
+
+    if (state.minPrice != null) {
+      const clamped = Math.max(lo, Math.min(hi, state.minPrice));
+      state.minPrice    = clamped <= lo ? null : clamped;
+      rangeMin.value    = state.minPrice != null ? state.minPrice : lo;
+    } else {
+      rangeMin.value = lo;
+    }
+    if (state.maxPrice != null) {
+      const clamped = Math.max(lo, Math.min(hi, state.maxPrice));
+      state.maxPrice    = clamped >= hi ? null : clamped;
+      rangeMax.value    = state.maxPrice != null ? state.maxPrice : hi;
+    } else {
+      rangeMax.value = hi;
+    }
+
+    priceCalibrated = true;
+    setPriceSliderEnabled(true);
     updatePriceDisplay();
   }
 
@@ -291,7 +315,18 @@
     }
   }
 
+  /* Enable/disable the slider inputs and toggle visual state.
+     Disabled until the API returns real bounds for the current query. */
+  function setPriceSliderEnabled(enabled) {
+    if (rangeMin) rangeMin.disabled = !enabled;
+    if (rangeMax) rangeMax.disabled = !enabled;
+    if (priceWrap) priceWrap.classList.toggle('is-uncalibrated', !enabled);
+  }
+
   function schedulePriceFetch() {
+    /* Ignore slider moves that fire before bounds are calibrated —
+       they would send meaningless 0/500 defaults to the API. */
+    if (!priceCalibrated) return;
     clearTimeout(priceTimer);
     priceTimer = setTimeout(() => {
       const lo = parseInt(rangeMin.value, 10);
@@ -331,9 +366,17 @@
   clearBtn.addEventListener('click', () => {
     input.value = '';
     clearBtn.classList.remove('show');
+    state.minPrice    = null;
+    state.maxPrice    = null;
+    priceBounds       = { min: 0, max: 500 };
+    priceCalibrated   = false;
+    resetPriceSlider();
+    setPriceSliderEnabled(false);
     results.style.display = 'none';
     while (results.firstChild) results.removeChild(results.firstChild);
     if (trending) trending.style.display = 'block';
+    renderChips();
+    renderFilterBadge();
     input.focus();
   });
 
@@ -450,10 +493,9 @@
     const a = document.createElement('a');
     a.className   = 'search-view-all';
     a.href        = buildCatalogUrl(q);
-    // a.textContent = total > RESULT_SIZE
-    //     ? `View all ${total} result${total !== 1 ? 's' : ''} →`
-    //     : `View ${total} result${total !== 1 ? 's' : ''} →`;
-    a.textContent = `View all results →`;
+    a.textContent = total > RESULT_SIZE
+        ? `View all ${total} result${total !== 1 ? 's' : ''} →`
+        : `View ${total} result${total !== 1 ? 's' : ''} →`;
     results.appendChild(a);
   }
 
