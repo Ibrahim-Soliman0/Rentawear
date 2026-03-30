@@ -14,9 +14,9 @@ import util.JsonUtil;
 
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -26,19 +26,28 @@ import java.util.stream.Collectors;
  * Receives the guest cart (items stored in localStorage while the user was
  * not logged in) and merges them into the user's DB cart.
  * <p>
- * Merge rule <p>
+ * Merge rule
  * ──────────
+ * For each guest item, look up the matching DB line-item by variant key
+ * (variantId : size : color : startDate : endDate):
  * <p>
- * A "variant key" uniquely identifies a line-item:
- * variantId : size : color : startDate : endDate
+ * Case 1 — key NOT in DB cart:
+ * Check total qty already reserved for this variantId across ALL the user's
+ * cart line-items (all date ranges).  If there is room under inventoryQty,
+ * add the guest item (capped to the remaining room).  Otherwise discard.
  * <p>
- * • Key already exists in the DB cart  → discard the guest item (DB wins)
+ * Case 2 — key IS in DB cart (same variant + same dates):
+ * The line-item already exists.  Try to top it up by the guest qty.
+ * Calculate remaining room = inventoryQty − totalReservedForVariant.
+ * If room > 0, call updateItemQty() to increment by min(guestQty, room).
+ * If no room, discard.
  * <p>
- * • Key not in the DB cart             → add the guest item via CartService
+ * This means a guest who had 1 unit of a variant with 3 in stock, whose DB
+ * cart already has 2 of that variant on the same dates, will correctly have
+ * their qty bumped to 3 rather than being silently discarded.
  * <p>
  * Request body (application/json)
  * ────────────────────────────────
- * <p>
  * [
  * {
  * "id"        : 42,
@@ -53,7 +62,6 @@ import java.util.stream.Collectors;
  * <p>
  * Response (application/json)
  * ────────────────────────────
- * <p>
  * { "success": true, "merged": 2, "skipped": 1 }
  */
 @WebServlet("/cart/merge")
@@ -76,8 +84,6 @@ public class CartMergeServlet extends HttpServlet {
         UserSessionDTO user = (UserSessionDTO) session.getAttribute("user");
 
         // ── Parse guest items from request body ───────────────────────────────
-        // Gson deserialises the JSON array into GuestItem[] using the public fields.
-        // fromJson returns null if the body is empty or the JSON is "null".
         GuestItem[] guestArray;
         try {
             guestArray = JsonUtil.fromJson(req, GuestItem[].class);
@@ -94,19 +100,26 @@ public class CartMergeServlet extends HttpServlet {
 
         List<GuestItem> guestItems = Arrays.asList(guestArray);
 
-        // ── Build a set of existing variant keys from the DB cart ─────────────
-        // Key format mirrors variantKey() in cart.js:
-        //   `${item.id}:${item.size||''}:${item.color||''}:${item.startDate||''}:${item.endDate||''}`
+        // ── Load the user's current DB cart ───────────────────────────────────
         List<CartItemDTO> existingItems = cartService.getItems(user.id());
-        Set<String> existingKeys = existingItems.stream()
-                .map(item -> variantKey(
-                        item.variantId(),
-                        item.size(),
-                        item.color(),
-                        item.startDate(),
-                        item.endDate()
-                ))
-                .collect(Collectors.toSet());
+
+        // Map of variantKey → CartItemDTO for fast lookup of matching line-items
+        Map<String, CartItemDTO> existingByKey = existingItems.stream()
+                .collect(Collectors.toMap(
+                        item -> variantKey(item.variantId(), item.size(), item.color(),
+                                item.startDate(), item.endDate()),
+                        item -> item,
+                        // If duplicate keys exist in DB (shouldn't happen), keep first
+                        (a, b) -> a
+                ));
+
+        // Running total of qty per variantId across all line-items in the DB cart.
+        // We mutate this as we merge so that multiple guest items for the same
+        // variantId correctly consume from the same shared pool.
+        Map<Integer, Integer> reservedQtyByVariant = new HashMap<>();
+        for (CartItemDTO item : existingItems) {
+            reservedQtyByVariant.merge(item.variantId(), item.qty(), Integer::sum);
+        }
 
         // ── Merge ─────────────────────────────────────────────────────────────
         int merged = 0;
@@ -114,31 +127,72 @@ public class CartMergeServlet extends HttpServlet {
 
         for (GuestItem guest : guestItems) {
 
-            // Skip malformed guest items silently
             if (guest.id == null || guest.startDate == null || guest.endDate == null) {
                 skipped++;
                 continue;
             }
 
-            String key = variantKey(guest.id, guest.size, guest.color, guest.startDate, guest.endDate);
+            int guestQty = guest.qty != null ? guest.qty : 1;
+            String key = variantKey(guest.id, guest.size, guest.color,
+                    guest.startDate, guest.endDate);
 
-            if (existingKeys.contains(key)) {
-                // DB cart already has this variant+dates combo → discard guest item
+            // How many of this variantId does the user already have in total?
+            int alreadyReserved = reservedQtyByVariant.getOrDefault(guest.id, 0);
+
+            // How many units of this variant does this product have in stock?
+            // We read it from the existing DB cart items if available, since
+            // CartItemDTO carries inventoryQty.  If this guest item's variant
+            // isn't in the DB cart at all we fall back to fetching it via
+            // CartService.getReservedQty() — but inventoryQty isn't available
+            // there.  The cleanest approach: read it from any existing DB item
+            // that shares the same variantId, or from the matched line-item.
+            Integer inventoryQty = existingItems.stream()
+                    .filter(i -> i.variantId() == guest.id)
+                    .map(CartItemDTO::inventoryQty)
+                    .findFirst()
+                    .orElse(null);
+
+            // How much room is left under the inventory cap?
+            // If we don't know inventoryQty (variant not in DB cart at all),
+            // we allow the add and let CartService.addItem() enforce the limit.
+            int room = (inventoryQty != null)
+                    ? Math.max(0, inventoryQty - alreadyReserved)
+                    : guestQty; // unknown cap — attempt the add
+
+            if (room == 0) {
+                // No room at all for this variant
                 skipped++;
                 continue;
             }
 
+            // How many can we actually add?
+            int qtyToAdd = Math.min(guestQty, room);
+
+            CartItemDTO matchingDbItem = existingByKey.get(key);
+
             try {
-                cartService.addItem(user.id(), new SimpleCartItemDTO(
-                        guest.id,
-                        guest.qty != null ? guest.qty : 1,
-                        guest.startDate,
-                        guest.endDate
-                ));
-                existingKeys.add(key); // prevent duplicates within the guest list itself
+                if (matchingDbItem != null) {
+                    // ── Case 2: same variant + same dates already in DB cart ──
+                    // Top up the existing line-item by qtyToAdd.
+                    int newQty = matchingDbItem.qty() + qtyToAdd;
+                    cartService.updateItemQty(user.id(), matchingDbItem.cartItemId(), newQty);
+                } else {
+                    // ── Case 1: new line-item (different dates or not in cart) ─
+                    cartService.addItem(user.id(), new SimpleCartItemDTO(
+                            guest.id,
+                            qtyToAdd,
+                            guest.startDate,
+                            guest.endDate
+                    ));
+                }
+
+                // Update our running total so subsequent guest items for the
+                // same variantId consume from the correctly reduced pool.
+                reservedQtyByVariant.merge(guest.id, qtyToAdd, Integer::sum);
                 merged++;
+
             } catch (Exception e) {
-                System.err.println("[CartMergeServlet] Failed to add guest item (variantId="
+                System.err.println("[CartMergeServlet] Failed to merge guest item (variantId="
                         + guest.id + "): " + e.getMessage());
                 skipped++;
             }
@@ -163,10 +217,8 @@ public class CartMergeServlet extends HttpServlet {
     }
 
     // ── Inner DTO for the JSON request body ───────────────────────────────────
-    // Public fields let Gson deserialise without extra configuration.
-    // Field names match the normalised item shape in cart.js.
     public static class GuestItem {
-        public Integer id;        // variantId (cart.js normalised name)
+        public Integer id;
         public Integer qty;
         public String startDate;
         public String endDate;
