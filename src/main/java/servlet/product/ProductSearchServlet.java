@@ -7,7 +7,7 @@ import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import service.ProductFacadeService;
-import servlet.util.FilterBuilder;
+import util.FilterBuilder;
 import util.JsonUtil;
 
 import java.io.IOException;

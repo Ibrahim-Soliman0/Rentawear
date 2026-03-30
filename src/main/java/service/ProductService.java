@@ -8,7 +8,6 @@ import repository.ProductRepository;
 import java.util.List;
 
 // Owns product-level queries only.
-// Does not know about variants, images, or DTOs, those belong to the facade.
 public class ProductService {
 
     private static final int NEW_DAYS = 30;
@@ -24,7 +23,10 @@ public class ProductService {
     }
 
     public List<Product> findNew(ProductFilterDTO f) {
-        return productRepo.findNew(f.pageSize(), NEW_DAYS, f.gender(), f.categoryIds());
+        return productRepo.findNew(
+                f.pageSize(), f.offset(), NEW_DAYS,
+                f.gender(), f.categoryIds(),
+                f.minPrice(), f.maxPrice());
     }
 
     public List<Product> findFiltered(ProductFilterDTO f) {
@@ -35,9 +37,12 @@ public class ProductService {
     }
 
     public List<Product> findByInterests(ProductFilterDTO f) {
+        List<Integer> categoryFilter = (f.categoryIds() != null && !f.categoryIds().isEmpty())
+                ? f.categoryIds()
+                : f.interestIds();
         return productRepo.findFiltered(
-                null,              // gender — null so cross-gender interests work
-                f.interestIds(),   // use interestIds as the category list
+                null,           // gender — null so cross-gender interests work
+                categoryFilter,
                 f.minPrice(),
                 f.maxPrice(),
                 f.pageSize(),
@@ -53,15 +58,19 @@ public class ProductService {
     }
 
     public long countByInterests(ProductFilterDTO f) {
+        List<Integer> categoryFilter = (f.categoryIds() != null && !f.categoryIds().isEmpty())
+                ? f.categoryIds()
+                : f.interestIds();
         return productRepo.countFiltered(
                 null,
-                f.interestIds(),
+                categoryFilter,
                 f.minPrice(),
                 f.maxPrice());
     }
 
     public long countNew(ProductFilterDTO f) {
-        return productRepo.countNew(NEW_DAYS, f.gender(), f.categoryIds());
+        return productRepo.countNew(NEW_DAYS, f.gender(), f.categoryIds(),
+                f.minPrice(), f.maxPrice());
     }
 
     public long countFiltered(ProductFilterDTO f) {
@@ -92,6 +101,5 @@ public class ProductService {
         }
     }
 
-    public Product save(Product product){return productRepo.save(product);}
-
+    public Product save(Product product) { return productRepo.save(product); }
 }

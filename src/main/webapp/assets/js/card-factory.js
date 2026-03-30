@@ -311,6 +311,31 @@
             return el;
         }
 
+        // ── Search result skeleton row ────────────────────────────────────────
+        function searchSkeleton() {
+            const div = document.createElement('div');
+            div.className = 'search-result-item search-result-skel';
+            div.setAttribute('aria-hidden', 'true');
+
+            const thumb = document.createElement('div');
+            thumb.className = 'search-result-thumb search-result-skel__thumb';
+
+            const info = document.createElement('div');
+            info.className = 'search-result-info';
+
+            ['search-result-skel__line--brand',
+                'search-result-skel__line--name',
+                'search-result-skel__line--price'].forEach(mod => {
+                const d = document.createElement('div');
+                d.className = 'search-result-skel__line ' + mod;
+                info.appendChild(d);
+            });
+
+            div.appendChild(thumb);
+            div.appendChild(info);
+            return div;
+        }
+
         // ── Search result row ─────────────────────────────────────────────────
         function searchResult(raw) {
             const p = _normalise(raw);
@@ -465,7 +490,7 @@
             return li;
         }
 
-        return { skeleton, grid, searchResult, cartItem };
+        return { skeleton, grid, searchResult, searchSkeleton, cartItem };
     })();
 
     window.CardFactory = CardFactory;

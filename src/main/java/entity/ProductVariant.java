@@ -101,6 +101,10 @@ public class ProductVariant {
     @Column(name = "quantity", nullable = false)
     private Integer quantity;
 
+    @Version
+    @Column(name = "version", nullable = false)
+    private Long version;
+
     public Integer getId() {
         return id;
     }
@@ -139,6 +143,14 @@ public class ProductVariant {
 
     public void setQuantity(Integer quantity) {
         this.quantity = quantity;
+    }
+
+    public Long getVersion() {
+        return version;
+    }
+
+    public void setVersion(Long version) {
+        this.version = version;
     }
 
     @Override

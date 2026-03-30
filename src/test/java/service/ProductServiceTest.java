@@ -150,7 +150,7 @@ class ProductServiceTest {
         void findNew_withFilters_returnsProducts() {
             // ARRANGE
             ProductFilterDTO filter = buildFilterDto("MALE", List.of(2), 10);
-            when(productRepository.findNew(10, 30, "MALE", List.of(2)))
+            when(productRepository.findNew(10, 0, 30, "MALE", List.of(2), null, null))
                     .thenReturn(List.of(tshirtProduct));
 
             // ACT
@@ -160,7 +160,7 @@ class ProductServiceTest {
             assertNotNull(result, "Should return non-null list");
             assertEquals(1, result.size(), "Should return 1 product");
             assertTrue(result.contains(tshirtProduct), "Should contain the tshirt product");
-            verify(productRepository, times(1)).findNew(10, 30, "MALE", List.of(2));
+            verify(productRepository, times(1)).findNew(10, 0, 30, "MALE", List.of(2), null, null);
         }
 
         @Test
@@ -168,7 +168,7 @@ class ProductServiceTest {
         void findNew_noMatches_returnsEmptyList() {
             // ARRANGE
             ProductFilterDTO filter = buildFilterDto("FEMALE", List.of(3), 10);
-            when(productRepository.findNew(10, 30, "FEMALE", List.of(3)))
+            when(productRepository.findNew(10, 0, 30, "FEMALE", List.of(3), null, null))
                     .thenReturn(List.of());
 
             // ACT
@@ -184,14 +184,14 @@ class ProductServiceTest {
         void findNew_usesCorrectNewDaysConstant() {
             // ARRANGE
             ProductFilterDTO filter = buildFilterDto("MALE", null, 20);
-            when(productRepository.findNew(20, 30, "MALE", null))
+            when(productRepository.findNew(20, 0, 30, "MALE", null, null, null))
                     .thenReturn(List.of(tshirtProduct));
 
             // ACT
             productService.findNew(filter);
 
             // ASSERT — verify NEW_DAYS=30 was passed (this is the constant in the service)
-            verify(productRepository, times(1)).findNew(20, 30, "MALE", null);
+            verify(productRepository, times(1)).findNew(20, 0, 30, "MALE", null, null, null);
         }
     }
 
@@ -473,7 +473,7 @@ class ProductServiceTest {
         void countNew_withFilters_returnsCount() {
             // ARRANGE
             ProductFilterDTO filter = buildFilterDto("MALE", List.of(2));
-            when(productRepository.countNew(30, "MALE", List.of(2)))
+            when(productRepository.countNew(30, "MALE", List.of(2), null, null))
                     .thenReturn(15L);
 
             // ACT
@@ -482,7 +482,7 @@ class ProductServiceTest {
             // ASSERT
             assertEquals(15L, result);
             verify(productRepository, times(1))
-                    .countNew(30, "MALE", List.of(2));
+                    .countNew(30, "MALE", List.of(2), null, null);
         }
 
         @Test
@@ -490,7 +490,7 @@ class ProductServiceTest {
         void countNew_usesCorrectNewDaysConstant() {
             // ARRANGE
             ProductFilterDTO filter = buildFilterDto(null, null);
-            when(productRepository.countNew(30, null, null))
+            when(productRepository.countNew(30, null, null, null, null))
                     .thenReturn(100L);
 
             // ACT
@@ -498,7 +498,7 @@ class ProductServiceTest {
 
             // ASSERT — verify 30 is passed as NEW_DAYS
             verify(productRepository, times(1))
-                    .countNew(30, null, null);
+                    .countNew(30, null, null, null, null);
         }
     }
 
