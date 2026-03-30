@@ -40,3 +40,4 @@ build/
 /src/main/webapp/assets/img/occasions/
 /src/main/webapp/assets/img/occasions/
 /src/main/webapp/assets/img/products/*
+/logs/

@@ -14,6 +14,15 @@
   <title>${not empty param.title ? param.title : 'Rentawear – Rent Premium Fashion'}</title>
   <meta name="description" content="${not empty param.description ? param.description : 'Rent designer dresses, suits, and more for any occasion.'}"/>
 
+  <link rel="icon" type="image/png"
+        href="${pageContext.request.contextPath}/assets/img/rw-favicon-light.png"
+        media="(prefers-color-scheme: light)">
+
+  <!-- Dark Mode Favicon -->
+  <link rel="icon" type="image/png"
+        href="${pageContext.request.contextPath}/assets/img/rw-favicon-dark.png"
+        media="(prefers-color-scheme: dark)">
+
   <!-- Google Fonts — Inter (auth forms) + Cormorant Garamond + DM Sans (new editorial UI) -->
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
