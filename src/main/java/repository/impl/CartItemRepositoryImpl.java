@@ -11,7 +11,6 @@ public class CartItemRepositoryImpl extends BaseRepositoryImpl<CartItem>
     public CartItemRepositoryImpl() {
         super(CartItem.class);
     }
-
     @Override
     public void deleteByVariantIds(List<Integer> variantIds) {
         if (variantIds == null || variantIds.isEmpty()) return;
@@ -20,4 +19,28 @@ public class CartItemRepositoryImpl extends BaseRepositoryImpl<CartItem>
                 .setParameter("vids", variantIds)
                 .executeUpdate();
     }
+    /**
+     * Returns the total quantity of a specific variant already in a user's cart,
+     * summed across ALL line-items (i.e. all date ranges).
+     * <p>
+     * Used by CartService to enforce per-user inventory limits before adding.
+     * <p>
+     * JPQL path: CartItem → Cart → User (via Cart.user)
+     */
+    @Override
+    public int sumQtyByVariantAndUser(Integer variantId, Integer userId) {
+        Long result = em().createQuery(
+                        "SELECT COALESCE(SUM(ci.quantity), 0) " +
+                                "FROM CartItem ci " +
+                                "WHERE ci.variant.id = :variantId " +
+                                "AND ci.cart.user.id = :userId",
+                        Long.class
+                )
+                .setParameter("variantId", variantId)
+                .setParameter("userId", userId)
+                .getSingleResult();
+
+        return result.intValue();
+    }
 }
+

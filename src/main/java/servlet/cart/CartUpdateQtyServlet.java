@@ -25,8 +25,9 @@ public class CartUpdateQtyServlet extends HttpServlet {
 
         HttpSession session = req.getSession(false);
 
+        // ── Guest user — qty is managed purely in localStorage ────────────────
         if (session == null || session.getAttribute("user") == null) {
-            resp.getWriter().write("{\"success\": false, \"message\": \"Not logged in.\"}");
+            resp.getWriter().write("{\"success\": true, \"loggedIn\": false}");
             return;
         }
 

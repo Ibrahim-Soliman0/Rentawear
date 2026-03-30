@@ -25,8 +25,11 @@ public class CartAddServlet extends HttpServlet {
 
         HttpSession session = req.getSession(false);
 
+        // ── Guest user — cart lives in localStorage, nothing to persist yet ───
+        // Return a structured "not logged in" response instead of a hard 401 so
+        // cart.js can store the item locally and merge it on the next login.
         if (session == null || session.getAttribute("user") == null) {
-            resp.getWriter().write("{\"success\": false, \"message\": \"Not logged in.\"}");
+            resp.getWriter().write("{\"success\": true, \"loggedIn\": false}");
             return;
         }
 

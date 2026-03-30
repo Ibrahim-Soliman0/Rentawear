@@ -128,6 +128,9 @@ class OrderServiceTest {
         testOrder.setStatus(OrderStatus.ORDERED);
         testOrder.setTotalAmount(new BigDecimal("100.00"));
         testOrder.addOrderItem(testOrderItem);
+
+        lenient().when(productVariantService.save(any(ProductVariant.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
     }
 
     // ═════════════════════════════════════════════════════════════════════════
