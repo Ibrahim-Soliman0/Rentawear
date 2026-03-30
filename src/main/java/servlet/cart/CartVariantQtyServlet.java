@@ -7,6 +7,8 @@ import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import service.CartItemService;
 import util.JsonUtil;
 
@@ -31,6 +33,7 @@ import java.util.Map;
 @WebServlet("/cart/variant-qty")
 public class CartVariantQtyServlet extends HttpServlet {
 
+    private static final Logger logger = LoggerFactory.getLogger(CartVariantQtyServlet.class);
     private final CartItemService cartItemService = new CartItemService();
 
     @Override
@@ -55,10 +58,15 @@ public class CartVariantQtyServlet extends HttpServlet {
 
         } catch (NumberFormatException e) {
             resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-            JsonUtil.writeJson(resp, Map.of("success", false, "message", "Invalid variantId."));
+            logger.warn("Invalid variantId received: {}", req.getParameter("variantId"));
+            JsonUtil.writeJson(resp, Map.of("success", false,
+                    "message", "Invalid variantId."));
         } catch (Exception e) {
             resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-            JsonUtil.writeJson(resp, Map.of("success", false, "message", e.getMessage()));
+            logger.error("Error while fetching reserved quantity for variantId={}",
+                    req.getParameter("variantId"), e);
+            JsonUtil.writeJson(resp, Map.of("success", false,
+                    "message", "Please try again later."));
         }
     }
 }

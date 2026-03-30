@@ -11,12 +11,10 @@ import exception.UserNotFoundException;
 import mapper.CartItemMapper;
 import org.mapstruct.factory.Mappers;
 import repository.CartRepository;
-import repository.impl.CartItemRepositoryImpl;
 import repository.impl.CartRepositoryImpl;
 
 import java.time.LocalDate;
 import java.util.List;
-import java.util.Optional;
 
 public class CartService extends BaseService<Cart> {
 
@@ -57,7 +55,19 @@ public class CartService extends BaseService<Cart> {
                 .orElseThrow(() ->
                         new UserNotFoundException("User with id [" + userId + "] doesn't exist"));
 
-        List<CartItem> itemsInCart = user.getCart().getCartItems();
+        Cart userCart = user.getCart();
+
+        if (userCart == null) {
+            // User has no cart yet, so there are no items to return
+            return List.of();
+        }
+
+        List<CartItem> itemsInCart = userCart.getCartItems();
+
+        if (itemsInCart == null) {
+            // Treat a null cart-items collection as empty
+            return List.of();
+        }
         return mapper.toDTOList(itemsInCart);
     }
 

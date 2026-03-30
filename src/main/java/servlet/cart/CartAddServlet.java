@@ -29,7 +29,7 @@ public class CartAddServlet extends HttpServlet {
         // Return a structured "not logged in" response instead of a hard 401 so
         // cart.js can store the item locally and merge it on the next login.
         if (session == null || session.getAttribute("user") == null) {
-            resp.getWriter().write("{\"success\": false, \"loggedIn\": false}");
+            resp.getWriter().write("{\"success\": true, \"loggedIn\": false}");
             return;
         }
 
