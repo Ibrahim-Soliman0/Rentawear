@@ -4,64 +4,84 @@ import jakarta.persistence.*;
 
 @NamedQueries({
 
-        //Single-product reads
+        // ── Single-product reads (all filter v.deleted = false) ───────────────
 
-        // All variants for one product, ordered by id ASC.
-        // Used by PDP and admin detail,  provides full colour+size+quantity data.
+        // All active variants for one product, ordered by id ASC.
+        // Used by PDP and admin detail — provides full colour+size+quantity data.
         @NamedQuery(
                 name  = "ProductVariant.findByProductId",
                 query = "SELECT pv FROM ProductVariant pv " +
                         "WHERE pv.product.id = :pid " +
+                        "AND pv.deleted = false " +
                         "ORDER BY pv.id ASC"
         ),
 
-        // Distinct colour strings for one product.
-        // Used by upload validation to confirm a colour exists before accepting
-        // image uploads for it.
+        // Distinct colour strings for one product (active variants only).
         @NamedQuery(
                 name  = "ProductVariant.findDistinctColorsByProductId",
                 query = "SELECT DISTINCT pv.color FROM ProductVariant pv " +
                         "WHERE pv.product.id = :pid " +
+                        "AND pv.deleted = false " +
                         "ORDER BY pv.color ASC"
         ),
 
-        // All sizes for one specific colour.
-        // Returns all sizes regardless of stock — use findAvailableSizesByProductIdAndColor
-        // when you need in-stock only.
+        // All sizes for one specific colour (active only).
         @NamedQuery(
                 name  = "ProductVariant.findSizesByProductIdAndColor",
                 query = "SELECT pv.size FROM ProductVariant pv " +
                         "WHERE pv.product.id = :pid " +
-                        "AND   pv.color      = :color " +
+                        "AND pv.color      = :color " +
+                        "AND pv.deleted    = false " +
                         "ORDER BY pv.id ASC"
         ),
 
-        // In-stock sizes only (quantity > 0) for one colour.
-        // Used to drive the disabled state on PDP size buttons.
+        // In-stock sizes only (quantity > 0) for one colour (active only).
         @NamedQuery(
                 name  = "ProductVariant.findAvailableSizesByProductIdAndColor",
                 query = "SELECT pv.size FROM ProductVariant pv " +
                         "WHERE pv.product.id = :pid " +
-                        "AND   pv.color      = :color " +
-                        "AND   pv.quantity   > 0 " +
+                        "AND pv.color      = :color " +
+                        "AND pv.quantity   > 0 " +
+                        "AND pv.deleted    = false " +
                         "ORDER BY pv.id ASC"
         ),
 
-        // Batch reads
+        // ── Batch reads ───────────────────────────────────────────────────────
 
-        // All variants for MULTIPLE products in one query.
-        // Used by ProductVariantService.getByProductIds() to build the
-        // variantsByProductId map without N+1 on admin listing pages.
-        // Results ordered by product.id ASC, variant.id ASC so grouping in
-        // memory is sequential.
+        // All active variants for MULTIPLE products in one query.
         @NamedQuery(
                 name  = "ProductVariant.findByProductIds",
                 query = "SELECT pv FROM ProductVariant pv " +
                         "WHERE pv.product.id IN :pids " +
+                        "AND pv.deleted = false " +
                         "ORDER BY pv.product.id ASC, pv.id ASC"
         ),
 
-        // Writes
+        // ── ID-only query used before soft-deleting a color ───────────────────
+        // Returns IDs of active variants for a given product+color.
+        // Called by the facade to collect which cart_items to purge first.
+        @NamedQuery(
+                name  = "ProductVariant.findIdsByProductIdAndColor",
+                query = "SELECT pv.id FROM ProductVariant pv " +
+                        "WHERE pv.product.id = :pid " +
+                        "AND pv.color     = :color " +
+                        "AND pv.deleted   = false"
+        ),
+
+        // ── Soft-delete (UPDATE — keeps rows so order_items FK stays valid) ───
+
+        @NamedQuery(
+                name  = "ProductVariant.softDeleteByProductIdAndColor",
+                query = "UPDATE ProductVariant pv SET pv.deleted = true " +
+                        "WHERE pv.product.id = :pid " +
+                        "AND pv.color = :color"
+        ),
+
+        @NamedQuery(
+                name  = "ProductVariant.softDeleteByProductId",
+                query = "UPDATE ProductVariant pv SET pv.deleted = true " +
+                        "WHERE pv.product.id = :pid"
+        ),
 
         // Deletes all size rows for a colour.
         // Always called alongside ProductImage.deleteByProductIdAndColor —
@@ -104,6 +124,9 @@ public class ProductVariant {
     @Version
     @Column(name = "version", nullable = false)
     private Long version;
+
+    @Column(name = "deleted", nullable = false)
+    private boolean deleted = false;
 
     public Integer getId() {
         return id;
@@ -151,6 +174,13 @@ public class ProductVariant {
 
     public void setVersion(Long version) {
         this.version = version;
+    }
+
+    public boolean isDeleted(){
+        return deleted;
+    }
+    public void setDeleted(boolean deleted) {
+        this.deleted = deleted;
     }
 
     @Override

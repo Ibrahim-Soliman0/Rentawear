@@ -499,6 +499,35 @@ function attachFormHandler() {
                 // after the animation completes (~2.2 s).
                 showOrderSuccess(data.redirect ?? `${window.CTX ?? ''}/profile#history`);
 
+            } else if (data.unavailableItems && data.unavailableItems.length > 0) {
+                // ── Deleted-product backstop ──────────────────────────────────
+                // Admin removed one or more products while the user was on this
+                // page.  Re-sync the cart (which drops the purged items), then
+                // re-render so the summary and total reflect reality.
+                const names = data.unavailableItems.join(', ');
+                showSubmitError(
+                    `The following item${data.unavailableItems.length > 1 ? 's are' : ' is'} ` +
+                    `no longer available and ${data.unavailableItems.length > 1 ? 'have' : 'has'} ` +
+                    `been removed from your cart: ${names}.`
+                );
+                setButtonLoading(false);
+
+                // Re-sync so the cart drawer, summary and total all update.
+                if (window.Cart) {
+                    await window.Cart.syncFromServer();
+                }
+                renderCart();
+
+                // Re-run credit check against the updated total.
+                const updatedTotal = Number(dom.totalAmountInput()?.value ?? 0);
+                const creditWarning = dom.creditWarning();
+                if (creditWarning) {
+                    // creditLimit was captured at session load — read it back from
+                    // the warning element's data attribute if we stored it, or just
+                    // re-run loadUserSession to refresh everything.
+                    loadUserSession();
+                }
+
             } else {
                 showSubmitError(data.message
                     ? `${data.message}.`
@@ -514,7 +543,12 @@ function attachFormHandler() {
     });
 }
 
-/* ── Boot ────────────────────────────────────────────────────────────────── */
-renderCart();           // sync — localStorage is instant, writes totalAmount
-loadUserSession();      // async — replaces skeletons, runs credit check
+/* ── Boot ───────────────────────────────────────────────────────────────────────────── */
 attachFormHandler();
+
+(async () => {
+    await (window.Cart?.ready ?? Promise.resolve());
+
+    renderCart();         // localStorage is now server-confirmed — safe to render
+    await loadUserSession(); // credit check runs against the correct total
+})();

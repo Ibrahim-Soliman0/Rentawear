@@ -37,6 +37,7 @@ class ProductFacadeServiceTest {
     @Mock private ProductImageService imageService;
     @Mock private ProductMapper productMapper;
     @Mock private CategoryService categoryService;
+    @Mock private CartItemService cartItemService;
 
     // ── The real object under test (built manually for controlled dependencies) ─
 
@@ -63,7 +64,8 @@ class ProductFacadeServiceTest {
                 variantService,
                 imageService,
                 productMapper,
-                categoryService
+                categoryService,
+                cartItemService
         );
 
         // ── Product 1 ───────────────────────────────────────────────────────
@@ -362,9 +364,12 @@ class ProductFacadeServiceTest {
     class DeleteProduct {
 
         @Test
-        @DisplayName("should delete product along with variants and images")
+        @DisplayName("should soft-delete product along with variants and images")
         void deleteProduct_validProductId_deletesSuccessfully() {
             // ARRANGE
+            product1.getProductVariants().clear();
+            product1.addProductVariant(variant1);
+            product1.addProductVariant(variant2);
             when(productService.getById(1)).thenReturn(product1);
 
             // ACT
@@ -372,27 +377,32 @@ class ProductFacadeServiceTest {
 
             // ASSERT
             assertTrue(result);
-            verify(variantService, times(1)).deleteByProductId(1);
-            verify(imageService, times(1)).deleteByProductId(1);
-            verify(productService, times(1)).delete(1);
+            verify(cartItemService, times(1))
+                    .deleteByVariantIds(List.of(variant1.getId(), variant2.getId()));
+            verify(variantService, times(1)).softDeleteByProductId(1);
+            verify(productService, times(1)).softDelete(1);
         }
 
         @Test
-        @DisplayName("should delete variants and images before product")
+        @DisplayName("should delete cart items, variants, images, then product")
         void deleteProduct_deletionOrder_variantsAndImagesFirst() {
             // ARRANGE
+            product1.getProductVariants().clear();
+            product1.addProductVariant(variant1);
+            product1.addProductVariant(variant2);
             when(productService.getById(1)).thenReturn(product1);
 
             // Create an order verifier
-            InOrder inOrder = inOrder(variantService, imageService, productService);
+            InOrder inOrder = inOrder(cartItemService, variantService, imageService, productService);
 
             // ACT
             facadeService.deleteProduct(1);
 
             // ASSERT — verify deletion order
-            inOrder.verify(variantService).deleteByProductId(1);
-            inOrder.verify(imageService).deleteByProductId(1);
-            inOrder.verify(productService).delete(1);
+            inOrder.verify(cartItemService)
+                    .deleteByVariantIds(List.of(variant1.getId(), variant2.getId()));
+            inOrder.verify(variantService).softDeleteByProductId(1);
+            inOrder.verify(productService).softDelete(1);
         }
 
         @Test
@@ -406,9 +416,10 @@ class ProductFacadeServiceTest {
 
             // ASSERT
             assertFalse(result);
-            verify(variantService, never()).deleteByProductId(anyInt());
+            verify(cartItemService, never()).deleteByVariantIds(anyList());
+            verify(variantService, never()).softDeleteByProductId(anyInt());
             verify(imageService, never()).deleteByProductId(anyInt());
-            verify(productService, never()).delete(anyInt());
+            verify(productService, never()).softDelete(anyInt());
         }
     }
 
@@ -421,28 +432,33 @@ class ProductFacadeServiceTest {
     class DeleteColor {
 
         @Test
-        @DisplayName("should delete both variants and images for a color")
+        @DisplayName("should delete cart items, variants, and image for a color")
         void deleteColor_validProductAndColor_deletesVariantsAndImages() {
             // ARRANGE & ACT
-            facadeService.deleteColor(1, "Red");
+            when(variantService.findIdsByColor(1, "Red")).thenReturn(List.of(10, 11));
+
+            facadeService.deleteColor(1, "Red", "/var/www");
 
             // ASSERT
-            verify(variantService, times(1)).deleteColor(1, "Red");
-            verify(imageService, times(1)).deleteColorImages(1, "Red");
+            verify(variantService, times(1)).findIdsByColor(1, "Red");
+            verify(cartItemService, times(1)).deleteByVariantIds(List.of(10, 11));
+            verify(variantService, times(1)).softDeleteColor(1, "Red");
         }
 
         @Test
         @DisplayName("should call services in correct order")
         void deleteColor_callOrder_variantsBeforeImages() {
             // ARRANGE
-            InOrder inOrder = inOrder(variantService, imageService);
+            when(variantService.findIdsByColor(1, "Blue")).thenReturn(List.of(12));
+            InOrder inOrder = inOrder(variantService, cartItemService, imageService);
 
             // ACT
-            facadeService.deleteColor(1, "Blue");
+            facadeService.deleteColor(1, "Blue", "/var/www");
 
             // ASSERT
-            inOrder.verify(variantService).deleteColor(1, "Blue");
-            inOrder.verify(imageService).deleteColorImages(1, "Blue");
+            inOrder.verify(variantService).findIdsByColor(1, "Blue");
+            inOrder.verify(cartItemService).deleteByVariantIds(List.of(12));
+            inOrder.verify(variantService).softDeleteColor(1, "Blue");
         }
     }
 

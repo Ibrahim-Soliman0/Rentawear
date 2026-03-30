@@ -22,9 +22,17 @@ import java.util.List;
 @WebServlet("/register")
 public class RegisterServlet extends HttpServlet {
 
-    private final UserService userService = new UserService();
-    private final CategoryService categoryService = new CategoryService();
+    private final UserService userService;
+    private final CategoryService categoryService;
 
+    public RegisterServlet() {
+        this(new UserService(), new CategoryService());
+    }
+
+    RegisterServlet(UserService userService, CategoryService categoryService) {
+        this.userService = userService;
+        this.categoryService = categoryService;
+    }
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         HttpSession session = req.getSession();

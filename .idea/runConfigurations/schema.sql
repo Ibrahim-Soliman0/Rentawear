@@ -72,8 +72,11 @@ CREATE TABLE products
     category_id INT,
     image_url   VARCHAR(255),
     created_at  TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    deleted     BOOLEAN DEFAULT FALSE NOT NULL,
     FOREIGN KEY (category_id) REFERENCES categories (id)
 );
+CREATE INDEX idx_products_deleted ON products  (deleted);
+
 
 -- =========================================
 -- PRODUCT VARIANTS (Size / Color / Stock)
@@ -88,9 +91,10 @@ CREATE TABLE product_variants
     version    BIGINT      NOT NULL,
     UNIQUE (product_id, color, size),
     CHECK  (quantity >= 0),
+    deleted    BOOLEAN DEFAULT FALSE NOT NULL,
     FOREIGN KEY (product_id) REFERENCES products (id)
 );
-
+CREATE INDEX idx_product_variants_deleted ON product_variants (deleted);
 -- =========================================
 -- PRODUCT IMAGES (Optional)
 -- =========================================
