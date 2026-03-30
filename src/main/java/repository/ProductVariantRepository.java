@@ -6,23 +6,28 @@ import java.util.List;
 
 public interface ProductVariantRepository extends Repository<ProductVariant> {
 
-    //Single-product reads
+    // ── Single-product reads ──────────────────────────────────────────────────
+
     List<ProductVariant> findByProductId(int productId);
 
     List<String> findDistinctColorsByProductId(int productId);
 
     List<String> findSizesByProductIdAndColor(int productId, String color);
 
-    // In-stock sizes only
+    /** In-stock sizes only (quantity > 0). */
     List<String> findAvailableSizesByProductIdAndColor(int productId, String color);
 
-    // Batch reads
+    // ── Batch reads ───────────────────────────────────────────────────────────
+
     List<ProductVariant> findByProductIds(List<Integer> productIds);
 
-    // Writes
-    // Deletes all size rows for a colour — called when removing a colour variant
+    List<Integer> findIdsByProductIdAndColor(int productId, String color);
+
+    void softDeleteByProductIdAndColor(int productId, String color);
+
+    void softDeleteByProductId(int productId);
+
     void deleteByProductIdAndColor(int productId, String color);
 
-    // Deletes all variants for a product
     void deleteByProductId(int productId);
 }

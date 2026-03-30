@@ -428,18 +428,48 @@ function removeColorGroup(groupId) {
   const hex       = card?.dataset.hex;
   const colorKey  = hex + '-' + colorName;
 
-  if (currentEditProductId && colorName && hex) {
-    let req = window.XMLHttpRequest ? new XMLHttpRequest() : new ActiveXObject('Microsoft.XMLHTTP');
-    req.open('DELETE', CTX + '/admin/product-color-image'
-        + '?productId=' + currentEditProductId
-        + '&color='     + encodeURIComponent(colorKey), true);
-    req.send();
+  // New product not yet persisted — just remove the UI card, nothing in DB yet.
+  if (!currentEditProductId) {
+    card?.remove();
+    if (document.getElementById('variantColorGroups').children.length === 0) {
+      document.getElementById('variantsEmptyHint').style.display = 'block';
+    }
+    return;
   }
 
-  card?.remove();
-  if (document.getElementById('variantColorGroups').children.length === 0) {
-    document.getElementById('variantsEmptyHint').style.display = 'block';
+  // Existing product — hit the full deleteColor endpoint which:
+  //   1. Purges cart_items for these variants  (hard delete — ephemeral)
+  //   2. Soft-deletes the variants             (order_items FK stays valid)
+  //   3. Deletes the color image file + DB row
+  const removeBtn = card?.querySelector('.adm-remove-color-btn');
+  if (removeBtn) {
+    removeBtn.disabled = true;
+    removeBtn.innerHTML = '<span class="spinner-border spinner-border-sm"></span>';
   }
+
+  let req = window.XMLHttpRequest ? new XMLHttpRequest() : new ActiveXObject('Microsoft.XMLHTTP');
+  req.onreadystatechange = function () {
+    if (req.readyState !== 4) return;
+
+    if (req.status === 200 || req.status === 204) {
+      card?.remove();
+      if (document.getElementById('variantColorGroups').children.length === 0) {
+        document.getElementById('variantsEmptyHint').style.display = 'block';
+      }
+    } else {
+      // Server-side failure — re-enable the button so the admin can retry.
+      if (removeBtn) {
+        removeBtn.disabled = false;
+        removeBtn.innerHTML = '<i class="bi bi-trash3"></i> Remove color';
+      }
+      showToast('Failed to remove color. Please try again.', 'error');
+    }
+  };
+
+  req.open('DELETE', CTX + '/admin/product-color-image'
+      + '?productId=' + currentEditProductId
+      + '&color='     + encodeURIComponent(colorKey), true);
+  req.send();
 }
 
 let sizeRowCounter = 0;

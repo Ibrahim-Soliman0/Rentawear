@@ -80,7 +80,7 @@ public class AdminProductColorImageServlet extends HttpServlet {
         String color        = req.getParameter("color");
 
         if (productIdRaw == null || color == null || color.isBlank()) {
-            resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "Missing productId or color");
+            resp.sendError(HttpServletResponse.SC_BAD_REQUEST,"productId and color are required");
             return;
         }
 
@@ -92,8 +92,13 @@ public class AdminProductColorImageServlet extends HttpServlet {
             return;
         }
 
+        if (facade.getProductById(productId) == null) {
+            resp.sendError(HttpServletResponse.SC_NOT_FOUND, "Product not found");
+            return;
+        }
+
         String webappRoot = getServletContext().getRealPath("/");
-        facade.deleteColorImage(productId, color, webappRoot);
+        facade.deleteColor(productId, color, webappRoot);
 
         resp.setStatus(HttpServletResponse.SC_OK);
     }

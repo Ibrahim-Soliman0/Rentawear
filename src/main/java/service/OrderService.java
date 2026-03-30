@@ -6,6 +6,7 @@ import dto.OrderDTO;
 import entity.*;
 import entity.enums.OrderStatus;
 import exception.InsufficientFundsException;
+import exception.UnavailableItemsException;
 import exception.UserNotFoundException;
 import jakarta.persistence.OptimisticLockException;
 import mapper.OrderMapper;
@@ -132,8 +133,31 @@ public class OrderService extends BaseService<Order> {
         order.setTotalAmount(orderAmount);
 
         // 4. Create an OrderItem for each cart item
+        List<String> unavailableNames = new ArrayList<>();
+
         for (Map item : cartItems) {
-            int variantId = ((Double) item.get("id")).intValue(); // JS numbers come as Double in Gson
+            int variantId = ((Double) item.get("id")).intValue();
+
+            ProductVariant variant = productVariantService.getById(variantId)
+                    .orElse(null);
+
+            if (variant == null || variant.isDeleted()) {
+                String name = (variant != null)
+                        ? variant.getProduct().getName()
+                        : (String) item.getOrDefault("name", "Unknown item");
+                unavailableNames.add(name);
+            }
+        }
+
+        if (!unavailableNames.isEmpty()) {
+            // Throw before touching any stock or creating any DB records.
+            // CheckoutServlet catches this and returns
+            // { success: false, unavailableItems: [...] }
+            // which checkout.js uses to re-sync the cart and re-render.
+            throw new UnavailableItemsException(unavailableNames);
+        }
+        for (Map item : cartItems) {
+            int variantId = ((Double) item.get("id")).intValue();
             int qty = ((Double) item.get("qty")).intValue();
 
             ProductVariant variant = productVariantService.getById(variantId)
