@@ -693,12 +693,16 @@ class Cart {
 
     _boot() {
         if (!this._storage.hasSynced()) {
-            this.syncFromServer();
+            this._syncPromise = this.syncFromServer();
         } else {
             this._items = this._storage.load();   // already normalised
             this.render();
-            this.syncFromServer();                // silent background reconcile
+            this._syncPromise = this.syncFromServer(); // silent background reconcile
         }
+    }
+
+    get ready() {
+        return this._syncPromise ?? Promise.resolve();
     }
 }
 
