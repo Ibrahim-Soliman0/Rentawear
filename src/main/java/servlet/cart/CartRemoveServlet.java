@@ -25,8 +25,9 @@ public class CartRemoveServlet extends HttpServlet {
 
         HttpSession session = req.getSession(false);
 
+        // ── Guest user — item only existed in localStorage, nothing to remove DB-side ──
         if (session == null || session.getAttribute("user") == null) {
-            resp.getWriter().write("{\"success\": false, \"message\": \"Not logged in.\"}");
+            resp.getWriter().write("{\"success\": true, \"loggedIn\": false}");
             return;
         }
 

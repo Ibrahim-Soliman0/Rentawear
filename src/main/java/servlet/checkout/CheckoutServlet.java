@@ -2,6 +2,7 @@ package servlet.checkout;
 
 import dto.UserSessionDTO;
 import exception.InsufficientFundsException;
+import exception.UnavailableItemsException;
 import jakarta.persistence.OptimisticLockException;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
@@ -16,6 +17,7 @@ import util.JsonUtil;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 
 @WebServlet("/checkout")
@@ -117,6 +119,12 @@ public class CheckoutServlet extends HttpServlet {
             resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
             resp.getWriter().write("{\"success\": false," +
                     " \"message\": \"Invalid numeric value in request.\"}");
+
+        } catch (UnavailableItemsException e) {
+            Map<String, Object> unavailableResp = new LinkedHashMap<>();
+            unavailableResp.put("success", false);
+            unavailableResp.put("unavailableItems", e.getItemNames());
+            resp.getWriter().write(JsonUtil.toJson(unavailableResp));
 
         } catch (IllegalStateException e) {
             // Business rule violations from OrderService
