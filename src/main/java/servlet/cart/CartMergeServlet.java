@@ -9,6 +9,8 @@ import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import service.CartService;
 import util.JsonUtil;
 
@@ -67,6 +69,7 @@ import java.util.stream.Collectors;
 @WebServlet("/cart/merge")
 public class CartMergeServlet extends HttpServlet {
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(CartMergeServlet.class);
     private final CartService cartService = new CartService();
 
     @Override
@@ -192,8 +195,8 @@ public class CartMergeServlet extends HttpServlet {
                 merged++;
 
             } catch (Exception e) {
-                System.err.println("[CartMergeServlet] Failed to merge guest item (variantId="
-                        + guest.id + "): " + e.getMessage());
+                LOGGER.error("[CartMergeServlet] Failed to merge guest item (variantId={}): {}",
+                        guest.id, e.getMessage());
                 skipped++;
             }
         }
