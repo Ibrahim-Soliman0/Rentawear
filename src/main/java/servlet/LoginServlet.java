@@ -8,7 +8,6 @@ import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
-import entity.User;
 import service.UserService;
 
 import java.io.IOException;
@@ -17,7 +16,19 @@ import java.util.Optional;
 @WebServlet("/login")
 public class LoginServlet extends HttpServlet {
 
-    private final UserService userService = new UserService();
+    private final UserService userService;
+
+    public LoginServlet() {
+        this.userService = new UserService();
+    }
+
+    /*
+     * Package-private constructor for testing.
+     * Allows tests to inject a mock UserService.
+     */
+    LoginServlet(UserService userService) {
+        this.userService = userService;
+    }
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
@@ -62,6 +73,14 @@ public class LoginServlet extends HttpServlet {
         } else {
             session.setMaxInactiveInterval(60 * 60 * 24);
         }
+
+        // ── Signal cart.js to merge the guest localStorage cart ───────────────
+        // cart.js checks for this attribute on the redirected page.
+        // Using a session flag (not a response header) because the browser
+        // follows the redirect before JS can read any header from this response.
+        // cart.js reads it via GET /cart/merge-pending, then cart.js POSTs
+        // the localStorage items to /cart/merge, and the flag is cleared.
+        session.setAttribute("pendingCartMerge", true);
 
         if(user.role()== UserRole.ADMIN){
             resp.sendRedirect(req.getContextPath() + "/admin/dashboard");

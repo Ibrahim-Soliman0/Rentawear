@@ -2,6 +2,8 @@ package servlet.checkout;
 
 import dto.UserSessionDTO;
 import exception.InsufficientFundsException;
+import exception.UnavailableItemsException;
+import jakarta.persistence.OptimisticLockException;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -9,17 +11,20 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import service.OrderService;
+import service.UserService;
 import util.JsonUtil;
 
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 
 @WebServlet("/checkout")
 public class CheckoutServlet extends HttpServlet {
 
     private final OrderService orderService = new OrderService();
+    private final UserService userService = new UserService();
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp)
@@ -66,11 +71,11 @@ public class CheckoutServlet extends HttpServlet {
             String cartJson = req.getParameter("cartJson");
             BigDecimal totalAmount = new BigDecimal(req.getParameter("totalAmount"));
 
-            // ── Validate ──────────────────────────────────────────────────
-            if (cartJson == null || cartJson.isBlank()) {
-                resp.getWriter().write("{\"success\": false, \"message\": \"Cart is empty.\"}");
-                return;
-            }
+//            // ── Validate ──────────────────────────────────────────────────
+//            if (cartJson == null || cartJson.isBlank()) {
+//                resp.getWriter().write("{\"success\": false, \"message\": \"Cart is empty.\"}");
+//                return;
+//            }
 
             if (user.address() == null || user.address().isBlank()) {
                 resp.getWriter().write("{\"success\": false, " +
@@ -93,6 +98,10 @@ public class CheckoutServlet extends HttpServlet {
                     totalAmount
             );
 
+            user = userService.updateUserSession(user.id());
+
+            session.setAttribute("user", user);
+
             // ── Success — tell JS where to redirect ───────────────────────
             Map<String, Object> response = new LinkedHashMap<>();
             response.put("success", true);
@@ -111,6 +120,12 @@ public class CheckoutServlet extends HttpServlet {
             resp.getWriter().write("{\"success\": false," +
                     " \"message\": \"Invalid numeric value in request.\"}");
 
+        } catch (UnavailableItemsException e) {
+            Map<String, Object> unavailableResp = new LinkedHashMap<>();
+            unavailableResp.put("success", false);
+            unavailableResp.put("unavailableItems", e.getItemNames());
+            resp.getWriter().write(JsonUtil.toJson(unavailableResp));
+
         } catch (IllegalStateException e) {
             // Business rule violations from OrderService
             // e.g. "Item no longer available", "Variant out of stock"
@@ -118,6 +133,11 @@ public class CheckoutServlet extends HttpServlet {
                     "{\"success\": false, \"message\": \"" + e.getMessage() + "\"}"
             );
 
+        } catch (OptimisticLockException e) {
+            // 2 users ordering the same product at the same time and the stock is not enough
+            resp.getWriter().write(
+                    "{\"success\": false, \"message\": \"" + e.getMessage() + "\"}"
+            );
         } catch (Exception e) {
             resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
             resp.getWriter().write(

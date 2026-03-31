@@ -83,7 +83,7 @@ function clearFieldError(inputId, errorId) {
 }
 function clearAllProductErrors() {
   ['productName','productCategory','productPrice']
-    .forEach((_, i, arr) => clearFieldError(arr[i], arr[i] + 'Error'));
+      .forEach((_, i, arr) => clearFieldError(arr[i], arr[i] + 'Error'));
 }
 
 /* ══════════════════════════════════════════════════════════════
@@ -170,6 +170,17 @@ function renderPagination(page, total, pageSize) {
     </div>`;
 }
 
+// Replaces a broken <img> with the standard placeholder icon on 404.
+function _imgToIcon(img) {
+  const icon = document.createElement('div');
+  icon.className = 'adm-product-img-placeholder';
+  if (img.id) icon.id = img.id;
+  const i = document.createElement('i');
+  i.className = 'bi bi-image';
+  icon.appendChild(i);
+  if (img.parentNode) img.parentNode.replaceChild(icon, img);
+}
+
 function renderProductsTable(products) {
   const tbody = document.getElementById('productsTableBody');
   if (!products || products.length === 0) {
@@ -193,8 +204,8 @@ function renderProductsTable(products) {
       <td>
         <div class="adm-product-cell">
           ${imageUrl
-            ? `<img src="${imageUrl}" alt="${escHtml(core.name)}" class="adm-product-img"/>`
-            : `<div class="adm-product-img-placeholder"><i class="bi bi-image"></i></div>`}
+        ? `<img src="${imageUrl}" alt="${escHtml(core.name)}" class="adm-product-img" onerror="_imgToIcon(this)"/>`
+        : `<div class="adm-product-img-placeholder"><i class="bi bi-image"></i></div>`}
           <div>
             <div class="adm-product-name">${escHtml(core.name)}</div>
             ${core.brand ? `<div class="adm-product-brand">${escHtml(core.brand)}</div>` : ''}
@@ -370,6 +381,7 @@ function addColorGroup(colorName, hex, existingVariants, existingImageUrl) {
         ${existingImageUrl
       ? `<img src="${resolveAdminImage(existingImageUrl)}"
                   class="adm-color-img-preview" id="${groupId}-preview"
+                  onerror="_imgToIcon(this)"
                   alt="Color image"/>`
       : `<div class="adm-color-img-placeholder" id="${groupId}-preview">
                <i class="bi bi-image"></i>
@@ -416,18 +428,48 @@ function removeColorGroup(groupId) {
   const hex       = card?.dataset.hex;
   const colorKey  = hex + '-' + colorName;
 
-  if (currentEditProductId && colorName && hex) {
-    let req = window.XMLHttpRequest ? new XMLHttpRequest() : new ActiveXObject('Microsoft.XMLHTTP');
-    req.open('DELETE', CTX + '/admin/product-color-image'
-        + '?productId=' + currentEditProductId
-        + '&color='     + encodeURIComponent(colorKey), true);
-    req.send();
+  // New product not yet persisted — just remove the UI card, nothing in DB yet.
+  if (!currentEditProductId) {
+    card?.remove();
+    if (document.getElementById('variantColorGroups').children.length === 0) {
+      document.getElementById('variantsEmptyHint').style.display = 'block';
+    }
+    return;
   }
 
-  card?.remove();
-  if (document.getElementById('variantColorGroups').children.length === 0) {
-    document.getElementById('variantsEmptyHint').style.display = 'block';
+  // Existing product — hit the full deleteColor endpoint which:
+  //   1. Purges cart_items for these variants  (hard delete — ephemeral)
+  //   2. Soft-deletes the variants             (order_items FK stays valid)
+  //   3. Deletes the color image file + DB row
+  const removeBtn = card?.querySelector('.adm-remove-color-btn');
+  if (removeBtn) {
+    removeBtn.disabled = true;
+    removeBtn.innerHTML = '<span class="spinner-border spinner-border-sm"></span>';
   }
+
+  let req = window.XMLHttpRequest ? new XMLHttpRequest() : new ActiveXObject('Microsoft.XMLHTTP');
+  req.onreadystatechange = function () {
+    if (req.readyState !== 4) return;
+
+    if (req.status === 200 || req.status === 204) {
+      card?.remove();
+      if (document.getElementById('variantColorGroups').children.length === 0) {
+        document.getElementById('variantsEmptyHint').style.display = 'block';
+      }
+    } else {
+      // Server-side failure — re-enable the button so the admin can retry.
+      if (removeBtn) {
+        removeBtn.disabled = false;
+        removeBtn.innerHTML = '<i class="bi bi-trash3"></i> Remove color';
+      }
+      showToast('Failed to remove color. Please try again.', 'error');
+    }
+  };
+
+  req.open('DELETE', CTX + '/admin/product-color-image'
+      + '?productId=' + currentEditProductId
+      + '&color='     + encodeURIComponent(colorKey), true);
+  req.send();
 }
 
 let sizeRowCounter = 0;
@@ -1061,10 +1103,10 @@ function addCategoryToDropdown(category) {
 /* ── Utilities ──────────────────────────────────────────────── */
 function escHtml(str) {
   return String(str || '')
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;');
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;');
 }
 
 function resolveAdminImage(base) {
@@ -1341,6 +1383,3 @@ function showToast(message, type) {
 }
 /* ── Init: load products on page load ───────────────────────── */
 loadProducts();
-
-
-

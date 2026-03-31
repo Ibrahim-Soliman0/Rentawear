@@ -7,7 +7,7 @@
 
 (function () {
 
-  const RESULT_SIZE     = 6;
+  const RESULT_SIZE     = 5;
   const SEARCH_DEBOUNCE = 300;
   const PRICE_DEBOUNCE  = 500;
 
@@ -18,7 +18,8 @@
     maxPrice:    null,
   };
 
-  let priceBounds = { min: 0, max: 500 };
+  let priceBounds     = { min: 0, max: 500 };
+  let priceCalibrated = false; /* true only after API returns real bounds */
   let searchTimer = null;
   let priceTimer  = null;
   let abortCtrl   = null;
@@ -34,6 +35,7 @@
   const filterBtn   = document.getElementById('searchFilterBtn');
   const filterBadge = document.getElementById('searchFilterBadge');
   const filterPanel = document.getElementById('searchFilterPanel');
+  const bodyRow     = document.getElementById('searchBodyRow');
   const chips       = document.getElementById('searchChips');
   const priceWrap   = document.getElementById('searchPriceWrap');
   const rangeMin    = document.getElementById('searchRangeMin');
@@ -45,6 +47,10 @@
   const results     = document.getElementById('searchResults');
 
   if (!modal || !input || !results) return;
+
+  /* Initialise fill bar geometry and lock slider until API calibrates it */
+  updatePriceDisplay();
+  setPriceSliderEnabled(false);
 
   /* Build catNames from checkbox data attributes */
   document.querySelectorAll('.sfp-cat-chk').forEach(chk => {
@@ -69,11 +75,25 @@
     reset();
   }
 
+  /* When the filter col opens, grow the body row to at least fit all
+     filter content so the modal doesn't feel too short. When it closes
+     the min-height is removed and the modal reverts to content height. */
+  function syncBodyRowHeight(isOpen) {
+    if (!bodyRow) return;
+    if (isOpen) {
+      const inner = filterPanel ? filterPanel.querySelector('.sfp-inner') : null;
+      bodyRow.style.minHeight = inner ? inner.scrollHeight + 'px' : '';
+    } else {
+      bodyRow.style.minHeight = '';
+    }
+  }
+
   function closePanelOnly() {
     if (!filterPanel) return;
     filterPanel.classList.remove('is-open');
     filterPanel.setAttribute('aria-hidden', 'true');
     filterBtn.setAttribute('aria-expanded', 'false');
+    syncBodyRowHeight(false);
   }
 
   /* ── Reset modal state ────────────────────────────────────── */
@@ -89,7 +109,9 @@
     document.querySelectorAll('.sfp-cat-chk').forEach(c => (c.checked = false));
     document.querySelectorAll('.sfp-cat-label').forEach(l => l.classList.remove('is-hidden'));
     resetPriceSlider();
-    if (priceWrap) priceWrap.style.display = 'none';
+    priceBounds     = { min: 0, max: 500 };
+    priceCalibrated = false;
+    setPriceSliderEnabled(false);
     if (trending)  trending.style.display  = 'block';
     results.style.display = 'none';
     while (results.firstChild) results.removeChild(results.firstChild);
@@ -115,12 +137,7 @@
     const isOpen = filterPanel.classList.toggle('is-open');
     filterPanel.setAttribute('aria-hidden', String(!isOpen));
     filterBtn.setAttribute('aria-expanded', String(isOpen));
-  });
-
-  document.addEventListener('click', e => {
-    if (filterPanel && !filterPanel.contains(e.target) && e.target !== filterBtn) {
-      closePanelOnly();
-    }
+    syncBodyRowHeight(isOpen);
   });
 
   document.addEventListener('keydown', e => {
@@ -247,8 +264,24 @@
     if (!rangeMin || !rangeMax) return;
     rangeMin.min = lo; rangeMin.max = hi;
     rangeMax.min = lo; rangeMax.max = hi;
-    if (state.minPrice == null) rangeMin.value = lo;
-    if (state.maxPrice == null) rangeMax.value = hi;
+
+    if (state.minPrice != null) {
+      const clamped = Math.max(lo, Math.min(hi, state.minPrice));
+      state.minPrice    = clamped <= lo ? null : clamped;
+      rangeMin.value    = state.minPrice != null ? state.minPrice : lo;
+    } else {
+      rangeMin.value = lo;
+    }
+    if (state.maxPrice != null) {
+      const clamped = Math.max(lo, Math.min(hi, state.maxPrice));
+      state.maxPrice    = clamped >= hi ? null : clamped;
+      rangeMax.value    = state.maxPrice != null ? state.maxPrice : hi;
+    } else {
+      rangeMax.value = hi;
+    }
+
+    priceCalibrated = true;
+    setPriceSliderEnabled(true);
     updatePriceDisplay();
   }
 
@@ -282,7 +315,18 @@
     }
   }
 
+  /* Enable/disable the slider inputs and toggle visual state.
+     Disabled until the API returns real bounds for the current query. */
+  function setPriceSliderEnabled(enabled) {
+    if (rangeMin) rangeMin.disabled = !enabled;
+    if (rangeMax) rangeMax.disabled = !enabled;
+    if (priceWrap) priceWrap.classList.toggle('is-uncalibrated', !enabled);
+  }
+
   function schedulePriceFetch() {
+    /* Ignore slider moves that fire before bounds are calibrated —
+       they would send meaningless 0/500 defaults to the API. */
+    if (!priceCalibrated) return;
     clearTimeout(priceTimer);
     priceTimer = setTimeout(() => {
       const lo = parseInt(rangeMin.value, 10);
@@ -322,10 +366,17 @@
   clearBtn.addEventListener('click', () => {
     input.value = '';
     clearBtn.classList.remove('show');
-    if (priceWrap) priceWrap.style.display = 'none';
+    state.minPrice    = null;
+    state.maxPrice    = null;
+    priceBounds       = { min: 0, max: 500 };
+    priceCalibrated   = false;
+    resetPriceSlider();
+    setPriceSliderEnabled(false);
     results.style.display = 'none';
     while (results.firstChild) results.removeChild(results.firstChild);
     if (trending) trending.style.display = 'block';
+    renderChips();
+    renderFilterBadge();
     input.focus();
   });
 
@@ -342,7 +393,6 @@
     const q = input.value.trim();
 
     if (q.length < 2) {
-      if (priceWrap) priceWrap.style.display = 'none';
       results.style.display = 'none';
       while (results.firstChild) results.removeChild(results.firstChild);
       if (trending) trending.style.display = 'block';
@@ -381,12 +431,11 @@
 
     /* ── Step 2: Render — outside try-catch ─────────────────── */
 
-    /* Calibrate price slider if bounds are in the response */
+    /* Calibrate price slider bounds from the response */
     if (data.priceRange && data.priceRange.min != null) {
       const lo = Math.floor(data.priceRange.min);
       const hi = Math.ceil(data.priceRange.max);
       calibratePriceSlider(lo, hi);
-      if (priceWrap) priceWrap.style.display = 'block';
     }
 
     renderChips();
@@ -399,7 +448,9 @@
   function setLoading() {
     results.style.display = 'block';
     while (results.firstChild) results.removeChild(results.firstChild);
-    results.appendChild(placeholder('Searching…'));
+    for (let i = 0; i < 4; i++) {
+      results.appendChild(CardFactory.searchSkeleton());
+    }
   }
 
   function setError() {
@@ -426,9 +477,11 @@
 
     /* Build each result row individually — a failure on one
        card must never prevent the view-all link from appearing. */
-    items.forEach(item => {
+    items.forEach((item, i) => {
       try {
-        results.appendChild(CardFactory.searchResult(item));
+        const el = CardFactory.searchResult(item);
+        el.style.animationDelay = `${i * 35}ms`;
+        results.appendChild(el);
       } catch (cardErr) {
         console.warn('[search] card render error:', cardErr, item);
         /* Skip this card silently — others still render */
@@ -447,6 +500,8 @@
   }
 
   /* ── Entry points ─────────────────────────────────────────── */
+
+  document.getElementById('searchFilterDone')?.addEventListener('click', closePanelOnly);
 
   document.getElementById('searchToggle')?.addEventListener('click', openSearch);
   backdrop?.addEventListener('click', closeSearch);

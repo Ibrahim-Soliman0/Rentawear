@@ -1,7 +1,6 @@
 package entity;
 
 import jakarta.persistence.*;
-import org.hibernate.annotations.ColumnDefault;
 import org.hibernate.annotations.CreationTimestamp;
 
 import java.math.BigDecimal;
@@ -25,17 +24,20 @@ import java.util.*;
 
 @NamedQueries({
 
-        // ── Step 2 entity fetch (shared by all listing paths)
+        // ── Step 2 entity fetch (shared by all listing paths) ─────────────────
         // Called after any *Ids query returns a page-sized list.
         // JOIN FETCH productVariants + category so no lazy loads are triggered
         // during mapper execution.
-        // ORDER BY restores sort after the IN clause reorders rows.
+        // The variant join also filters deleted variants so soft-deleted sizes
+        // never appear on product cards or the PDP.
         @NamedQuery(
                 name  = "Product.findByIds",
                 query = "SELECT DISTINCT p FROM Product p " +
-                        "LEFT JOIN FETCH p.productVariants " +
+                        "LEFT JOIN FETCH p.productVariants pv " +
                         "LEFT JOIN FETCH p.category " +
                         "WHERE p.id IN :ids " +
+                        "AND p.deleted = false " +
+                        "AND (pv IS NULL OR pv.deleted = false) " +
                         "ORDER BY p.createdAt DESC"
         ),
 
@@ -43,74 +45,91 @@ import java.util.*;
         @NamedQuery(
                 name  = "Product.findNewIds",
                 query = "SELECT p.id FROM Product p " +
-                        "WHERE p.createdAt >= :cutoff " +
+                        "WHERE p.deleted = false " +
+                        "AND p.createdAt >= :cutoff " +
                         "ORDER BY p.createdAt DESC"
         ),
         @NamedQuery(
                 name  = "Product.countNew",
                 query = "SELECT COUNT(p) FROM Product p " +
-                        "WHERE p.createdAt >= :cutoff"
+                        "WHERE p.deleted = false " +
+                        "AND p.createdAt >= :cutoff"
         ),
-        // New arrivals filtered by gender only (no category)
+        // New arrivals filtered by gender + price (no category)
         @NamedQuery(
                 name  = "Product.findNewFilteredIds",
                 query = "SELECT p.id FROM Product p " +
                         "LEFT JOIN p.category c " +
-                        "WHERE p.createdAt >= :cutoff " +
-                        "AND (:gender IS NULL OR c.gender = :gender) " +
+                        "WHERE p.deleted = false " +
+                        "AND p.createdAt >= :cutoff " +
+                        "AND (:gender   IS NULL OR c.gender     = :gender) " +
+                        "AND (:minPrice IS NULL OR p.basePrice >= :minPrice) " +
+                        "AND (:maxPrice IS NULL OR p.basePrice <= :maxPrice) " +
                         "ORDER BY p.createdAt DESC"
         ),
         @NamedQuery(
                 name  = "Product.countNewFiltered",
                 query = "SELECT COUNT(p) FROM Product p " +
                         "LEFT JOIN p.category c " +
-                        "WHERE p.createdAt >= :cutoff " +
-                        "AND (:gender IS NULL OR c.gender = :gender)"
+                        "WHERE p.deleted = false " +
+                        "AND p.createdAt >= :cutoff " +
+                        "AND (:gender   IS NULL OR c.gender     = :gender) " +
+                        "AND (:minPrice IS NULL OR p.basePrice >= :minPrice) " +
+                        "AND (:maxPrice IS NULL OR p.basePrice <= :maxPrice)"
         ),
-// New arrivals filtered by gender + specific categories
+        // New arrivals filtered by gender + price + specific categories
         @NamedQuery(
                 name  = "Product.findNewByCategoriesIds",
                 query = "SELECT p.id FROM Product p " +
                         "LEFT JOIN p.category c " +
-                        "WHERE p.createdAt >= :cutoff " +
+                        "WHERE p.deleted = false " +
+                        "AND p.createdAt >= :cutoff " +
                         "AND c.id IN :ids " +
-                        "AND (:gender IS NULL OR c.gender = :gender) " +
+                        "AND (:gender   IS NULL OR c.gender     = :gender) " +
+                        "AND (:minPrice IS NULL OR p.basePrice >= :minPrice) " +
+                        "AND (:maxPrice IS NULL OR p.basePrice <= :maxPrice) " +
                         "ORDER BY p.createdAt DESC"
         ),
         @NamedQuery(
                 name  = "Product.countNewByCategories",
                 query = "SELECT COUNT(p) FROM Product p " +
                         "LEFT JOIN p.category c " +
-                        "WHERE p.createdAt >= :cutoff " +
+                        "WHERE p.deleted = false " +
+                        "AND p.createdAt >= :cutoff " +
                         "AND c.id IN :ids " +
-                        "AND (:gender IS NULL OR c.gender = :gender)"
+                        "AND (:gender   IS NULL OR c.gender     = :gender) " +
+                        "AND (:minPrice IS NULL OR p.basePrice >= :minPrice) " +
+                        "AND (:maxPrice IS NULL OR p.basePrice <= :maxPrice)"
         ),
 
-        //Filtered browse (no category filter)
+        // ── Filtered browse (no category filter) ─────────────────────────────
         @NamedQuery(
                 name  = "Product.findFilteredIds",
                 query = "SELECT p.id FROM Product p " +
                         "LEFT JOIN p.category c " +
-                        "WHERE (:gender   IS NULL OR c.gender     = :gender) " +
-                        "AND   (:minPrice IS NULL OR p.basePrice >= :minPrice) " +
-                        "AND   (:maxPrice IS NULL OR p.basePrice <= :maxPrice) " +
+                        "WHERE p.deleted = false " +
+                        "AND (:gender   IS NULL OR c.gender     = :gender) " +
+                        "AND (:minPrice IS NULL OR p.basePrice >= :minPrice) " +
+                        "AND (:maxPrice IS NULL OR p.basePrice <= :maxPrice) " +
                         "ORDER BY p.createdAt DESC"
         ),
         @NamedQuery(
                 name  = "Product.countFiltered",
                 query = "SELECT COUNT(DISTINCT p) FROM Product p " +
                         "LEFT JOIN p.category c " +
-                        "WHERE (:gender   IS NULL OR c.gender     = :gender) " +
-                        "AND   (:minPrice IS NULL OR p.basePrice >= :minPrice) " +
-                        "AND   (:maxPrice IS NULL OR p.basePrice <= :maxPrice)"
+                        "WHERE p.deleted = false " +
+                        "AND (:gender   IS NULL OR c.gender     = :gender) " +
+                        "AND (:minPrice IS NULL OR p.basePrice >= :minPrice) " +
+                        "AND (:maxPrice IS NULL OR p.basePrice <= :maxPrice)"
         ),
 
-        //Filtered browse with category
+        // ── Filtered browse with category ─────────────────────────────────────
         @NamedQuery(
                 name  = "Product.findByCategoriesIds",
                 query = "SELECT p.id FROM Product p " +
                         "LEFT JOIN p.category c " +
-                        "WHERE c.id IN :ids " +
+                        "WHERE p.deleted = false " +
+                        "AND c.id IN :ids " +
                         "AND (:gender   IS NULL OR c.gender     = :gender) " +
                         "AND (:minPrice IS NULL OR p.basePrice >= :minPrice) " +
                         "AND (:maxPrice IS NULL OR p.basePrice <= :maxPrice) " +
@@ -120,18 +139,20 @@ import java.util.*;
                 name  = "Product.countByCategories",
                 query = "SELECT COUNT(DISTINCT p) FROM Product p " +
                         "LEFT JOIN p.category c " +
-                        "WHERE c.id IN :ids " +
+                        "WHERE p.deleted = false " +
+                        "AND c.id IN :ids " +
                         "AND (:gender   IS NULL OR c.gender     = :gender) " +
                         "AND (:minPrice IS NULL OR p.basePrice >= :minPrice) " +
                         "AND (:maxPrice IS NULL OR p.basePrice <= :maxPrice)"
         ),
 
-        //Personalized / interest-based feed
+        // ── Personalized / interest-based feed ────────────────────────────────
         @NamedQuery(
                 name  = "Product.findByInterestsIds",
                 query = "SELECT p.id FROM Product p " +
                         "LEFT JOIN p.category c " +
-                        "WHERE c.id IN :ids " +
+                        "WHERE p.deleted = false " +
+                        "AND c.id IN :ids " +
                         "AND (:gender IS NULL OR c.gender = :gender) " +
                         "ORDER BY p.createdAt DESC"
         ),
@@ -139,16 +160,18 @@ import java.util.*;
                 name  = "Product.countByInterests",
                 query = "SELECT COUNT(DISTINCT p) FROM Product p " +
                         "LEFT JOIN p.category c " +
-                        "WHERE c.id IN :ids " +
+                        "WHERE p.deleted = false " +
+                        "AND c.id IN :ids " +
                         "AND (:gender IS NULL OR c.gender = :gender)"
         ),
 
-        // Search (no category filter)
+        // ── Search (no category filter) ───────────────────────────────────────
         @NamedQuery(
                 name  = "Product.searchFilteredIds",
                 query = "SELECT p.id FROM Product p " +
                         "LEFT JOIN p.category c " +
-                        "WHERE LOWER(p.name) LIKE :q " +
+                        "WHERE p.deleted = false " +
+                        "AND LOWER(p.name) LIKE :q " +
                         "AND (:gender   IS NULL OR c.gender     = :gender) " +
                         "AND (:minPrice IS NULL OR p.basePrice >= :minPrice) " +
                         "AND (:maxPrice IS NULL OR p.basePrice <= :maxPrice) " +
@@ -158,7 +181,8 @@ import java.util.*;
                 name  = "Product.countSearchFiltered",
                 query = "SELECT COUNT(DISTINCT p) FROM Product p " +
                         "LEFT JOIN p.category c " +
-                        "WHERE LOWER(p.name) LIKE :q " +
+                        "WHERE p.deleted = false " +
+                        "AND LOWER(p.name) LIKE :q " +
                         "AND (:gender   IS NULL OR c.gender     = :gender) " +
                         "AND (:minPrice IS NULL OR p.basePrice >= :minPrice) " +
                         "AND (:maxPrice IS NULL OR p.basePrice <= :maxPrice)"
@@ -169,7 +193,8 @@ import java.util.*;
                 name  = "Product.searchByCategoriesIds",
                 query = "SELECT p.id FROM Product p " +
                         "LEFT JOIN p.category c " +
-                        "WHERE LOWER(p.name) LIKE :q " +
+                        "WHERE p.deleted = false " +
+                        "AND LOWER(p.name) LIKE :q " +
                         "AND c.id IN :ids " +
                         "AND (:gender   IS NULL OR c.gender     = :gender) " +
                         "AND (:minPrice IS NULL OR p.basePrice >= :minPrice) " +
@@ -180,7 +205,8 @@ import java.util.*;
                 name  = "Product.countSearchFilteredByCategories",
                 query = "SELECT COUNT(DISTINCT p) FROM Product p " +
                         "LEFT JOIN p.category c " +
-                        "WHERE LOWER(p.name) LIKE :q " +
+                        "WHERE p.deleted = false " +
+                        "AND LOWER(p.name) LIKE :q " +
                         "AND c.id IN :ids " +
                         "AND (:gender   IS NULL OR c.gender     = :gender) " +
                         "AND (:minPrice IS NULL OR p.basePrice >= :minPrice) " +
@@ -193,13 +219,15 @@ import java.util.*;
                 name  = "Product.getMinMaxPrice",
                 query = "SELECT MIN(p.basePrice), MAX(p.basePrice) FROM Product p " +
                         "LEFT JOIN p.category c " +
-                        "WHERE (:gender IS NULL OR c.gender = :gender)"
+                        "WHERE p.deleted = false " +
+                        "AND (:gender IS NULL OR c.gender = :gender)"
         ),
         @NamedQuery(
                 name  = "Product.getMinMaxPriceByCategories",
                 query = "SELECT MIN(p.basePrice), MAX(p.basePrice) FROM Product p " +
                         "LEFT JOIN p.category c " +
-                        "WHERE c.id IN :ids " +
+                        "WHERE p.deleted = false " +
+                        "AND c.id IN :ids " +
                         "AND (:gender IS NULL OR c.gender = :gender)"
         )
 })
@@ -233,8 +261,11 @@ public class Product {
     // private String brand;
 
     @CreationTimestamp
-    @Column(name = "created_at",updatable = false)
+    @Column(name = "created_at", updatable = false)
     private Instant createdAt;
+
+    @Column(name = "deleted", nullable = false)
+    private boolean deleted = false;
 
     @OneToMany(mappedBy = "product",
             cascade = {CascadeType.PERSIST, CascadeType.REMOVE, CascadeType.MERGE},
@@ -277,61 +308,29 @@ public class Product {
         return productVariants;
     }
 
-    public Integer getId() {
-        return id;
-    }
+    public Integer getId() { return id; }
+    public void setId(Integer id) { this.id = id; }
 
-    public void setId(Integer id) {
-        this.id = id;
-    }
+    public String getName() { return name; }
+    public void setName(String name) { this.name = name; }
 
-    public String getName() {
-        return name;
-    }
+    public String getDescription() { return description; }
+    public void setDescription(String description) { this.description = description; }
 
-    public void setName(String name) {
-        this.name = name;
-    }
+    public BigDecimal getBasePrice() { return basePrice; }
+    public void setBasePrice(BigDecimal basePrice) { this.basePrice = basePrice; }
 
-    public String getDescription() {
-        return description;
-    }
+    public Category getCategory() { return category; }
+    public void setCategory(Category category) { this.category = category; }
 
-    public void setDescription(String description) {
-        this.description = description;
-    }
+    public String getImageUrl() { return imageUrl; }
+    public void setImageUrl(String imageUrl) { this.imageUrl = imageUrl; }
 
-    public BigDecimal getBasePrice() {
-        return basePrice;
-    }
+    public Instant getCreatedAt() { return createdAt; }
+    public void setCreatedAt(Instant createdAt) { this.createdAt = createdAt; }
 
-    public void setBasePrice(BigDecimal basePrice) {
-        this.basePrice = basePrice;
-    }
-
-    public Category getCategory() {
-        return category;
-    }
-
-    public void setCategory(Category category) {
-        this.category = category;
-    }
-
-    public String getImageUrl() {
-        return imageUrl;
-    }
-
-    public void setImageUrl(String imageUrl) {
-        this.imageUrl = imageUrl;
-    }
-
-    public Instant getCreatedAt() {
-        return createdAt;
-    }
-
-    public void setCreatedAt(Instant createdAt) {
-        this.createdAt = createdAt;
-    }
+    public boolean isDeleted() { return deleted; }
+    public void setDeleted(boolean deleted) { this.deleted = deleted; }
 
     @Override
     public boolean equals(Object o) {

@@ -170,6 +170,30 @@
     <%-- end .checkout-container --%>
 </main>
 
+<%-- ── Success overlay — hidden until checkout.js triggers it ── --%>
+<div class="order-success-overlay" id="orderSuccessOverlay"
+     aria-live="polite" aria-hidden="true" role="status">
+
+    <div class="success-circle">
+        <svg viewBox="0 0 52 52">
+            <!-- Circle -->
+            <circle class="success-circle-path"
+                    cx="26"
+                    cy="26"
+                    r="24"
+                    fill="none"/>
+
+            <!-- Check -->
+            <path class="success-check-path"
+                    d="M14 27 L22 35 L38 19"
+                    fill="none"/>
+        </svg>
+    </div>
+
+    <p class="success-title">Order Successful</p>
+    <p class="success-sub">Redirecting to your rental history…</p>
+</div>
+
 <jsp:include page="components/footer.jsp"/>
 
 <jsp:include page="components/scripts.jsp">

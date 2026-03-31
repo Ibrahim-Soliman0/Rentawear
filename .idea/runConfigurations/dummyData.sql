@@ -115,90 +115,90 @@ INSERT INTO products (id, name, description, base_price, category_id, image_url,
 
 -- ── Product 1: Luna Bias-Cut Gown ─────────────────────────────────
 -- Colors: Midnight Navy, Champagne
-INSERT INTO product_variants (product_id, size, color, quantity) VALUES
-(1, 'XS', '#1B2A4A-Midnight Navy',  3),
-(1, 'S',  '#1B2A4A-Midnight Navy',  4),
-(1, 'M',  '#1B2A4A-Midnight Navy',  3),
-(1, 'L',  '#1B2A4A-Midnight Navy',  2),
-(1, 'XS', '#F5E6C8-Champagne',      2),
-(1, 'S',  '#F5E6C8-Champagne',      4),
-(1, 'M',  '#F5E6C8-Champagne',      3),
-(1, 'L',  '#F5E6C8-Champagne',      2);
+INSERT INTO product_variants (product_id, size, color, quantity, version) VALUES
+(1, 'XS', '#1B2A4A-Midnight Navy',  3, 0),
+(1, 'S',  '#1B2A4A-Midnight Navy',  4, 0),
+(1, 'M',  '#1B2A4A-Midnight Navy',  3, 0),
+(1, 'L',  '#1B2A4A-Midnight Navy',  2, 0),
+(1, 'XS', '#F5E6C8-Champagne',      2, 0),
+(1, 'S',  '#F5E6C8-Champagne',      4, 0),
+(1, 'M',  '#F5E6C8-Champagne',      3, 0),
+(1, 'L',  '#F5E6C8-Champagne',      2, 0);
 
 -- ── Product 2: Celeste Midi Dress ─────────────────────────────────
 -- Colors: Blush Pink, Sage Green, Ivory
-INSERT INTO product_variants (product_id, size, color, quantity) VALUES
-(2, 'XS', '#F4C2C2-Blush Pink',     3),
-(2, 'S',  '#F4C2C2-Blush Pink',     5),
-(2, 'M',  '#F4C2C2-Blush Pink',     4),
-(2, 'L',  '#F4C2C2-Blush Pink',     2),
-(2, 'XL', '#F4C2C2-Blush Pink',     1),
-(2, 'XS', '#8FAF8F-Sage Green',     2),
-(2, 'S',  '#8FAF8F-Sage Green',     3),
-(2, 'M',  '#8FAF8F-Sage Green',     4),
-(2, 'L',  '#8FAF8F-Sage Green',     2),
-(2, 'XS', '#FFFFF0-Ivory',          2),
-(2, 'S',  '#FFFFF0-Ivory',          3),
-(2, 'M',  '#FFFFF0-Ivory',          3);
+INSERT INTO product_variants (product_id, size, color, quantity, version) VALUES
+(2, 'XS', '#F4C2C2-Blush Pink',     3, 0),
+(2, 'S',  '#F4C2C2-Blush Pink',     5, 0),
+(2, 'M',  '#F4C2C2-Blush Pink',     4, 0),
+(2, 'L',  '#F4C2C2-Blush Pink',     2, 0),
+(2, 'XL', '#F4C2C2-Blush Pink',     1, 0),
+(2, 'XS', '#8FAF8F-Sage Green',     2, 0),
+(2, 'S',  '#8FAF8F-Sage Green',     3, 0),
+(2, 'M',  '#8FAF8F-Sage Green',     4, 0),
+(2, 'L',  '#8FAF8F-Sage Green',     2, 0),
+(2, 'XS', '#FFFFF0-Ivory',          2, 0),
+(2, 'S',  '#FFFFF0-Ivory',          3, 0),
+(2, 'M',  '#FFFFF0-Ivory',          3, 0);
 
 -- ── Product 3: Harper Wrap Dress ──────────────────────────────────
 -- Colors: Burgundy, Midnight Navy
-INSERT INTO product_variants (product_id, size, color, quantity) VALUES
-(3, 'XS', '#800020-Burgundy',       2),
-(3, 'S',  '#800020-Burgundy',       4),
-(3, 'M',  '#800020-Burgundy',       5),
-(3, 'L',  '#800020-Burgundy',       3),
-(3, 'XL', '#800020-Burgundy',       2),
-(3, 'XS', '#1B2A4A-Midnight Navy',  3),
-(3, 'S',  '#1B2A4A-Midnight Navy',  4),
-(3, 'M',  '#1B2A4A-Midnight Navy',  3),
-(3, 'L',  '#1B2A4A-Midnight Navy',  2);
+INSERT INTO product_variants (product_id, size, color, quantity, version) VALUES
+(3, 'XS', '#800020-Burgundy',       2, 0),
+(3, 'S',  '#800020-Burgundy',       4, 0),
+(3, 'M',  '#800020-Burgundy',       5, 0),
+(3, 'L',  '#800020-Burgundy',       3, 0),
+(3, 'XL', '#800020-Burgundy',       2, 0),
+(3, 'XS', '#1B2A4A-Midnight Navy',  3, 0),
+(3, 'S',  '#1B2A4A-Midnight Navy',  4, 0),
+(3, 'M',  '#1B2A4A-Midnight Navy',  3, 0),
+(3, 'L',  '#1B2A4A-Midnight Navy',  2, 0);
 
 -- ── Product 4: Riviera Wide-Leg Jumpsuit ──────────────────────────
 -- Colors: Camel, Onyx Black
-INSERT INTO product_variants (product_id, size, color, quantity) VALUES
-(4, 'XS', '#C19A6B-Camel',          2),
-(4, 'S',  '#C19A6B-Camel',          3),
-(4, 'M',  '#C19A6B-Camel',          4),
-(4, 'L',  '#C19A6B-Camel',          2),
-(4, 'XS', '#1C1C1C-Onyx Black',     3),
-(4, 'S',  '#1C1C1C-Onyx Black',     4),
-(4, 'M',  '#1C1C1C-Onyx Black',     5),
-(4, 'L',  '#1C1C1C-Onyx Black',     3),
-(4, 'XL', '#1C1C1C-Onyx Black',     2);
+INSERT INTO product_variants (product_id, size, color, quantity, version) VALUES
+(4, 'XS', '#C19A6B-Camel',          2, 0),
+(4, 'S',  '#C19A6B-Camel',          3, 0),
+(4, 'M',  '#C19A6B-Camel',          4, 0),
+(4, 'L',  '#C19A6B-Camel',          2, 0),
+(4, 'XS', '#1C1C1C-Onyx Black',     3, 0),
+(4, 'S',  '#1C1C1C-Onyx Black',     4, 0),
+(4, 'M',  '#1C1C1C-Onyx Black',     5, 0),
+(4, 'L',  '#1C1C1C-Onyx Black',     3, 0),
+(4, 'XL', '#1C1C1C-Onyx Black',     2, 0);
 
 -- ── Product 5: Aurum Evening Clutch ───────────────────────────────
 -- One size, two colorways
-INSERT INTO product_variants (product_id, size, color, quantity) VALUES
-(5, 'One Size', '#D4AF37-Gold',      6),
-(5, 'One Size', '#C0C0C0-Silver',    6);
+INSERT INTO product_variants (product_id, size, color, quantity, version) VALUES
+(5, 'One Size', '#D4AF37-Gold',      6, 0),
+(5, 'One Size', '#C0C0C0-Silver',    6, 0);
 
 -- ── Product 6: Regent Tuxedo ──────────────────────────────────────
 -- Colors: Onyx Black, Midnight Navy
-INSERT INTO product_variants (product_id, size, color, quantity) VALUES
-(6, 'S',   '#1C1C1C-Onyx Black',    3),
-(6, 'M',   '#1C1C1C-Onyx Black',    4),
-(6, 'L',   '#1C1C1C-Onyx Black',    4),
-(6, 'XL',  '#1C1C1C-Onyx Black',    2),
-(6, 'S',   '#1B2A4A-Midnight Navy', 2),
-(6, 'M',   '#1B2A4A-Midnight Navy', 3),
-(6, 'L',   '#1B2A4A-Midnight Navy', 3),
-(6, 'XL',  '#1B2A4A-Midnight Navy', 2);
+INSERT INTO product_variants (product_id, size, color, quantity, version) VALUES
+(6, 'S',   '#1C1C1C-Onyx Black',    3, 0),
+(6, 'M',   '#1C1C1C-Onyx Black',    4, 0),
+(6, 'L',   '#1C1C1C-Onyx Black',    4, 0),
+(6, 'XL',  '#1C1C1C-Onyx Black',    2, 0),
+(6, 'S',   '#1B2A4A-Midnight Navy', 2, 0),
+(6, 'M',   '#1B2A4A-Midnight Navy', 3, 0),
+(6, 'L',   '#1B2A4A-Midnight Navy', 3, 0),
+(6, 'XL',  '#1B2A4A-Midnight Navy', 2, 0);
 
 -- ── Product 7: Chester Slim-Fit Suit ──────────────────────────────
 -- Colors: Charcoal, Stone Grey, Onyx Black
-INSERT INTO product_variants (product_id, size, color, quantity) VALUES
-(7, 'S',  '#36454F-Charcoal',       3),
-(7, 'M',  '#36454F-Charcoal',       5),
-(7, 'L',  '#36454F-Charcoal',       4),
-(7, 'XL', '#36454F-Charcoal',       2),
-(7, 'S',  '#8C8C8C-Stone Grey',     3),
-(7, 'M',  '#8C8C8C-Stone Grey',     4),
-(7, 'L',  '#8C8C8C-Stone Grey',     3),
-(7, 'S',  '#1C1C1C-Onyx Black',     2),
-(7, 'M',  '#1C1C1C-Onyx Black',     4),
-(7, 'L',  '#1C1C1C-Onyx Black',     3),
-(7, 'XL', '#1C1C1C-Onyx Black',     2);
+INSERT INTO product_variants (product_id, size, color, quantity, version) VALUES
+(7, 'S',  '#36454F-Charcoal',       3, 0),
+(7, 'M',  '#36454F-Charcoal',       5, 0),
+(7, 'L',  '#36454F-Charcoal',       4, 0),
+(7, 'XL', '#36454F-Charcoal',       2, 0),
+(7, 'S',  '#8C8C8C-Stone Grey',     3, 0),
+(7, 'M',  '#8C8C8C-Stone Grey',     4, 0),
+(7, 'L',  '#8C8C8C-Stone Grey',     3, 0),
+(7, 'S',  '#1C1C1C-Onyx Black',     2, 0),
+(7, 'M',  '#1C1C1C-Onyx Black',     4, 0),
+(7, 'L',  '#1C1C1C-Onyx Black',     3, 0),
+(7, 'XL', '#1C1C1C-Onyx Black',     2, 0);
 
 
 -- =========================================

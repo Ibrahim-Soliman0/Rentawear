@@ -10,14 +10,11 @@ import exception.CartItemNotFoundException;
 import exception.UserNotFoundException;
 import mapper.CartItemMapper;
 import org.mapstruct.factory.Mappers;
-import repository.CartItemRepository;
 import repository.CartRepository;
-import repository.impl.CartItemRepositoryImpl;
 import repository.impl.CartRepositoryImpl;
 
 import java.time.LocalDate;
 import java.util.List;
-import java.util.Optional;
 
 public class CartService extends BaseService<Cart> {
 
@@ -31,45 +28,87 @@ public class CartService extends BaseService<Cart> {
     }
 
     public CartService(CartRepository cartRepository) {
+        this(
+                cartRepository,
+                new UserService(),
+                new ProductVariantService(),
+                new CartItemService()
+        );
+    }
+
+    public CartService(
+            CartRepository cartRepository,
+            UserService userService,
+            ProductVariantService productVariantService,
+            CartItemService cartItemService
+    ) {
         super(cartRepository);
         this.cartRepository = cartRepository;
-        this.userService = new UserService();
-        this.productVariantService = new ProductVariantService();
-        this.cartItemService = new CartItemService();
+        this.userService = userService;
+        this.productVariantService = productVariantService;
+        this.cartItemService = cartItemService;
     }
 
     public List<CartItemDTO> getItems(Integer userId) {
         CartItemMapper mapper = Mappers.getMapper(CartItemMapper.class);
         User user = userService.getById(userId)
                 .orElseThrow(() ->
-                        new UserNotFoundException("User with id [" + userId + "] doesn't exit"));
+                        new UserNotFoundException("User with id [" + userId + "] doesn't exist"));
 
-        List<CartItem> itemsInCart = user.getCart().getCartItems();
+        Cart userCart = user.getCart();
+
+        if (userCart == null) {
+            // User has no cart yet, so there are no items to return
+            return List.of();
+        }
+
+        List<CartItem> itemsInCart = userCart.getCartItems();
+
+        if (itemsInCart == null) {
+            // Treat a null cart-items collection as empty
+            return List.of();
+        }
         return mapper.toDTOList(itemsInCart);
     }
 
     public Integer addItem(Integer userId, SimpleCartItemDTO itemDTO) {
 
-        Optional<User> userOptional = userService.getById(userId);
+        User user = userService.getById(userId)
+                .orElseThrow(() ->
+                        new UserNotFoundException("User with id [" + userId + "] doesn't exist"));
 
-        if (userOptional.isEmpty()) {
-            throw new UserNotFoundException("User with id [" + userId + "] doesn't exit");
-        }
-
-        User user = userOptional.get();
         Cart userCart = user.getCart();
 
         // first time renting the user has no cart created for him yet so create one
         if (userCart == null) {
             Cart cart = new Cart();
             user.setCart(cart);
+            userCart = user.getCart();
         }
-
-        userCart = user.getCart();
 
         ProductVariant productVariant = productVariantService.getById(itemDTO.variantId())
                 .orElseThrow(() -> new IllegalArgumentException(
                         "Variant with id [" + itemDTO.variantId() + "] doesn't exist"));
+
+        // ── Server-side inventory enforcement ─────────────────────────────────
+        // Count how many of this variant the user already has across ALL their
+        // cart line-items (all date ranges).  Reject if adding the requested qty
+        // would exceed the variant's inventory.
+        //
+        // This is the authoritative check — the client-side check in cart.js is
+        // a UX convenience only.  A logged-out user who had 3 items in their DB
+        // cart cannot bypass the limit by adding more as a guest and then merging.
+        int alreadyInCart = cartItemService.getReservedQty(userId, itemDTO.variantId());
+        int inventoryQty = productVariant.getQuantity();
+
+        if (alreadyInCart + itemDTO.qty() > inventoryQty) {
+            int remaining = inventoryQty - alreadyInCart;
+            throw new IllegalStateException(
+                    remaining <= 0
+                            ? "No stock remaining for this variant."
+                            : "Only " + remaining + " unit(s) of this variant available."
+            );
+        }
 
         CartItem itemToAdd = new CartItem();
         itemToAdd.setVariant(productVariant);
@@ -77,25 +116,22 @@ public class CartService extends BaseService<Cart> {
         itemToAdd.setStartDate(LocalDate.parse(itemDTO.startDate()));
         itemToAdd.setEndDate(LocalDate.parse(itemDTO.endDate()));
 
+        itemToAdd = cartItemService.save(itemToAdd);
+
         userCart.addCartItem(itemToAdd);
-        save(userCart);
 
         return itemToAdd.getId();
     }
 
     public void removeItem(Integer userId, Integer cartItemId) {
 
-        Optional<User> userOptional = userService.getById(userId);
+        User user = userService.getById(userId)
+                .orElseThrow(() ->
+                        new UserNotFoundException("User with id [" + userId + "] doesn't exist"));
 
-        if (userOptional.isEmpty()) {
-            throw new UserNotFoundException("User with id [" + userId + "] doesn't exit");
-        }
-
-        User user = userOptional.get();
         Cart userCart = user.getCart();
 
         if (userCart == null) {
-            System.out.println("the user id [" + userId + "] has no purchases made yet");
             throw new CartItemNotFoundException(
                     "Cart item with id [" + cartItemId + "] doesn't exist");
         }
@@ -105,8 +141,6 @@ public class CartService extends BaseService<Cart> {
                         "Cart item with id [" + cartItemId + "] doesn't exist"));
 
         if (userCart.getCartItems() == null || !userCart.getCartItems().contains(itemToRemove)) {
-            System.out.println("the user id [" + userId + "] has no items in the cart or" +
-                    " doesn't have the requested item");
             throw new CartItemNotFoundException(
                     "Cart item with id [" + cartItemId + "] doesn't exist");
         }
@@ -116,17 +150,13 @@ public class CartService extends BaseService<Cart> {
 
     public void updateItemQty(Integer userId, Integer cartItemId, Integer newQty) {
 
-        Optional<User> userOptional = userService.getById(userId);
+        User user = userService.getById(userId)
+                .orElseThrow(() ->
+                        new UserNotFoundException("User with id [" + userId + "] doesn't exist"));
 
-        if (userOptional.isEmpty()) {
-            throw new UserNotFoundException("User with id [" + userId + "] doesn't exit");
-        }
-
-        User user = userOptional.get();
         Cart userCart = user.getCart();
 
         if (userCart == null) {
-            System.out.println("the user id [" + userId + "] has no purchases made yet");
             throw new CartItemNotFoundException(
                     "Cart item with id [" + cartItemId + "] doesn't exist");
         }
@@ -136,10 +166,25 @@ public class CartService extends BaseService<Cart> {
                         "Cart item with id [" + cartItemId + "] doesn't exist"));
 
         if (userCart.getCartItems() == null || !userCart.getCartItems().contains(itemToUpdate)) {
-            System.out.println("the user id [" + userId + "] has no items in the cart or" +
-                    " doesn't have the requested item");
             throw new CartItemNotFoundException(
                     "Cart item with id [" + cartItemId + "] doesn't exist");
+        }
+
+        // ── Server-side inventory enforcement for qty updates ─────────────────
+        // Subtract the item's current qty before checking, because we're
+        // replacing it — not adding on top of it.
+        int currentQty = itemToUpdate.getQuantity();
+        int otherQty = cartItemService.getReservedQty(userId,
+                itemToUpdate.getVariant().getId()) - currentQty;
+        int inventoryQty = itemToUpdate.getVariant().getQuantity();
+
+        if (otherQty + newQty > inventoryQty) {
+            int remaining = inventoryQty - otherQty;
+            throw new IllegalStateException(
+                    remaining <= 0
+                            ? "No stock remaining for this variant."
+                            : "Only " + remaining + " unit(s) of this variant available."
+            );
         }
 
         itemToUpdate.setQuantity(newQty);
