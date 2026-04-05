@@ -137,6 +137,12 @@ The application uses MySQL for production and H2 In-Memory Database for testing:
 - **Orders** – Rental transaction records
 - **Images** – Product image metadata and paths
 
+### Schema Diagram
+
+The following diagram demonstrates the database schema design:
+
+![Database Schema](screens/schema.jpg)
+
 ---
 
 ## Technology Stack
